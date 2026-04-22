@@ -60,6 +60,52 @@ To be decided as part of issue triage. Constraints:
 
 Multi-agent dev via [Squad by Brady Gaster](https://github.com/bradygaster/squad). Team in `.squad/team.md`. Routing in `.squad/routing.md`. Open `squad`-labeled issues are the live backlog.
 
+## Quickstart
+
+### Install
+
+For end users:
+
+```bash
+uvx mcp-server-azure-architect
+```
+
+For development (editable install):
+
+```bash
+# Install uv if not already available
+pip install uv
+
+# Install package with dev dependencies
+uv pip install -e ".[dev]"
+```
+
+### Run
+
+Run the server via stdio transport:
+
+```bash
+mcp-server-azure-architect
+```
+
+Test with MCP Inspector:
+
+```bash
+npx @modelcontextprotocol/inspector mcp-server-azure-architect
+```
+
+### Authentication
+
+The server uses Azure `DefaultAzureCredential` for authentication, which supports multiple credential sources in this order:
+
+1. Environment variables (`AZURE_CLIENT_ID`, `AZURE_TENANT_ID`, `AZURE_CLIENT_SECRET`)
+2. Managed Identity (when running on Azure compute)
+3. Azure CLI (`az login`)
+
+All tools are read-only by design. No Azure write operations are exposed.
+
+For more details on the runtime choice, see [docs/adr/0001-runtime-choice.md](docs/adr/0001-runtime-choice.md).
+
 ## License
 
 MIT.

@@ -7,6 +7,10 @@ dist/
 build/
 *.egg-info/
 .venv/
+*.pyc
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
 
 # Squad: ignore runtime state (logs, inbox, sessions)
 .squad/orchestration-log/
