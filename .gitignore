@@ -1,0 +1,10 @@
+# Local artifacts
+.vscode/
+.env
+node_modules/
+__pycache__/
+dist/
+build/
+*.egg-info/
+.venv/
+
