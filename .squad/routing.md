@@ -6,13 +6,16 @@ How to decide who handles what.
 
 | Work Type | Route To | Examples |
 |-----------|----------|----------|
-| {domain 1} | {Name} | {example tasks} |
-| {domain 2} | {Name} | {example tasks} |
-| {domain 3} | {Name} | {example tasks} |
-| Code review | {Name} | Review PRs, check quality, suggest improvements |
-| Testing | {Name} | Write tests, find edge cases, verify fixes |
-| Scope & priorities | {Name} | What to build next, trade-offs, decisions |
-| Session logging | Scribe | Automatic — never needs routing |
+| MCP server runtime, tool registration, transport | Forge | Python/TS/.NET runtime choice, tool decorators, stdio/SSE wiring |
+| ARG and KQL queries | Atlas | ALZ checklist query authoring, KQL fixes, vendored snapshot updates |
+| Copilot CLI skills | Iris | `design-review`, `alz-gap-check`, `runner-sizing`, `ingress-migration-plan` skills |
+| Client integration, mcp-config.json, install docs | Burke | Copilot CLI / Claude Desktop / Cursor / VS Code config, companion-server wiring |
+| Read-only enforcement, auth, secret scrubbing | Sentinel | DefaultAzureCredential boundaries, no-write proofs, gitleaks rules |
+| Research, runtime selection, examples, docs | Sage | Runtime ADR, MCP spec citations, Microsoft Learn cross-refs |
+| Triage, design, PR sign-off | Lead | All untriaged squad issues, design reviews |
+| Code review | Lead | Review PRs, enforce conventions |
+| Scope and priorities | Lead | What to build next, trade-offs |
+| Session logging | Scribe | Automatic, never needs routing |
 
 ## Issue Routing
 

@@ -1,0 +1,35 @@
+# gitleaks config for mcp-server-azure-architect
+# Public OSS posture: catch any leaks of identifiers that should not ship
+# alongside upstream secret patterns.
+
+title = "mcp-server-azure-architect gitleaks"
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Allowlist for placeholders, examples, and built-in public identifiers"
+paths = [
+  '''(.*?)\.md''',
+  '''docs/.*''',
+  '''queries/MANIFEST\.md''',
+]
+regexes = [
+  '''00000000-0000-0000-0000-000000000000''',
+  '''11111111-1111-1111-1111-111111111111''',
+  '''<your-subscription-id>''',
+  '''<your-tenant-id>''',
+  '''EXAMPLE-''',
+]
+
+[[rules]]
+id = "azure-tenant-or-subscription-id-in-non-doc"
+description = "Block real-looking GUIDs in non-doc paths"
+regex = '''[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}'''
+path = '''(src|scripts|queries)/.*'''
+[rules.allowlist]
+regexes = [
+  '''00000000-0000-0000-0000-000000000000''',
+  '''11111111-1111-1111-1111-111111111111''',
+  '''EXAMPLE-''',
+]

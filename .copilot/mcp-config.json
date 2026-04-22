@@ -1,14 +1,49 @@
 {
+  "$schema": "https://aka.ms/mcp-config-schema",
+  "_comment": "Curated kit for Azure architects. Companions are recommended-not-bundled. See docs/companions/ for per-server rationale.",
   "mcpServers": {
-    "EXAMPLE-github": {
+    "azure-mcp": {
+      "_purpose": "Official Microsoft Azure MCP. Source of truth for ARG, Quota, Advisor, Monitor, Policy, RBAC, AKS, AppService.",
       "command": "npx",
-      "args": [
-        "-y",
-        "@anthropic/github-mcp-server"
-      ],
+      "args": ["-y", "@azure/mcp@latest"]
+    },
+    "microsoft-learn": {
+      "_purpose": "Grounded Microsoft Learn doc lookup. Reduces architect hallucination.",
+      "url": "https://learn.microsoft.com/api/mcp"
+    },
+    "github": {
+      "_purpose": "Repo, issue, PR access for IaC reviews and design intent diff.",
+      "command": "docker",
+      "args": ["run", "-i", "--rm", "-e", "GITHUB_PERSONAL_ACCESS_TOKEN", "ghcr.io/github/github-mcp-server"],
       "env": {
-        "GITHUB_TOKEN": "${GITHUB_TOKEN}"
+        "GITHUB_PERSONAL_ACCESS_TOKEN": "${GITHUB_PERSONAL_ACCESS_TOKEN}"
       }
+    },
+    "mermaid": {
+      "_purpose": "Render architecture diagrams inline in design reviews.",
+      "command": "npx",
+      "args": ["-y", "@mermaid-js/mermaid-mcp@latest"]
+    },
+    "drawio": {
+      "_purpose": "Visio-replacement diagrams, exportable for stakeholder decks.",
+      "command": "npx",
+      "args": ["-y", "drawio-mcp-server@latest"]
+    },
+    "kubernetes": {
+      "_purpose": "Live cluster inspection during AKS design and ingress migration reviews.",
+      "command": "npx",
+      "args": ["-y", "kubernetes-mcp-server@latest"]
+    },
+    "terraform": {
+      "_purpose": "HashiCorp Terraform registry lookup, plan, validate.",
+      "command": "docker",
+      "args": ["run", "-i", "--rm", "hashicorp/terraform-mcp-server"]
+    },
+    "mcp-server-azure-architect": {
+      "_purpose": "This repo. ALZ checklist queries by ID + scorecard composition. Read-only.",
+      "_install": "Replace command and args once the runtime ADR lands in docs/adr/runtime.md.",
+      "command": "TBD-pending-runtime-adr",
+      "args": []
     }
   }
 }
