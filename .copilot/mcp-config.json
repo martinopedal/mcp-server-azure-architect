@@ -1,49 +1,57 @@
 {
   "$schema": "https://aka.ms/mcp-config-schema",
-  "_comment": "Curated kit for Azure architects. Companions are recommended-not-bundled. See docs/companions/ for per-server rationale.",
+  "_comment": "Curated kit for Azure architects. Companions are recommended-not-bundled. See docs/install/ for per-client setup. Disable any server by setting disabled=true.",
   "mcpServers": {
     "azure-mcp": {
       "_purpose": "Official Microsoft Azure MCP. Source of truth for ARG, Quota, Advisor, Monitor, Policy, RBAC, AKS, AppService.",
+      "_disabled_instructions": "Set disabled:true to opt out of this server.",
       "command": "npx",
-      "args": ["-y", "@azure/mcp@latest"]
+      "args": ["-y", "@azure/mcp@2.0.1"]
     },
     "microsoft-learn": {
-      "_purpose": "Grounded Microsoft Learn doc lookup. Reduces architect hallucination.",
+      "_purpose": "Grounded Microsoft Learn doc lookup. Reduces architect hallucination. No self-host needed; uses hosted endpoint.",
+      "_disabled_instructions": "Set disabled:true to opt out of this server.",
       "url": "https://learn.microsoft.com/api/mcp"
     },
     "github": {
-      "_purpose": "Repo, issue, PR access for IaC reviews and design intent diff.",
+      "_purpose": "Repo, issue, PR access for IaC reviews and design intent diff. Requires GITHUB_PERSONAL_ACCESS_TOKEN env var.",
+      "_disabled_instructions": "Set disabled:true to opt out of this server. Requires GitHub PAT for auth.",
       "command": "docker",
-      "args": ["run", "-i", "--rm", "-e", "GITHUB_PERSONAL_ACCESS_TOKEN", "ghcr.io/github/github-mcp-server"],
+      "args": ["run", "-i", "--rm", "-e", "GITHUB_PERSONAL_ACCESS_TOKEN", "ghcr.io/github/github-mcp-server:latest"],
       "env": {
         "GITHUB_PERSONAL_ACCESS_TOKEN": "${GITHUB_PERSONAL_ACCESS_TOKEN}"
       }
     },
     "mermaid": {
       "_purpose": "Render architecture diagrams inline in design reviews.",
+      "_disabled_instructions": "Set disabled:true to opt out of this server.",
       "command": "npx",
-      "args": ["-y", "@mermaid-js/mermaid-mcp@latest"]
+      "args": ["-y", "mcp-mermaid@0.4.1"]
     },
     "drawio": {
       "_purpose": "Visio-replacement diagrams, exportable for stakeholder decks.",
+      "_disabled_instructions": "Set disabled:true to opt out of this server.",
       "command": "npx",
-      "args": ["-y", "drawio-mcp-server@latest"]
+      "args": ["-y", "drawio-mcp-server@2.0.4"]
     },
     "kubernetes": {
       "_purpose": "Live cluster inspection during AKS design and ingress migration reviews.",
+      "_disabled_instructions": "Set disabled:true to opt out of this server.",
       "command": "npx",
-      "args": ["-y", "kubernetes-mcp-server@latest"]
+      "args": ["-y", "kubernetes-mcp-server@0.0.53"]
     },
     "terraform": {
       "_purpose": "HashiCorp Terraform registry lookup, plan, validate.",
+      "_disabled_instructions": "Set disabled:true to opt out of this server.",
       "command": "docker",
-      "args": ["run", "-i", "--rm", "hashicorp/terraform-mcp-server"]
+      "args": ["run", "-i", "--rm", "hashicorp/terraform-mcp-server:v0.5.1"]
     },
     "mcp-server-azure-architect": {
       "_purpose": "This repo. ALZ checklist queries by ID + scorecard composition. Read-only.",
-      "_install": "Replace command and args once the runtime ADR lands in docs/adr/runtime.md.",
-      "command": "TBD-pending-runtime-adr",
-      "args": []
+      "_runtime": "Python + FastMCP (ADR-001, approved 2026-04-22).",
+      "_distribution_notes": "End users: uvx mcp-server-azure-architect. Dev users: uv run mcp-server-azure-architect. PyPI publication pending v0 release.",
+      "command": "uvx",
+      "args": ["mcp-server-azure-architect"]
     }
   }
 }
