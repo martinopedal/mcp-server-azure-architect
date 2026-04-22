@@ -1,0 +1,13 @@
+Import profile command:
+python3.12 -X importtime -c "import mcp_server_azure_architect.server"
+
+Summary (Python 3.12.12):
+- mcp package: 1385 ms (99% of total import time)
+  - FastMCP server: 486 ms (35%)
+  - JSON Schema: 114 ms (8%)
+  - uvicorn: 85 ms (6%)
+- azure-identity / azure-mgmt-resourcegraph: 0 ms in startup path due to lazy loading.
+
+Notes:
+- Raw output was captured during local investigation and summarized here after accidental cleanup.
+- Detailed timings and rationale are documented in docs/perf/coldstart-investigation.md.
