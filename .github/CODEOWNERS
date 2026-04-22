@@ -1,1 +1,10 @@
-* @martinopedal
+# CODEOWNERS — code owners who must review PRs touching matching paths.
+# See: https://docs.github.com/repositories/managing-your-repositories-settings-and-features/customizing-your-repository/about-code-owners
+#
+# @copilot is added as a co-owner so the GitHub Copilot coding agent can
+# satisfy the code-owner review requirement on human-authored PRs and unblock
+# auto-merge. GitHub still prevents an author from approving their own PR,
+# so @copilot-authored PRs (the copilot/* branches) continue to require
+# review from a human owner.
+
+* @martinopedal @copilot
