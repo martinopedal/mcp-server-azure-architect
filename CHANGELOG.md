@@ -14,7 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- **Tool docstring style guide** (`docs/dev/tool-docstring-style.md`). Comprehensive pattern extracted from 5 working MCP tools. Covers required structure (summary, description, Args, Returns, Raises, Examples), parameter conventions (optionality, defaults, Literal types), common pitfalls, and test patterns. Google-style docstrings normalized across the project.
+- **Tool docstring style guide** (`docs/dev/tool-docstring-style.md`). Pattern extracted from 5 working MCP tools. Covers required structure (summary, description, Args, Returns, Raises, Examples), parameter conventions (optionality, defaults, Literal types), common pitfalls, and test patterns. Google-style docstrings normalized across the project.
 - Native MCP tool `alz_query_list` for enumerating vendored ALZ checklist queries with optional filters (pillar, source_repo). Returns metadata (checklist_id, pillar, source_repo, citation) for up to 200 queries per call. Pairs with `alz_query_by_id` for discovery-then-fetch workflow. (#51)
 - Cold-start canary test for azure.identity lazy import (regression guard for #67).
 - Cold-start canary test documenting httpx as FastMCP-owned dependency (addresses #68).
@@ -31,7 +31,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Documentation
 
 - `docs/companions/` - Supply chain audit notes for all 7 companion MCP servers in the curated kit
-- `docs/perf/coldstart-investigation.md` - Comprehensive cold-start profiling report with import graph analysis and lazy-import recommendations
+- `docs/perf/coldstart-investigation.md` - Cold-start profiling report with import graph analysis and lazy-import recommendations
 - `docs/perf/lazy-import-results.md` - Before/after measurements and analysis for lazy-import refactors
 - `docs/runbook.md` - Operator runbook for daily operation, authentication, common errors, logging, and maintenance workflows
 - `.squad/identity/now.md` - Cross-session continuity hint with current project focus, recent waves, next priorities, and open issues inventory
