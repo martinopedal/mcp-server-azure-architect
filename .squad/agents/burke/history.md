@@ -69,3 +69,32 @@ Delivered cross-platform kit installer (`scripts/install_kit.py`) that automates
 **Stdlib-only Python scripts age better than scripted installers with dependencies.** Using only Python stdlib (no pip installs needed) means the installer runs anywhere Python 3.11+ is installed, with zero setup. No version conflicts, no `pip install installer-deps` step. For v0.1 tools where we're still learning user needs, stdlib-only reduces friction and maintenance burden.
 
 **Dry-run mode is essential for config-modifying tools.** Architects want to preview changes before committing, especially when merging into existing configs. `--dry-run` flag (prints merged JSON to stdout, touches no files) provides confidence and aids debugging. Standard pattern for infra tools (Terraform plan, Ansible check mode).
+
+## Session 4: Azure MCP Repository Move and Read-Only Flag (Issue #92, PR #108, 2026-05-15)
+
+Fixed live correctness defect: Microsoft archived `Azure/azure-mcp` on 2026-02-06 and consolidated development into `microsoft/mcp/servers/Azure.Mcp.Server`. Updated all docs to reference new canonical location. Added `--read-only` flag by default to `.copilot/mcp-config.json`, plus documented `--mode namespace` and `--namespace` whitelisting knobs for context-cost optimization.
+
+Three files changed: `docs/companions/azure-mcp.md` (new "Recommended Client Flags" section with usage examples), `.copilot/mcp-config.json` (`--read-only` added to azure-mcp args), `docs/adr/0004-companion-server-bar.md` (addendum noting archive date and repository move). PR #108 created on branch `burke/92-azure-mcp-repoint-v2`. Per Lead synthesis 2026-05-15 section 1 (Bug 2.D) and Sage research finding B.2.
+
+## Session 5: AKS-MCP Mutation Hazard Documentation (Issue #101, 2026-05-XX)
+
+Closed issue #101 by documenting the AKS-MCP mutation hazard as a worked example of why Criterion 6 (Read-Only by Design or Config) is essential for companion selection.
+
+**Changes:**
+1. **docs/companions/kubernetes.md**: Added prominent ⚠️ "Hazard: Mutation-Capable Alternatives (AKS-MCP)" section explaining why Azure/aks-mcp is dangerous (arbitrary `call_az`/`call_kubectl` tools, configurable `--access-level` flag), why we deliberately chose the narrower `kubernetes-mcp-server` instead (read-only by design), and detailed mitigation steps if users choose to wire AKS-MCP anyway (explicit `--access-level readonly` flag + per-tool gating in MCP client).
+2. **docs/companions/azure-mcp.md**: Added "Related Companions and Hazards" section with cross-link to the AKS-MCP hazard section, directing readers away from AKS-MCP and explaining our read-only choice.
+3. **docs/adr/0004-companion-server-bar.md**: Added new addendum "Criterion 6 Worked Example: AKS-MCP Mutation Hazard" explaining that AKS-MCP is a real-world example of why read-only-by-default matters when wiring companion servers into AI-driven tools that may invoke tools without explicit confirmation.
+
+**Validation:**
+- Relative markdown links verified (cross-links use correct paths: `kubernetes.md#anchor` from azure-mcp.md, `../companions/kubernetes.md#anchor` from ADR-0004).
+- No Python code blocks in changes (all documentation).
+- Tone: factual, not alarmist. Hazard is real but mitigation is straightforward.
+
+**Acceptance Criteria Met:**
+1. ✅ Located kubernetes/AKS companion doc at `docs/companions/kubernetes.md`.
+2. ✅ Added prominent ⚠️ hazard section near top with specific tool names (`call_az`, `call_kubectl`), ADR-003 citation, and detailed mitigation steps.
+3. ✅ Added smaller note in ADR-0004 as worked example of Criterion 6 importance with cross-link.
+4. ✅ Cross-linked from azure-mcp.md "Related Companions" section.
+5. ✅ Validated markdown links (relative paths verified).
+
+PR created on branch `burke/101-aks-mcp-hazard`.

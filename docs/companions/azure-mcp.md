@@ -105,6 +105,12 @@ If azure-mcp is uninstalled:
 
 **Risk:** High. Core to the kit.
 
+## Related Companions and Hazards
+
+### Azure Kubernetes Service (AKS) Workload Integration
+
+For visibility into Kubernetes workloads running on AKS clusters, this kit includes `kubernetes-mcp-server` (read-only kubectl inspection). If you are evaluating other Kubernetes integration tools, be aware that [Azure/aks-mcp](https://github.com/Azure/aks-mcp) is mutation-capable by default and is **not recommended** for use with this project. See the [⚠️ Hazard section in kubernetes.md](kubernetes.md#-hazard-mutation-capable-alternatives-aks-mcp) for details and why we chose the narrower read-only alternative.
+
 ## References
 
 - [microsoft/mcp Azure MCP Server](https://github.com/microsoft/mcp/tree/main/servers/Azure.Mcp.Server)
