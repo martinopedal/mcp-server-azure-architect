@@ -488,8 +488,9 @@ async def test_scorecard_timeout_after_60s() -> None:
         "mcp_server_azure_architect.scorecard._get_resource_graph_client"
     ) as mock_client_factory:
         mock_client = Mock()
+        mock_client_factory.return_value = mock_client
 
-        # Simulate timeout by raising asyncio.TimeoutError inside wait_for
+        # Simulate timeout by raising TimeoutError inside wait_for
         with patch("mcp_server_azure_architect.scorecard.asyncio.wait_for") as mock_wait_for:
             mock_wait_for.side_effect = TimeoutError()
 
@@ -503,6 +504,4 @@ async def test_scorecard_timeout_after_60s() -> None:
             assert error_msg is not None
             assert "timed out after 60s" in error_msg.lower()
             assert "narrow the scope" in error_msg.lower() or "pagination" in error_msg.lower()
-
-        mock_client_factory.return_value = mock_client
 
