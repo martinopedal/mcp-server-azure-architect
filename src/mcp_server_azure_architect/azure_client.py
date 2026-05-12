@@ -2,13 +2,17 @@
 
 from __future__ import annotations
 
+import logging
 import re
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from azure.identity import DefaultAzureCredential
 
+logger = logging.getLogger(__name__)
+
 _credential: DefaultAzureCredential | None = None
+_authorized_subscriptions: dict[int, set[str]] = {}
 
 
 def get_credential() -> DefaultAzureCredential:
@@ -48,3 +52,73 @@ def token_scrub(text: str) -> str:
     text = re.sub(key_pattern, "[REDACTED_KEY]", text)
 
     return text
+
+
+def scrub_subscription_id(subscription_id: str) -> str:
+    """Redact most of a subscription ID for safe logging.
+
+    Args:
+        subscription_id: Azure subscription ID (GUID format).
+
+    Returns:
+        Redacted subscription ID (e.g., 12345678-****-****-****-************).
+    """
+    if len(subscription_id) < 36:
+        return subscription_id[:8] + "-****-****-****-************"
+    return subscription_id[:8] + "-****-****-****-************"
+
+
+def validate_caller_scope(subscription_id: str, credential: DefaultAzureCredential) -> bool:
+    """Validate that subscription_id is in the caller's authorized scope.
+
+    Queries Azure Resource Manager to enumerate subscriptions accessible by the
+    credential, then checks if the requested subscription_id is in that list.
+    Results are cached per credential instance to avoid repeated ARM calls.
+
+    This defends against confused-deputy attacks where an AI agent is tricked
+    into probing subscriptions outside the caller's scope (Threat S1, issue #57).
+
+    Args:
+        subscription_id: Azure subscription ID to validate.
+        credential: DefaultAzureCredential instance.
+
+    Returns:
+        True if subscription_id is in the caller's scope, False otherwise.
+
+    Raises:
+        Exception: If ARM call to list subscriptions fails.
+    """
+    cred_id = id(credential)
+
+    # Check cache
+    if cred_id not in _authorized_subscriptions:
+        # Lazy import to minimize cold-start overhead
+        from azure.mgmt.subscription import SubscriptionClient
+
+        logger.info("Enumerating authorized subscriptions for scope validation")
+        client = SubscriptionClient(credential=credential)
+
+        try:
+            # List all subscriptions accessible to this credential
+            subs = client.subscriptions.list()
+            sub_ids: set[str] = set()
+            for sub in subs:
+                if sub.subscription_id is not None:
+                    sub_ids.add(sub.subscription_id)
+            _authorized_subscriptions[cred_id] = sub_ids
+            logger.info(f"Cached {len(sub_ids)} authorized subscription(s)")
+        except Exception as e:
+            scrubbed_error = token_scrub(str(e))
+            logger.error(f"Failed to enumerate subscriptions: {scrubbed_error}")
+            raise
+
+    authorized = _authorized_subscriptions[cred_id]
+    is_valid = subscription_id in authorized
+
+    if not is_valid:
+        scrubbed_id = scrub_subscription_id(subscription_id)
+        logger.warning(
+            f"Subscription ID validation failed: {scrubbed_id} is not in caller's scope"
+        )
+
+    return is_valid

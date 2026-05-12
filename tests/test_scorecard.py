@@ -20,6 +20,16 @@ def reset_alz_cache() -> None:
     alz_queries.reset_cache()
 
 
+@pytest.fixture(autouse=True)
+def mock_scope_validation() -> Any:
+    """Mock validate_caller_scope to always return True unless overridden."""
+    with patch(
+        "mcp_server_azure_architect.scorecard.validate_caller_scope"
+    ) as mock_validate:
+        mock_validate.return_value = True
+        yield mock_validate
+
+
 def _mock_arg_response(rows: list[dict[str, Any]]) -> Mock:
     """Build a mock ARG response."""
     mock_response = Mock()
@@ -261,6 +271,34 @@ async def test_scorecard_citation_included() -> None:
         assert result["results"][0]["citation"]
         assert "martinopedal" in result["results"][0]["citation"]
         assert "54f0d8b1-22a3-4c0d-8ce2-58b9e086c93a" in result["results"][0]["citation"]
+
+
+@pytest.mark.asyncio
+async def test_scorecard_rejects_out_of_scope_subscription(
+    mock_scope_validation: Any,
+) -> None:
+    """Scorecard rejects subscription_id not in caller's scope (issue #57)."""
+    mock_scope_validation.return_value = False
+
+    with pytest.raises(PermissionError) as excinfo:
+        await run_scorecard(subscription_id="out-of-scope-sub")
+
+    assert "not in your scope" in str(excinfo.value).lower()
+
+
+@pytest.mark.asyncio
+async def test_scorecard_accepts_in_scope_subscription() -> None:
+    """Scorecard accepts subscription_id in caller's scope."""
+    with patch(
+        "mcp_server_azure_architect.scorecard._get_resource_graph_client"
+    ) as mock_client_factory:
+        mock_client = Mock()
+        mock_client.resources = Mock(return_value=_mock_arg_response([]))
+        mock_client_factory.return_value = mock_client
+
+        result = await run_scorecard(subscription_id="in-scope-sub")
+
+        assert result["subscription_id"] == "in-scope-sub"
 
 
 def test_scorecard_no_azure_sdk_at_module_import() -> None:

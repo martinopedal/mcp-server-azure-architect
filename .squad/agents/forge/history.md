@@ -410,3 +410,36 @@ Filed `.squad/decisions/inbox/forge-docstring-style-guide.md` documenting:
 - **Workflow path filters can block required checks.** If a required check has a path filter and those paths are not touched in a PR, the check never reports, and the PR is blocked despite passing all checks it ran. The simplest correct fix is to drop the path filter entirely (checks are usually fast enough to run unconditionally).
 - **Pattern extraction from working examples.** Instead of inventing a style guide from scratch, extracting from 5 real, shipped examples ensures the guide is grounded in reality and builds on what is already working. This also provides confidence that the pattern is feasible and tested.
 
+
+---
+
+## 2026-01-12: Subscription Scope Validator (Issue #57, PR #78)
+
+**Context:** Implemented confused-deputy defense for subscription_id parameters (Threat S1).
+
+**Implementation choices:**
+
+1. **Caching strategy:** Used module-level dict[int, set[str]] keyed on id(credential) for subscription list caching. Considered functools.lru_cache but couldn't key on credential instance directly. The dict approach gives explicit control and works well with lazy imports.
+
+2. **Mypy comprehension issue:** Set comprehensions with type guards need explicit type annotation or explicit loop. Changed from {sub.subscription_id for sub in subs if sub.subscription_id is not None} to explicit loop with if sub.subscription_id is not None: sub_ids.add(...) to satisfy mypy's type narrowing.
+
+3. **Test mocking path:** Mock path must target the imported module (e.g., azure.mgmt.subscription.SubscriptionClient) not the importing module (azure_client.SubscriptionClient), since the import happens inside the function at runtime (lazy import pattern).
+
+4. **Test fixture pattern:** Used autouse fixture mock_scope_validation() in test_scorecard.py to mock validate_caller_scope globally, then override in specific tests with mock_scope_validation.return_value = False. Clean pattern for retrofitting existing tests.
+
+5. **Pre-existing test failures:** mcp_smoke.py fails on Python 3.14 due to upstream MCP SDK issue (TaskGroup exception). Not related to changes. All 115 pytest tests pass.
+
+**Learnings:**
+
+- **Lazy imports and testing:** When mocking lazily-imported modules, patch the original module path, not the importer. The import statement executes inside the function boundary.
+- **Per-credential caching:** id(credential) is stable within a session and allows caching keyed on credential identity without requiring the credential to be hashable.
+- **GUID redaction pattern:** subscription_id[:8] + "-****-****-****-************" shows first segment for debugging while redacting the rest.
+
+**Validation gates:**
+- ruff check . - All checks passed
+- mypy src/mcp_server_azure_architect - No issues found
+- pytest - 115 passed, 1 skipped
+- scripts/check_readonly.py - No violations
+- mcp_smoke.py - Pre-existing Python 3.14 incompatibility (not related to changes)
+
+**Outcome:** PR #78 opened, all validation gates passed except pre-existing mcp_smoke.py Python 3.14 issue.
