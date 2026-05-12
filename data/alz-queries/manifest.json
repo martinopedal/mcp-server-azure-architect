@@ -14,7 +14,11 @@
         "files": [
           "data/alz-queries/checklist/54f0d8b1-22a3-4c0d-8ce2-58b9e086c93a.kql",
           "data/alz-queries/checklist/348ef254-c27d-442e-abba-c7571559ab91.kql"
-        ]
+        ],
+        "sha256": {
+          "data/alz-queries/checklist/54f0d8b1-22a3-4c0d-8ce2-58b9e086c93a.kql": "35c9f61e21f4aa19a7497ba293abc83fc713025e9147609320c259e68e5cc61f",
+          "data/alz-queries/checklist/348ef254-c27d-442e-abba-c7571559ab91.kql": "93476d96090080a5fc32c450afaffc8540990a9f6a4a8d00bceac93cc273703b"
+        }
       },
       "file_count": 2
     },
@@ -32,7 +36,11 @@
         "files": [
           "data/alz-queries/graph/e8aa1e41-870d-4968-94c6-77be14f510ac.kql",
           "data/alz-queries/graph/667313b4-f566-44b5-b984-a859c773e7d2.kql"
-        ]
+        ],
+        "sha256": {
+          "data/alz-queries/graph/e8aa1e41-870d-4968-94c6-77be14f510ac.kql": "8d75212f8e502761eababeee4914f5fc6eeb4321b4dfc3fd95c90a13b4994a02",
+          "data/alz-queries/graph/667313b4-f566-44b5-b984-a859c773e7d2.kql": "85fb49e2a26f0d8b64673a41b57de4955d4d6c16b5cb066c1570f78bae750497"
+        }
       },
       "file_count": 2
     }

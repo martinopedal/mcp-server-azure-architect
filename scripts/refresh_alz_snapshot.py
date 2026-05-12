@@ -9,6 +9,7 @@ Usage:
 """
 
 import argparse
+import hashlib
 import json
 import subprocess
 import sys
@@ -38,6 +39,15 @@ def run_git(args: list[str], cwd: str | Path) -> str:
         check=True,
     )
     return result.stdout.strip()
+
+
+def compute_sha256(file_path: Path) -> str:
+    """Compute SHA-256 hash of file contents."""
+    sha256 = hashlib.sha256()
+    with open(file_path, "rb") as f:
+        for chunk in iter(lambda: f.read(8192), b""):
+            sha256.update(chunk)
+    return sha256.hexdigest()
 
 
 def get_upstream_commit(repo: str) -> str:
@@ -290,9 +300,22 @@ def refresh_snapshot(dry_run: bool = False) -> bool:
     if changes_detected and not dry_run:
         # Save updated manifest
         manifest["sources"] = new_sources
+
+        # Regenerate SHA-256 hashes for all query files
+        print("Regenerating SHA-256 hashes...")
+        for source in new_sources:
+            if "sha256" not in source["subset"]:
+                source["subset"]["sha256"] = {}
+
+            for file_path_str in source["subset"]["files"]:
+                file_path = repo_root / file_path_str
+                if file_path.exists():
+                    sha256_hash = compute_sha256(file_path)
+                    source["subset"]["sha256"][file_path_str] = sha256_hash
+
         save_manifest(manifest, manifest_path)
         generate_manifest_md(manifest, manifest_md_path)
-        print("\nManifests updated.")
+        print("\nManifests updated with SHA-256 hashes.")
 
     if dry_run and changes_detected:
         print("\n[DRY RUN] Changes detected but not applied.")

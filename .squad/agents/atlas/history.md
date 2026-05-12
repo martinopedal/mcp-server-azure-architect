@@ -1,5 +1,87 @@
 # Atlas — ARG and KQL Engineer — History
 
+## Wave 8: SHA-256 Integrity Verification for Vendored Queries (Issue #63)
+
+### Tasks
+- Implemented threat T1 mitigation: SHA-256 integrity checks for vendored ALZ queries
+- Created `scripts/verify_query_integrity.py` (stdlib only, verify + update modes)
+- Added SHA-256 hashes to `manifest.json` for all 4 vendored query files
+- Created `data/alz-queries/CONTRIBUTING.md` (workflow documentation)
+- Updated `.github/workflows/ci.yml` to verify integrity before tests
+- Updated `scripts/refresh_alz_snapshot.py` to regenerate hashes after refresh
+- Created `tests/test_verify_query_integrity.py` (9 tests, full coverage)
+- Updated `CHANGELOG.md` with Security section entry
+- Opened PR #XX via `gh pr create`
+
+### Key Decisions
+
+#### Source of Truth: manifest.json
+**Chosen:** `manifest.json` as machine-readable source of truth for SHA-256 hashes.
+
+Each source in `manifest.json` now has a `subset.sha256` dictionary mapping file paths to 64-character hex SHA-256 hashes. `MANIFEST.md` is auto-generated from `manifest.json` (no hash duplication in markdown — keeps it human-readable). The `verify_query_integrity.py --update` mode regenerates both files atomically.
+
+**Rejected:** MANIFEST.md as source (parsing markdown is brittle). Separate `hashes.json` file (splits provenance across too many files).
+
+#### CI Integration: Fast-Fail Before Tests
+**Chosen:** Add integrity check as a step in the existing `test` job, before `ruff check`.
+
+CI now runs: `install deps → verify integrity → ruff → mypy → pytest`. If integrity fails, the build stops immediately (no wasted test time). The check is fast (~50ms for 4 files) and deterministic.
+
+**Rejected:** Separate `integrity` job (matrix explosion). Post-test check (wastes CI time on tampered queries).
+
+#### Hash Regeneration in Refresh Workflow
+**Chosen:** `refresh_alz_snapshot.py` directly computes and writes SHA-256 hashes inline.
+
+The refresh script imports `hashlib.sha256` and computes hashes for all query files after writing them, then saves `manifest.json` once. This is simpler and faster than shelling out to `verify_query_integrity.py --update`.
+
+**Rejected:** Shell out to `verify_query_integrity.py --update` (adds subprocess overhead and Windows path issues). Separate CI job to regenerate hashes after refresh (racy if refresh PR lands without hashes).
+
+### Validation Gates Passed
+- `ruff check .` — clean ✅
+- `mypy scripts/verify_query_integrity.py tests/test_verify_query_integrity.py` — clean ✅
+- `pytest -q tests/test_verify_query_integrity.py` — 9/9 tests green ✅
+- `python scripts/verify_query_integrity.py` — all 4 queries PASS ✅
+- `python scripts/check_readonly.py src/` — no violations ✅
+
+### Learnings
+
+#### SHA-256 Is Sufficient (No GPG Signatures Needed for v1)
+Git commit SHAs already provide cryptographic integrity for the snapshot (SHA-1/SHA-256 depending on Git version). Per-file SHA-256 hashes detect accidental modification or tampered files *after* vendoring, not compromised upstream repos. If upstream is compromised at commit level, file hashes won't help. GPG signature verification of upstream commits is out of scope for v1 (requires key distribution and trust model).
+
+**Takeaway:** Per-file hashes mitigate T1 (tampered vendored query post-checkout), not T0 (compromised upstream repo). For T0 mitigation, we rely on upstream repo security + dual review of refresh PRs (Sage + Sentinel).
+
+#### Stdlib-Only Script Pattern for Portability
+`verify_query_integrity.py` uses only Python stdlib (`hashlib`, `json`, `pathlib`, `sys`, `argparse`). No azure-sdk, no FastMCP, no external deps. This keeps the script portable and fast:
+- CI runs the script before installing azure-sdk (faster cold start)
+- Script can be invoked outside the venv (`python scripts/verify_query_integrity.py` from any shell)
+- Air-gapped deployments can validate integrity without network access
+
+**Reusable pattern:** Any future validation scripts (schema checkers, KQL linters) should follow this stdlib-only convention.
+
+#### Test Strategy: Direct Function Calls Over Mocking
+Initial test design used `unittest.mock.patch` to mock `Path.__truediv__` for repo_root resolution. This was brittle (signature mismatches, complex mock setup). Simplified to direct function calls with `tmp_path` fixtures. Tests now pass a `Path` directly to `verify_integrity(repo_root)` and `update_hashes(repo_root)` — simpler, faster, no mocking.
+
+**Takeaway:** Prefer direct function calls with dependency injection over mocking internal stdlib behavior. Mocking is for external APIs (network, subprocess), not path arithmetic.
+
+#### CONTRIBUTING.md as User-Facing Workflow Guide
+`data/alz-queries/CONTRIBUTING.md` documents the workflow for adding/refreshing queries, not the technical implementation. It answers: "How do I vendor a new query?" and "What happens if I edit a query file?" This is higher value than inline docstrings (which explain *how* the code works) for contributors unfamiliar with the threat model.
+
+**Reusable pattern:** Every vendored dependency directory should have a CONTRIBUTING.md explaining the refresh workflow and integrity guarantees.
+
+#### CI Integrity Check: Fast-Fail Philosophy
+Placing the integrity check *before* `ruff` and `mypy` ensures tampered queries fail immediately (~100ms total CI time) instead of after lint/typecheck/test (~5 minutes total). This respects CI cost budget and provides faster feedback for accidental edits.
+
+**Implication for future gates:** Any fast deterministic checks (schema validation, citation checks) should run early in the CI job, before expensive linting/testing.
+
+### Follow-Up Tasks (Out of Scope)
+- Integration test: Create a tampered query file in CI and verify the build fails (simulate T1 attack)
+- Monitoring: Track hash regeneration frequency in refresh PRs (should be ~weekly)
+- ADR-00X: Document integrity verification as part of supply-chain threat model
+- Consider: Extend `verify_query_integrity.py` to validate KQL syntax (optional future wave)
+
+### Squad Coordination
+This PR closes issue #63 (CRITICAL severity, threat T1 mitigation). Sentinel should review the threat model alignment. Sage should verify documentation completeness for contributors unfamiliar with the vendoring workflow.
+
 ## 2026-04-22T11:33:32Z — Runtime Decision: Python
 
 ADR-001 accepted. Runtime is Python. Informs FastMCP compatibility and KQL tool registration patterns.

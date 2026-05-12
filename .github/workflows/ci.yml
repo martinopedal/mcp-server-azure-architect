@@ -32,6 +32,9 @@ jobs:
       - name: Install dependencies
         run: uv pip install --system -e ".[dev]"
       
+      - name: Verify ALZ query integrity
+        run: python scripts/verify_query_integrity.py
+      
       - name: Run ruff check
         run: ruff check .
       
