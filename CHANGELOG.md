@@ -7,20 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Changed
-- ADR-001 revised baseline expectations: measured cold start is 8.5-9.0 seconds on Python 3.12-3.14 (dominated by irreducible FastMCP framework overhead). See `docs/perf/coldstart-investigation.md` for detailed analysis.
-
 ### Added
 
-#### MCP Tools
+- **Tool docstring style guide** (`docs/dev/tool-docstring-style.md`). Comprehensive pattern extracted from 5 working MCP tools. Covers required structure (summary, description, Args, Returns, Raises, Examples), parameter conventions (optionality, defaults, Literal types), common pitfalls, and test patterns. Google-style docstrings normalized across the project.
 - Native MCP tool `alz_query_list` for enumerating vendored ALZ checklist queries with optional filters (pillar, source_repo). Returns metadata (checklist_id, pillar, source_repo, citation) for up to 200 queries per call. Pairs with `alz_query_by_id` for discovery-then-fetch workflow. (#51)
 
-#### Documentation
+### Changed
+
+- ADR-001 revised baseline expectations: measured cold start is 8.5-9.0 seconds on Python 3.12-3.14 (dominated by irreducible FastMCP framework overhead). See `docs/perf/coldstart-investigation.md` for detailed analysis.
+
+### Fixed
+
+- **Readonly-check workflow now runs on all PRs.** Removed `paths:` filter from `.github/workflows/readonly-check.yml` to fix doc-only PR blocking issue. The workflow always runs on every PR + push; it is a fast check (~30s) and correctly reports "no violations" for doc-only changes. This unblocks doc-only PRs while preserving the read-only enforcement gate as a required status check.
+
+### Documentation
+
 - `docs/companions/` - Supply chain audit notes for all 7 companion MCP servers in the curated kit
 - `docs/perf/coldstart-investigation.md` - Comprehensive cold-start profiling report with import graph analysis and lazy-import recommendations
 - `docs/perf/importtime-baseline-3.14.log` - Raw Python importtime trace (first 200 lines)
 
-#### Automation
+### Automation
+
 - **ALZ snapshot refresh automation:** Weekly scheduled GitHub Actions workflow to detect upstream drift in `martinopedal/alz-checklist-queries` and `martinopedal/alz-graph-queries`, automatically opening PRs with updated manifests when changes detected. See `.github/workflows/refresh-alz-snapshot.yml` and `scripts/refresh_alz_snapshot.py`.
 
 ## [0.1.0] - 2026-05-15
