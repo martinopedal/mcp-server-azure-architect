@@ -265,6 +265,33 @@ Shipped the alz_scorecard MCP tool: runs vendored ALZ queries against Azure Reso
 - **asyncio.to_thread for sync SDK in async context.** ResourceGraphClient.resources() is synchronous. Wrap in asyncio.to_thread(_blocking_call) to enable concurrent gather without blocking the event loop. This pattern enables async tool signatures in FastMCP while composing with sync Azure SDK clients.
 - **Composition > duplication.** Scorecard reuses get_query() and list_query_ids() from alz_queries.py (PR #45). No duplication. Single source of truth for query text and metadata.
 
+## 2026-05-12T16:00:00Z - PR #TBD: alz_query_list native tool (closes #51)
+
+Shipped `alz_query_list` MCP tool for catalog discovery. Enumerates vendored ALZ checklist queries with optional pillar/source_repo filters. Returns metadata (checklist_id, pillar, source_repo, citation) for up to 200 queries per call.
+
+**PR:** #TBD feat(server): add alz_query_list native tool  
+**Closes:** #51  
+**Validation:** pytest 90/90 (+11 tests, net +26 after rebase), ruff clean, mypy strict clean, read-only AST gate clean, mcp_smoke.py 6 tools.
+
+### Learnings
+
+- **Discovery-then-fetch pattern for large catalogs.** `alz_query_list` returns lightweight metadata (no KQL text), `alz_query_by_id` fetches the full query. This two-stage pattern keeps list responses fast and enables client-side filtering/search before fetching expensive payloads.
+- **Default limit at 200 items.** Balances typical catalog size (production snapshots will have 50-200 queries) against response size constraints. Alphabetical slicing ensures deterministic truncation when limit is exceeded.
+- **Title field placeholder.** Included `"title": ""` in item schema even though current metadata doesn't populate it. Future-proofs for upstream manifest changes without breaking schema compatibility. 8 bytes per item overhead is acceptable.
+- **Composite manifest_commit format.** Semicolon-separated `repo@short_sha` list captures multi-source reality (alz-checklist-queries + alz-graph-queries). Human-readable, grep-friendly, no JSON nesting overhead.
+- **Pillar values auto-discovered.** Derived from directory structure (kql_path.parent.name). New pillars in upstream repos appear automatically, no code changes needed. Current: "checklist", "graph".
+- **Rebase after week gap expanded test count.** Worktree created on 0aed417 (wave 5), origin/main moved to 998afad (wave 5 + ADR-003 readonly gate + 25 new tests). Post-rebase: 90 tests total, net +26 from my baseline. My 11 new tests brought it to 75, rebase added 15 more from concurrent PRs.
+- **Cold-start delta: 0ms.** `list_queries()` composes existing `_get_index()` loader. No new top-level imports, no file I/O at import time. Measured <1ms parse overhead.
+
+### Design Choices
+
+1. **Limit default = 200:** Production catalogs will have 50-200 queries. 200 covers typical use without unbounded responses.
+2. **Sort key = checklist_id:** Alphabetical UUIDs are deterministic and reproducible. Avoids temporal coupling (vendored_at) or nested sorts (pillar-then-id).
+3. **Citation format:** Matches get_query() output for consistency. Includes repo, commit, source_file, and checklist_id.
+4. **Empty title field:** Placeholder for future upstream metadata. Schema stability > response size.
+
+Documented in `.squad/decisions/inbox/forge-alz-query-list.md`.
+
 ## 2026-05-12T15:00:00Z - PR #TBD: MCP Inspector smoke test in CI (closes #19)
 
 Shipped `scripts/mcp_smoke.py` and `inspector-smoke` CI job to catch tool registration regressions, JSON Schema validity failures, and basic protocol breakage.
