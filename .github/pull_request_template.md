@@ -24,6 +24,7 @@ Before opening this PR, confirm:
 - [ ] `python -m mypy src tests scripts` is clean
 - [ ] `python scripts/check_readonly.py src/mcp_server_azure_architect/` is clean (if `src/` was modified)
 - [ ] `python scripts/mcp_smoke.py` passes (if tools changed)
+- [ ] New query tools have sensitive-data warning in docstring (Threat I2)
 - [ ] CHANGELOG.md updated under `[Unreleased]`
 
 ## ADR or design notes

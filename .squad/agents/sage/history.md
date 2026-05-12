@@ -15,6 +15,93 @@ Sage is the research and documentation specialist for the project. Primary respo
 
 ## Sage: Session History
 
+## 2026-05-16 - Security Bundle Wave 8: Deployment + Usage Guides (Issues #59, #60)
+
+**Deliverables:**
+1. `docs/install/deployment-guide.md` (251 lines) - Deployment hardening and compliance guide covering audit logging setup (Linux append-only, Windows Event Log, cloud forwarding), 90+ day retention policy with logrotate examples, and security best practices (non-privileged users, restricted permissions, network isolation, credential management)
+2. `docs/install/usage-guide.md` (262 lines) - End-user guide for safe query tool usage covering sensitive data classification, scope guidance (resource group > subscription), result handling best practices, and organizational policy template
+3. `server.py` docstring updates - Added sensitive-data warnings to `alz_scorecard`, `alz_query_by_id`, and `alz_query_list` following tool-docstring-style.md pattern
+4. `.github/pull_request_template.md` - Added "New query tools have sensitive-data warning in docstring" to validation gates checklist
+5. `CHANGELOG.md` - Added entries under Documentation and new Security section
+6. `.squad/agents/sage/history.md` - This entry
+
+### Task Executed
+
+Bundle two security-focused issues (#59 and #60) targeting governance and risk management for deployed MCP server. #59 addresses Threat R2 (log tampering in audit logs); #60 addresses Threat I2 (sensitive data exposure in query results). Both are pure documentation work suitable for concurrent delivery.
+
+### Threat R2: Log Tampering Mitigation
+
+`docs/install/deployment-guide.md` covers:
+- Linux: `chattr +a` for append-only audit logs with `lsattr` verification
+- Windows: Windows Event Log forwarding via `wecutil` and group policy (`gpedit.msc`)
+- Cloud: Azure Monitor Logs (Log Analytics workspace integration) and syslog forwarding (rsyslog config example with `@@syslog-collector` pattern)
+- Rationale for cloud audit logs in production: tamper-proof, externally managed, meets compliance audit trail requirements
+
+### Log Retention Policy
+
+90+ days minimum sourced from SOC 2, ISO 27001, HIPAA, and GDPR compliance requirements. Included `logrotate` configuration example for self-hosted rotation + compression. Archive-to-cloud pattern for long-term retention (7 years via lifecycle policies).
+
+### Security Best Practices Section
+
+Four sub-sections:
+1. Non-privileged user: `useradd -r` example for Linux, Windows service account notes
+2. File permissions: `chmod 700` for `~/.mcp-server-azure-architect/`, `chmod 600` for files, Windows NTFS ACL verification
+3. Network isolation: Explicit egress whitelist (ARM, optional Graph, log collectors) and blocked destinations
+4. Credential management: Comparison of Managed Identity > Workload Identity > az cli > environment variables; anti-pattern of embedding credentials
+
+### Threat I2: Sensitive Data Warnings
+
+`docs/install/usage-guide.md` target audience: end-users (architects, infrastructure engineers) invoking tools via MCP clients.
+
+Four core sections:
+1. Sensitive Data Classification - Examples: connection strings, resource tags (e.g., env=prod, cost-center), private IPs, managed identity object IDs, diagnostic settings, role assignments
+2. Scope Guidance - Prefer resource_group over subscription; one subscription per call; understand audience before running queries
+3. Result Handling - Local processing only, redaction before sharing, archive with RBAC if retention required
+4. Organizational Policy Template - Stakeholder-editable template covering classification, permitted uses, prohibited uses, handling requirements, audit trail, contact point
+
+### Docstring Pattern
+
+Added consistent "Note:" paragraph to `alz_scorecard`, `alz_query_by_id`, and `alz_query_list`:
+```
+Note: Results may contain sensitive data (resource tags with secrets, connection
+strings in configurations, private IPs). Treat results as sensitive. Do not log,
+share, or persist results without review per your organization's data handling
+policy.
+```
+
+Skipped `pricing_lookup_sku`, `pricing_compare_skus` (public pricing data), and `health_check` (no data returned).
+
+### PR Template Update
+
+Added validation gate: `- [ ] New query tools have sensitive-data warning in docstring (Threat I2)` to `.github/pull_request_template.md` to prevent future tool additions from bypassing the warning pattern.
+
+### Validation
+
+1. Line counts: deployment-guide.md (251 lines, matching target ~120 + audit section), usage-guide.md (262 lines, matching target ~150-200), both under 300 lines
+2. No em dashes: all three new/updated files scanned
+3. Cross-links: All internal links verified (docs/runbook.md, docs/threat-model.md reference as "if available")
+4. Tool docstring style: Followed Google-style format from docs/dev/tool-docstring-style.md; "Note:" section appended after Raises per document conventions
+5. CHANGELOG entries: Added under [Unreleased] Documentation (two entries) and new Security section
+6. No new Azure SDK calls: All files are documentation only
+
+### Design Decisions
+
+**Scope of deployment-guide.md:** Included Forge's "Audit Logging Configuration" section placeholder (to be filled by Forge's logging PR #58/#61); our work adds "Log Tampering Mitigation", "Log Retention", and "Security Best Practices" sections. File will merge cleanly via standard changelog conflict resolution.
+
+**Scope of usage-guide.md:** Deliberately different from runbook.md (operator-focused, procedural) and threat-model.md (risk-focused). Usage-guide targets end-users and includes organizational policy template (blank, to be filled by customers). No duplication of runbook.md authentication section.
+
+**Docstring warning placement:** Appended after "Raises:" to follow Google-style conventions. "Note:" section is metadata/guidance, not part of the formal Args/Returns/Raises specification.
+
+**PR checklist item:** Phrased as "New query tools have sensitive-data warning..." to apply to future tools, not just these three. Makes the pattern explicit for code reviewers and future maintainers.
+
+### References
+
+- [.github/copilot-instructions.md](../../.github/copilot-instructions.md) - No em dashes, read-only enforcement
+- [AGENTS.md](../../AGENTS.md) - Validation gates, scope boundaries
+- [docs/dev/tool-docstring-style.md](../../docs/dev/tool-docstring-style.md) - Google-style format and "Note:" examples
+- [docs/runbook.md](../../docs/runbook.md) - Operator-focused counterpart (no duplication)
+- [docs/install/](../../docs/install/) - Companion installer docs directory
+
 ## 2026-05-16 - Polish Wave 7: Runbook + Identity Hint + README 6-Tool Update
 
 **Deliverables:**
