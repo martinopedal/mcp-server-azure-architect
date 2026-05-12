@@ -129,7 +129,7 @@ def test_audit_log_tool_with_redaction() -> None:
             logged_messages.append(msg)
 
         # Use type ignore for method assignment in test
-        logger_instance.info = capture_info  # type: ignore[method-assign]
+        logger_instance.info = capture_info  # type: ignore[assignment]
 
         result = tool_with_sensitive_params(
             subscription_id="aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee",
