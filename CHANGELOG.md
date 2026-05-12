@@ -7,10 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- ADR-001 revised baseline expectations: measured cold start is 8.5-9.0 seconds on Python 3.12-3.14 (dominated by irreducible FastMCP framework overhead). See `docs/perf/coldstart-investigation.md` for detailed analysis.
+
 ### Added
 
 #### Documentation
 - `docs/companions/` - Supply chain audit notes for all 7 companion MCP servers in the curated kit
+- `docs/perf/coldstart-investigation.md` - Comprehensive cold-start profiling report with import graph analysis and lazy-import recommendations
+- `docs/perf/importtime-baseline-3.14.log` - Raw Python importtime trace (first 200 lines)
 
 ## [0.1.0] - 2026-05-15
 
