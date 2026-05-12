@@ -2,7 +2,7 @@
 
 ## Project
 
-MCP server and Copilot CLI skills bundle for Azure architects. Native tools fill the gap above `azure-mcp` (named ALZ queries, scorecard, quota planner, Advisor surfacing). Skills orchestrate the kit. Curated `mcp-config.json` wires companion servers.
+MCP server and Copilot CLI skills bundle for Azure architects. Native tools fill the gap above `azure-mcp` with named ALZ checklist queries and ALZ Corp scorecard composition (pricing retail SKU lookups). Quota planning and Advisor surfacing are covered by `microsoft/mcp` namespaces per ADR-004. Architect-specific Copilot skills orchestrate the kit. Curated `mcp-config.json` wires read-only companion servers.
 
 ## Style
 
