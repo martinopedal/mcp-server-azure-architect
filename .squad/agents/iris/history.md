@@ -19,3 +19,10 @@ Authored the first Copilot CLI extension for the project: `alz-gap-check`. This 
 2. Removed guessed Microsoft Learn URLs. v1 will add remediation via `microsoft-learn-mcp` search.
 3. Added terminology section to catalog.md explaining "skill" vs "extension".
 4. Verified decision record exists locally at `.squad/decisions/inbox/iris-skill-catalog-v0.md` (gitignored inbox, Scribe merges post-PR).
+## 2026-04-22T11:33:32Z — Runtime Decision: Python
+
+ADR-001 accepted. Runtime is Python. Informs skill orchestration and MCP composition patterns.
+
+## 2026-04-22T11:45:02Z — Runtime Scaffold Complete
+
+Forge completed Python + FastMCP scaffold. All CI gates pass (ruff, mypy, pytest). Lead approved; cold-start follow-up investigation open (assigned Sage). You can now begin authoring Copilot skills that orchestrate the toolkit.
