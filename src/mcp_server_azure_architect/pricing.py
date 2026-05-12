@@ -23,7 +23,10 @@ not under our control.
 from __future__ import annotations
 
 import time
+from decimal import Decimal
 from typing import TYPE_CHECKING, Any, Literal
+
+from pydantic import BaseModel, Field
 
 if TYPE_CHECKING:
     import httpx
@@ -41,6 +44,61 @@ _MAX_PAGES = 5
 
 # Soft cap on number of SKUs that pricing_compare_skus accepts in one call.
 _COMPARE_MAX_SKUS = 10
+
+
+class VmGroup(BaseModel):
+    """VM sizing group for workload estimation."""
+
+    sku: str = Field(..., description="ARM SKU name (e.g., 'Standard_D2s_v5')")
+    count: int = Field(..., ge=1, description="Number of VMs of this SKU")
+    hours_per_month: float = Field(
+        730.0, ge=0, le=744, description="Hours per month (default: 730)"
+    )
+
+
+class StorageItem(BaseModel):
+    """Storage sizing for workload estimation."""
+
+    sku: str = Field(..., description="Storage SKU or meter name")
+    capacity_gb: float = Field(..., ge=0, description="Storage capacity in GB")
+    region_override: str | None = Field(None, description="Override region for this storage item")
+
+
+class WorkloadSpec(BaseModel):
+    """Structured workload sizing specification for cost estimation."""
+
+    region: str = Field(..., description="Primary ARM region (e.g., 'westeurope')")
+    vms: list[VmGroup] = Field(default_factory=list, description="VM groups to estimate")
+    storage: list[StorageItem] = Field(
+        default_factory=list, description="Storage items to estimate"
+    )
+    currency: str = Field("USD", description="ISO currency code")
+
+
+class LineItem(BaseModel):
+    """Individual line item in a cost estimate."""
+
+    sku: str
+    region: str
+    quantity: float
+    unit_price: Decimal
+    unit_of_measure: str
+    monthly_cost: Decimal
+    source_meter_id: str | None = None
+
+
+class CostEstimate(BaseModel):
+    """Workload cost estimate result."""
+
+    total_monthly: Decimal = Field(..., description="Total monthly cost")
+    currency: str = Field(..., description="Currency code")
+    line_items: list[LineItem] = Field(..., description="Itemized cost breakdown")
+    assumptions: list[str] = Field(
+        default_factory=list, description="Assumptions made during estimation"
+    )
+    warnings: list[str] = Field(
+        default_factory=list, description="Warnings about missing or ambiguous data"
+    )
 
 
 def _get_client() -> httpx.Client:
@@ -79,9 +137,7 @@ def _normalize_term(term: str) -> tuple[str, str | None]:
         return "Reservation", "1 Year"
     if t in ("3yr", "3y", "3year", "3 years", "3 year"):
         return "Reservation", "3 Years"
-    raise ValueError(
-        f"Unknown term '{term}'. Expected one of: 'ondemand', '1yr', '3yr'."
-    )
+    raise ValueError(f"Unknown term '{term}'. Expected one of: 'ondemand', '1yr', '3yr'.")
 
 
 def _build_filter(sku: str, region: str, term: str) -> str:
@@ -96,9 +152,7 @@ def _build_filter(sku: str, region: str, term: str) -> str:
     region_esc = _escape_odata_value(region)
     price_type, reservation_term = _normalize_term(term)
 
-    sku_clause = (
-        f"(armSkuName eq '{sku_esc}' or skuName eq '{sku_esc}')"
-    )
+    sku_clause = f"(armSkuName eq '{sku_esc}' or skuName eq '{sku_esc}')"
     parts = [
         sku_clause,
         f"armRegionName eq '{region_esc}'",
@@ -358,6 +412,158 @@ def pricing_compare_skus(
             "consult unit_of_measure. Retail prices only (no EA/CSP)."
         ),
     }
+
+
+def pricing_estimate_workload(spec: WorkloadSpec) -> dict[str, Any]:
+    """Estimate monthly cost for a structured workload specification.
+
+    Composes pricing_lookup_sku results into a multi-line cost estimate. Designed
+    for sizing trade-off analysis and to feed the alz_scorecard cost guardrail.
+    Handles VM count, region, hours/month, and storage capacity.
+
+    Args:
+        spec: WorkloadSpec with region, vms (list of VmGroup), storage (list of
+            StorageItem), and currency. VmGroups specify sku, count, and
+            hours_per_month. StorageItems specify sku, capacity_gb, and optional
+            region_override.
+
+    Returns:
+        Dict representation of CostEstimate with total_monthly (Decimal),
+        currency, line_items (list of LineItem dicts), assumptions (list of str),
+        and warnings (list of str). Empty line_items is valid if no SKUs are
+        found. Warnings report any SKU not found or hourly conversion ambiguous.
+
+    Caveats:
+        - Retail prices only. EA, CSP, and private rate cards are not exposed.
+        - USD default. Pass ``spec.currency`` for other ISO codes supported by
+          the API.
+        - No real-time freshness SLA from Microsoft. Results are cached for 24h.
+        - Storage cost model is simplified: assumes meter is capacity-based and
+          converts to monthly via capacity_gb. Consult unit_of_measure for actual
+          metering.
+        - If a SKU lookup returns zero items, a warning is recorded and that item
+          is omitted from the estimate (does not raise).
+
+    Reference:
+        https://learn.microsoft.com/rest/api/cost-management/retail-prices/azure-retail-prices
+    """
+    line_items: list[LineItem] = []
+    assumptions: list[str] = []
+    warnings: list[str] = []
+    total = Decimal("0")
+
+    if spec.vms:
+        assumptions.append("VM costs use hourly pricing multiplied by hours_per_month per group.")
+
+    for vm_group in spec.vms:
+        result = pricing_lookup_sku(
+            sku=vm_group.sku,
+            region=spec.region,
+            term="ondemand",
+            currency=spec.currency,
+        )
+        items = result["items"]
+        if not items:
+            warnings.append(f"VM SKU '{vm_group.sku}' not found in region '{spec.region}'.")
+            continue
+
+        vm_cheapest: dict[str, Any] | None = None
+        for item in items:
+            price = item.get("unit_price")
+            if price is None:
+                continue
+            if vm_cheapest is None or float(price) < float(vm_cheapest["unit_price"]):
+                vm_cheapest = item
+
+        if vm_cheapest is None:
+            warnings.append(f"VM SKU '{vm_group.sku}' has no valid unit_price in API response.")
+            continue
+
+        hourly = _hourly_from_unit(vm_cheapest["unit_price"], vm_cheapest.get("unit_of_measure"))
+        if hourly is None:
+            warnings.append(
+                f"VM SKU '{vm_group.sku}' meter is not hourly "
+                f"(unit_of_measure: {vm_cheapest.get('unit_of_measure')}). Skipping."
+            )
+            continue
+
+        monthly_per_vm = Decimal(str(hourly)) * Decimal(str(vm_group.hours_per_month))
+        monthly_total = monthly_per_vm * vm_group.count
+        total += monthly_total
+
+        line_items.append(
+            LineItem(
+                sku=vm_group.sku,
+                region=spec.region,
+                quantity=float(vm_group.count * vm_group.hours_per_month),
+                unit_price=Decimal(str(vm_cheapest["unit_price"])),
+                unit_of_measure=vm_cheapest.get("unit_of_measure") or "unknown",
+                monthly_cost=monthly_total,
+                source_meter_id=vm_cheapest.get("meter_id"),
+            )
+        )
+
+    if spec.storage:
+        assumptions.append(
+            "Storage costs assume capacity-based metering; consult unit_of_measure "
+            "for actual meter. Regional pricing may vary if region_override is set."
+        )
+
+    for storage_item in spec.storage:
+        storage_region = storage_item.region_override or spec.region
+        result = pricing_lookup_sku(
+            sku=storage_item.sku,
+            region=storage_region,
+            term="ondemand",
+            currency=spec.currency,
+        )
+        items = result["items"]
+        if not items:
+            warnings.append(
+                f"Storage SKU '{storage_item.sku}' not found in region " f"'{storage_region}'."
+            )
+            continue
+
+        storage_cheapest: dict[str, Any] | None = None
+        for item in items:
+            price = item.get("unit_price")
+            if price is None:
+                continue
+            if storage_cheapest is None or float(price) < float(storage_cheapest["unit_price"]):
+                storage_cheapest = item
+
+        if storage_cheapest is None:
+            warnings.append(
+                f"Storage SKU '{storage_item.sku}' has no valid unit_price in API " f"response."
+            )
+            continue
+
+        unit_price_dec = Decimal(str(storage_cheapest["unit_price"]))
+        capacity_dec = Decimal(str(storage_item.capacity_gb))
+        monthly_cost = unit_price_dec * capacity_dec
+        total += monthly_cost
+
+        line_items.append(
+            LineItem(
+                sku=storage_item.sku,
+                region=storage_region,
+                quantity=float(storage_item.capacity_gb),
+                unit_price=unit_price_dec,
+                unit_of_measure=storage_cheapest.get("unit_of_measure") or "unknown",
+                monthly_cost=monthly_cost,
+                source_meter_id=storage_cheapest.get("meter_id"),
+            )
+        )
+
+    estimate = CostEstimate(
+        total_monthly=total,
+        currency=spec.currency,
+        line_items=line_items,
+        assumptions=assumptions,
+        warnings=warnings,
+    )
+
+    return estimate.model_dump(mode="python")
 
 
 def _clear_cache_for_tests() -> None:
