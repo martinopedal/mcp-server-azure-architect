@@ -4,7 +4,7 @@ Read this first. Then read `.github/copilot-instructions.md` and `.squad/team.md
 
 ## Mission
 
-Ship an MCP server + Copilot CLI skills bundle that fills the architect-shaped gap above raw `azure-mcp`: named ALZ checklist queries, ALZ Corp scorecard, quota planner, Advisor surfacing, and orchestration skills. Plus a curated `mcp-config.json` that turns on the companion kit (mermaid, drawio, microsoft-learn, kubernetes, terraform).
+Ship an MCP server + Copilot CLI skills bundle that fills the architect-shaped gap above `azure-mcp` with named ALZ checklist queries and ALZ Corp scorecard composition (pricing retail SKU lookups, not quota/Advisor generics which `azure-mcp` already covers per ADR-004). Architect-specific Copilot skills orchestrate the kit. Curated `mcp-config.json` wires read-only companion servers (mermaid, drawio, microsoft-learn, kubernetes, terraform).
 
 ## Project conventions
 
@@ -36,15 +36,19 @@ Ship an MCP server + Copilot CLI skills bundle that fills the architect-shaped g
 
 ## Validation gates before merge
 
-To be defined once runtime is selected. Placeholder set:
-
-- Lint and format clean for the chosen runtime.
-- All tools list in MCP Inspector with valid JSON Schema.
-- Read-only smoke test passes (no Azure write calls anywhere in the call graph).
-- `mcp-config.json` validates against the MCP client config schema for at least one client.
+- Ruff lint and format clean.
+- Mypy type check passes.
+- Pytest unit tests pass (Python 3.11, 3.12).
+- MCP Inspector smoke test: server starts, all tools enumerate with valid JSON Schema (Forge issue #19 forthcoming).
+- Read-only AST gate enforced: no Azure SDK `Begin*`, `Create*`, `Update*`, or `Delete*` calls in the call graph (Sentinel issue #7 forthcoming).
+- gitleaks scan passes (no embedded secrets).
+- CodeQL scan passes (security analysis).
+- Dependency-review check passes (supply chain).
+- Branch protection: all required checks pass, strict mode enforced on main.
 
 ## Related
 
 - [.github/copilot-instructions.md](.github/copilot-instructions.md)
 - [.squad/team.md](.squad/team.md)
 - [.squad/routing.md](.squad/routing.md)
+- [docs/adr/0004-companion-server-bar.md](docs/adr/0004-companion-server-bar.md). Authoritative scope decision on companion vs native tools.

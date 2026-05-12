@@ -75,3 +75,7 @@ Wave 2 complete: foundation (#22, #23, #26, #27, #33, #34) all on main. Decision
 **Open questions for wave 4.5:**
 1. ADR-003 layer-1 AST gate (issue #7): Should check_readonly.py implementation block v0.1 release or land in wave 5? Needs Lead decision.
 2. alz_scorecard + cost overlay: Atlas designing alz_scorecard (wave 4.5 #10). Should it include cost overlay using PR #46 pricing tools, or remain independent? Design question for Atlas + Forge coordination.
+
+## Wave 5 Outcomes (2026-05-13)
+
+**AGENTS.md reconciliation against ADR-004:** Mission statement updated to remove quota planner and Advisor surfacing (out-of-scope per ADR-004 criterion 4, no duplication of azure-mcp). Clarified scope: named ALZ queries, ALZ scorecard, pricing SKU lookups, architect skills. Validation gates upgraded from placeholder ("to be defined") to concrete enforcement: ruff, mypy, pytest (3.11/3.12), MCP Inspector smoke, readonly AST gate, gitleaks, CodeQL, dependency-review, branch protection strict. Cross-linked ADR-004 in Related section. This completes the Critical wave 5 AGENTS.md reconciliation task.
