@@ -26,10 +26,7 @@ ADR-001 accepted. Runtime is Python. Informs skill orchestration and MCP composi
 ## 2026-04-22T11:45:02Z — Runtime Scaffold Complete
 
 Forge completed Python + FastMCP scaffold. All CI gates pass (ruff, mypy, pytest). Lead approved; cold-start follow-up investigation open (assigned Sage). You can now begin authoring Copilot skills that orchestrate the toolkit.
-## 2026-04-22T11:33:32Z — Runtime Decision: Python
 
-ADR-001 accepted. Runtime is Python. Informs skill orchestration and MCP composition patterns.
+## Team Update (2026-05-12)
 
-## 2026-04-22T11:45:02Z — Runtime Scaffold Complete
-
-Forge completed Python + FastMCP scaffold. All CI gates pass (ruff, mypy, pytest). Lead approved; cold-start follow-up investigation open (assigned Sage). You can now begin authoring Copilot skills that orchestrate the toolkit.
+Wave 2 complete: foundation (#22, #23, #26, #27, #33, #34) all on main. Decisions ledger consolidated. ADR-001 ratified. Next: ADR-002/003/004, branch protection (#20), threat model (#18), and v0.1 docs per Sage's gap audit.

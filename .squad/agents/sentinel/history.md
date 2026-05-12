@@ -145,3 +145,7 @@ This pattern scales to a registry of recommended servers.
 - Issue #18: Threat model
 - Issue #20: CI gates
 - Orchestration Log: `.squad/orchestration-log/20260512T000000Z-sentinel.md`
+
+## Team Update (2026-05-12)
+
+Wave 2 complete: foundation (#22, #23, #26, #27, #33, #34) all on main. Decisions ledger consolidated. ADR-001 ratified. Next: ADR-002/003/004, branch protection (#20), threat model (#18), and v0.1 docs per Sage's gap audit.
