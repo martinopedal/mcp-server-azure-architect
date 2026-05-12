@@ -70,10 +70,27 @@ class ScorecardResult(TypedDict):
 
 
 def _get_resource_graph_client() -> ResourceGraphClient:
-    """Lazily import and construct ResourceGraphClient."""
+    """Lazily import and construct ResourceGraphClient with cloud-specific endpoint.
+
+    Constructs ResourceGraphClient with base_url and credential_scopes derived
+    from AZURE_CLOUD_NAME environment variable to support sovereign clouds.
+
+    Returns:
+        ResourceGraphClient configured for the active cloud environment.
+
+    Raises:
+        ValueError: If AZURE_CLOUD_NAME is set to an unknown cloud name.
+    """
     from azure.mgmt.resourcegraph import ResourceGraphClient
 
-    return ResourceGraphClient(credential=get_credential())
+    from ._clouds import get_cloud_config
+
+    cloud = get_cloud_config()
+    return ResourceGraphClient(
+        credential=get_credential(),
+        base_url=cloud.arm_endpoint,
+        credential_scopes=[cloud.arm_scope],
+    )
 
 
 async def _run_single_query(
