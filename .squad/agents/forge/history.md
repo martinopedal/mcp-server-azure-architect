@@ -147,7 +147,52 @@ Python + FastMCP server runtime fully scaffolded per ADR-001. Key choices:
 
 ## Related Artifacts
 
-- `.squad/decisions/inbox/forge-pr26-audit.md` (this session's audit)
+- `.squad/decisions/inbox/forge-pr26-audit.md` (session 1)
+- `.squad/decisions/inbox/forge-lazy-imports.md` (session 2, wave 7)
+
+---
+
+## Session 2: Lazy Import Refactors (Wave 7, 2026-05-12)
+
+**Task**: Ship lazy-import refactors for #67 (azure.identity) and #68 (httpx).
+
+**Outcome**:
+- **Issue #67 (azure.identity)**: FIXED. Moved import from module top to function-local in `azure_client.get_credential()`. Measured 157ms overall cold-start reduction (azure.identity cost deferred to first credential use).
+- **Issue #68 (httpx)**: NOT FIXABLE (FastMCP-owned). httpx is eagerly imported by FastMCP itself via `mcp.shared._httpx_utils`, not by our code. Documented in `pricing.py` docstring.
+
+**Key findings**:
+1. **TYPE_CHECKING guard**: Used `if TYPE_CHECKING:` at module top to satisfy mypy while deferring runtime import. Pattern keeps type hints working without cold-start penalty.
+2. **FastMCP httpx import is irreducible**: profiling confirmed httpx (213ms) comes from FastMCP, not our pricing module. Our lazy import in `_get_client()` was already correct (PR #46).
+3. **Canary test isolation**: Initial tests used `sys.modules.pop()` which caused test isolation failures. Switched to `subprocess.run()` for clean import environment.
+
+**Measurements**:
+- Before: 2,035,173 µs (2.04s)
+- After: 1,878,198 µs (1.88s)
+- Savings: 156,975 µs (157ms, 7.7% faster)
+
+**Deliverables**:
+- `src/mcp_server_azure_architect/azure_client.py` - lazy azure.identity import
+- `src/mcp_server_azure_architect/pricing.py` - documentation note on httpx FastMCP ownership
+- `tests/test_cold_start.py` - 2 new canary tests (82 tests total, all pass)
+- `docs/perf/lazy-import-results.md` - before/after analysis
+- `.squad/decisions/inbox/forge-lazy-imports.md` - decision artifact
+
+**Validation**: All gates passed (read-only, pytest, ruff, mypy, mcp_smoke).
+
+### Learnings
+
+1. **Lazy imports reduce cold start**: Moving azure.identity to function-local deferred 435ms to first use, yielding 157ms overall server import reduction.
+2. **Measure, don't assume**: Issue #68 suspected our code, but profiling revealed FastMCP ownership.
+3. **TYPE_CHECKING for lazy imports**: Pattern to satisfy mypy while deferring runtime cost.
+4. **Test isolation with subprocess**: For canary tests that need clean sys.modules, use subprocess not sys.modules.pop().
+5. **Document upstream constraints**: When an import is not fixable (FastMCP-owned), document clearly so future maintainers don't waste time.
+
+---
+
+## Related Artifacts
+
+- `.squad/decisions/inbox/forge-pr26-audit.md` (session 1)
+- `.squad/decisions/inbox/forge-lazy-imports.md` (session 2, wave 7)
 - `gh issue 32` (dependency tightening follow-up)
 - `docs/perf/coldstart-investigation.md` (measurement evidence)
 - `docs/adr/0001-runtime-choice.md` (ADR update)
