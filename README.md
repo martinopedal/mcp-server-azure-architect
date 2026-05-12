@@ -18,7 +18,7 @@ This server is **not a router or aggregator**. MCP clients already aggregate. We
 
 ## What's in scope
 
-- A small MCP server exposing two native tool families: `alz_query_by_id` (catalog lookup) and `alz_scorecard` (composition + scoring).
+- A small MCP server exposing six native tools: `health_check`, `alz_query_by_id`, `alz_query_list`, `pricing_lookup_sku`, `pricing_compare_skus`, and `alz_scorecard`.
 - Copilot CLI skills: `design-review`, `alz-gap-check`, `ingress-migration-plan`, `policy-as-code-suggest`.
 - A curated `mcp-config.json` for Copilot CLI, Claude Desktop, Cursor, and VS Code Copilot.
 - Read-only by default, end to end.

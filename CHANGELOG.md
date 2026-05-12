@@ -24,6 +24,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `docs/companions/` - Supply chain audit notes for all 7 companion MCP servers in the curated kit
 - `docs/perf/coldstart-investigation.md` - Comprehensive cold-start profiling report with import graph analysis and lazy-import recommendations
+- `docs/runbook.md` - Operator runbook for daily operation, authentication, common errors, logging, and maintenance workflows
+- `.squad/identity/now.md` - Cross-session continuity hint with current project focus, recent waves, next priorities, and open issues inventory
 - `docs/perf/importtime-baseline-3.14.log` - Raw Python importtime trace (first 200 lines)
 
 ### Automation
