@@ -41,7 +41,7 @@ These checks are already defined in `.github/workflows/` and should be added to 
 
 These checks are planned but not yet implemented. They should be added to the required list once their workflows land:
 
-7. **`readonly-check`** — ADR-003 layer 1 enforcement (`.github/scripts/check_readonly.py`). Tracked in issue #7.
+7. **`Read-Only Enforcement Check / Check for mutation methods`** — ADR-003 layer 1 enforcement (`scripts/check_readonly.py`). **COMPLETED** in PR #TBD. Coordinator should add this to required checks after PR merge.
 8. **`mcp-inspector-smoke`** — MCP Inspector validation (all tools list with valid JSON Schema). Tracked in issue #19.
 9. **`coverage`** — Code coverage gate (threshold TBD, likely 80%). Tracked in issue #TBD.
 10. **`license-check`** — License compliance check (all deps have acceptable licenses). Tracked in issue #TBD.

@@ -212,7 +212,7 @@ Per `docs/security/threat-model.md`:
 
 ## Implementation Status
 
-- **Layer 1 (AST-based import allowlist):** PENDING. Implementation tracked in issue #7. Estimated effort: 1-2 days. Blocker for v0.1 release.
+- **Layer 1 (AST-based import allowlist):** **IMPLEMENTED**. AST-based mutation method checker at `scripts/check_readonly.py` enforced via `.github/workflows/readonly-check.yml` (PR #TBD). Scans all Python source in `src/mcp_server_azure_architect/` for Azure SDK mutation method calls matching documented patterns. Violations block CI. Opt-out via `# readonly-allow: <reason>` line comment.
 - **Layer 2 (convention + CODEOWNERS):** PENDING. Can be implemented in parallel with layer 1. Estimated effort: 1 hour.
 - **Layer 3 (runtime guard):** DEFERRED. Tracked as follow-up issue (to be created). Target: v0.2 or when tool count exceeds 10.
 
