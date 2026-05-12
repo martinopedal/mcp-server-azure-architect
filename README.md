@@ -45,16 +45,18 @@ The default `mcp-config.json` shipped with this repo wires these up. Edit before
 
 ## Status
 
-Pre-alpha. Backlog tracked as GitHub issues with the `squad` label. Runtime decision (Python vs TypeScript vs .NET) is itself an issue.
+Pre-alpha. Backlog tracked as GitHub issues with the `squad` label. Runtime ratified per ADR-001 (Python + FastMCP).
 
 ## Stack
 
-To be decided as part of issue triage. Constraints:
+Python 3.11+ with FastMCP, per [ADR-001](docs/adr/0001-runtime-choice.md). Build via Hatchling, lint with ruff, types with mypy, tests with pytest. Distribution via `uvx mcp-server-azure-architect`.
 
-- Local-first, single binary or single-process startup.
-- Read-only Azure SDK calls only.
+Constraints:
+
+- Local-first, single binary or single-process startup. Cold-start budget under 1 second on Python 3.12 (per ADR-001 measurements).
+- Read-only Azure SDK calls only. DefaultAzureCredential exclusively.
 - Zero credentials at rest. Token-scrub on any logging.
-- ALZ checklist queries source from the public `martinopedal/alz-checklist-queries` and `martinopedal/alz-graph-queries` repos.
+- ALZ checklist queries source from the public `martinopedal/alz-checklist-queries` and `martinopedal/alz-graph-queries` repos (vendored snapshot, pinned by upstream commit SHA).
 
 ## Squad
 
