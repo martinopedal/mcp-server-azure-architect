@@ -54,6 +54,7 @@ def _escape_odata_value(value: str) -> str:
     OData escapes single quotes by doubling them. Reference:
     https://learn.microsoft.com/odata/concepts/uri-conventions#literals
     """
+    # readonly-allow: string method, not Azure SDK mutation
     return value.replace("'", "''")
 
 

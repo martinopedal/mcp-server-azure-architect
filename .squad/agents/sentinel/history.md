@@ -97,6 +97,49 @@
 
 ## Learnings
 
+### Session 2: ADR-003 Layer-1 AST Gate + Threat Model Issue Filing (2026-05-12)
+
+**Artifacts:**
+- `scripts/check_readonly.py` — AST-based readonly enforcement (ADR-003 layer 1)
+- `tests/test_check_readonly.py` — 16 tests covering all mutation patterns
+- `.github/workflows/readonly-check.yml` — CI gate for readonly enforcement
+- `.squad/decisions/inbox/sentinel-readonly-ast-gate.md` — Design decision artifact (gitignored)
+- 7 GitHub issues filed for threat-model OPEN items (#57-#63)
+
+**Implementation Choices:**
+1. **AST over regex.** Precise detection, no false positives from comments or strings. Python stdlib only.
+2. **Opt-out via `readonly-allow:` comment.** Line-level suppression with advisory reason requirement.
+3. **String method allowlist.** Excluded `str.replace()` to avoid false positives while still catching `client.delete_*()`.
+4. **Pattern-based detection.** Prefix-based (begin_, create_, delete_, etc.) catches Azure SDK mutations; exact-match alone causes too many false positives.
+
+**False Positive Handling:**
+- Initial approach used exact-match for bare `delete`, `create`, `update`, `replace`. This flagged `str.replace()` in pricing.py.
+- Refined approach: only detect prefix-based patterns (delete_, create_, etc.). Bare method names require contextual judgment (Layer 2 code review).
+- Added `readonly-allow:` comment to pricing.py line 57 as documentation, though script now skips `replace` entirely.
+
+**Validation Results:**
+- 16/16 tests pass
+- 57/57 total pytest suite passes
+- ruff, mypy clean
+- Real source tree (src/) has zero violations
+
+**Filed Issues:**
+1. #57: S1 - Confused-Deputy via Unvalidated subscription_id (CRITICAL)
+2. #58: R1 - Tool Execution Not Logged (MEDIUM)
+3. #59: R2 - Log Tampering (LOW)
+4. #60: I2 - Sensitive Data in Query Results (MEDIUM)
+5. #61: I3 - World-Readable Log Files (MEDIUM)
+6. #62: D1 - Large Query Result Overwhelms MCP Channel (MEDIUM)
+7. #63: T1 - Integrity Checks for Vendored Queries (CRITICAL, assigned to Atlas)
+
+All issues include Definition of Done section with concrete acceptance criteria.
+
+**Lessons:**
+- AST analysis is straightforward for Python. Stdlib `ast` module handles all edge cases (multiline calls, nested expressions).
+- Heuristic allowlists (e.g., excluding `replace`) are pragmatic but require documentation. Bare method names like `delete()` are context-dependent.
+- Test the real source tree. `test_real_source_tree_has_no_violations` acts as a CI canary and caught the str.replace() false positive immediately.
+- Line-level opt-out is the right granularity. Reviewers can audit each suppression in PR context.
+
 ### Threat Modeling for Read-Only MCP Servers
 
 **Pattern:** STRIDE-lite adapted for read-only MCP servers, emphasizing:
