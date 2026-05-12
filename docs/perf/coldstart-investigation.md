@@ -40,6 +40,14 @@ To keep CI reproducible across 3.11 and 3.12 while still enforcing startup disci
 - Hard failure gate is set to 2000ms.
 - Test measurement includes a warm-up import before timing to avoid first-run bytecode compilation noise.
 
+## Recent Measurements
+
+| Date | PR | Python | Median (ms) | Notes |
+|---|---|---|---|---|
+| 2026-04-22 | Baseline | 3.12.12 | 943 | Initial measurement |
+| 2026-05-12 | #46 (pricing tools) | 3.14.0 | ~4.4 | Lazy httpx import |
+| 2026-05-12 | #TBD (alz_scorecard) | 3.14.0 | 3471 | Within variance vs main (3499ms) |
+
 ## References
 
 - ADR-001: `docs/adr/0001-runtime-choice.md`

@@ -12,6 +12,7 @@ from mcp_server_azure_architect.pricing import (
 from mcp_server_azure_architect.pricing import (
     pricing_lookup_sku as _pricing_lookup_sku,
 )
+from mcp_server_azure_architect.scorecard import run_scorecard
 
 mcp = FastMCP("azure-architect")
 
@@ -89,3 +90,41 @@ def pricing_compare_skus(
     return _pricing_compare_skus(
         skus=skus, region=region, term=term, currency=currency
     )
+
+
+@mcp.tool()
+async def alz_scorecard(
+    subscription_id: str,
+    pillar: str | None = None,
+    checklist_ids: list[str] | None = None,
+) -> dict[str, Any]:
+    """Run Azure Landing Zone (ALZ) scorecard for a subscription.
+
+    Executes vendored ALZ checklist queries against Azure Resource Graph and
+    returns a structured scorecard with per-checklist pass/fail/unknown status
+    plus aggregate summary by pillar.
+
+    Read-only: calls ResourceGraphClient.resources() only. No mutations, no
+    Begin*/Create*/Update*/Delete* operations per ADR-003.
+
+    Args:
+        subscription_id: Azure subscription ID to evaluate.
+        pillar: Optional pillar filter (e.g., "checklist", "graph"). If provided,
+            only queries from that pillar are run.
+        checklist_ids: Optional explicit list of checklist IDs to run. If provided,
+            overrides pillar filter. Capped at 25 queries per call.
+
+    Returns:
+        ScorecardResult with `subscription_id`, `results` (list of per-checklist
+        ChecklistResult), `aggregate` (total/pass/fail/unknown counts plus by_pillar
+        breakdown), and `truncated` (bool, true if cap was applied).
+
+    Raises:
+        ValueError: if explicit checklist_ids exceeds 25.
+    """
+    result = await run_scorecard(
+        subscription_id=subscription_id,
+        pillar=pillar,
+        checklist_ids=checklist_ids,
+    )
+    return dict(result)

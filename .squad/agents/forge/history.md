@@ -248,3 +248,19 @@ def _cache_get(key):
 **Diagnosis:** `Get-Content C:\Python<ver>\Lib\site-packages\_editable_impl_<package>.pth` shows where the install actually points.
 
 **Fix:** `pip install -e . --force-reinstall --no-deps` overwrites the `.pth`. Worth knowing when squad members create fresh worktrees in a shared interpreter.
+## 2026-05-12T14:00:00Z - PR #TBD: alz_scorecard native tool (closes #10)
+
+Shipped the alz_scorecard MCP tool: runs vendored ALZ queries against Azure Resource Graph, returns structured scorecard (pass/fail/unknown per query, aggregate summary by pillar).
+
+**PR:** #TBD feat(server): alz_scorecard tool with bounded ARG queries
+**Closes:** #10
+**Validation:** pytest 41/41 (12 new), ruff clean, mypy strict clean, cold-start within variance (3471ms vs 3499ms main).
+
+### Learnings
+
+- **Bounded concurrency pattern.** Max 5 in-flight queries via asyncio.Semaphore. Prevents ARG rate limit breaches while maintaining 5x throughput over serial execution. This pattern generalizes to any API with rate limits or quota constraints.
+- **Lazy import at function boundary.** Import azure.mgmt.resourcegraph inside _get_resource_graph_client(), not at module top. Measured zero cold-start impact (within variance band). Mirrors pricing.py httpx pattern from PR #46.
+- **Count column heuristic for heterogeneous queries.** Vendored ALZ queries use inconsistent aggregation. Some return a Count column, others return raw rows. Heuristic: if Count column exists, use it; else fall back to len(rows). Documented in module docstring.
+- **Alphabetical slicing for deterministic truncation.** When full sweep or pillar filter exceeds 25-query cap, slice to first 25 alphabetical and set truncated: true. Alphabetical order is neutral and reproducible.
+- **asyncio.to_thread for sync SDK in async context.** ResourceGraphClient.resources() is synchronous. Wrap in asyncio.to_thread(_blocking_call) to enable concurrent gather without blocking the event loop. This pattern enables async tool signatures in FastMCP while composing with sync Azure SDK clients.
+- **Composition > duplication.** Scorecard reuses get_query() and list_query_ids() from alz_queries.py (PR #45). No duplication. Single source of truth for query text and metadata.
