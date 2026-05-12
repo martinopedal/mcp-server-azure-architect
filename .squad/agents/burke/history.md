@@ -58,3 +58,14 @@ MCP server public surface = tool names, parameter names/types, return shapes, do
 ## Team Update (2026-05-15)
 
 Wave 5 release pipeline shipped. v0.1.0 ready for tag cut once PR merges and Lead approves. Pipeline tested with local build smoke test. One-time PyPI trusted publishing setup documented for first release. PR #16 (kit installer) in separate worktree, low conflict risk (different pyproject.toml sections).
+## Session 3: Kit installer script (Issue #16, PR #16, 2026-05-12)
+
+Delivered cross-platform kit installer (`scripts/install_kit.py`) that automates the onboarding flow for architects: prerequisite checks, client detection (Copilot CLI, Claude Desktop, Cursor, VS Code), config merge with collision handling, and auth smoke tests. Key decisions: Python (stdlib only) for cross-platform portability, MERGE strategy that preserves existing servers with interactive prompts on collision, and run-from-repo distribution (no console_script entry yet). Supports `--dry-run` for preview and `--non-interactive` for CI. Comprehensive test coverage (23 tests, all green). Updated README to show installer as canonical quickstart path. Decision artifact in `.squad/decisions/inbox/burke-kit-installer.md`.
+
+### Learnings
+
+**Installer merge strategy must preserve existing work.** Architects may already have custom MCP servers configured. Overwriting their config files would delete existing work and break workflows. Solution: MERGE new servers into existing config, prompt on name collision (interactive), or skip (non-interactive). Backup invalid JSON configs before starting fresh. This pattern applies to any tool that modifies user-managed config files.
+
+**Stdlib-only Python scripts age better than scripted installers with dependencies.** Using only Python stdlib (no pip installs needed) means the installer runs anywhere Python 3.11+ is installed, with zero setup. No version conflicts, no `pip install installer-deps` step. For v0.1 tools where we're still learning user needs, stdlib-only reduces friction and maintenance burden.
+
+**Dry-run mode is essential for config-modifying tools.** Architects want to preview changes before committing, especially when merging into existing configs. `--dry-run` flag (prints merged JSON to stdout, touches no files) provides confidence and aids debugging. Standard pattern for infra tools (Terraform plan, Ansible check mode).
