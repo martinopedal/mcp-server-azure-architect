@@ -331,3 +331,156 @@ async def test_alz_scorecard_tool_registered() -> None:
     assert "subscription_id" in schema["properties"]
     assert schema["properties"]["subscription_id"]["type"] == "string"
     assert "subscription_id" in schema.get("required", [])
+
+
+@pytest.mark.asyncio
+async def test_scorecard_pagination_default_page_size() -> None:
+    """Default page_size is 1000 when not specified."""
+    with patch(
+        "mcp_server_azure_architect.scorecard._get_resource_graph_client"
+    ) as mock_client_factory:
+        mock_client = Mock()
+        mock_client.resources = Mock(return_value=_mock_arg_response([]))
+        mock_client_factory.return_value = mock_client
+
+        await run_scorecard(
+            subscription_id="sub-123",
+            checklist_ids=["54f0d8b1-22a3-4c0d-8ce2-58b9e086c93a"],
+        )
+
+        # Check that resources was called with QueryRequest having options.top=1000
+        call_args = mock_client.resources.call_args[0][0]
+        assert call_args.options.top == 1000
+
+
+@pytest.mark.asyncio
+async def test_scorecard_pagination_custom_page_size() -> None:
+    """Custom page_size is honored."""
+    with patch(
+        "mcp_server_azure_architect.scorecard._get_resource_graph_client"
+    ) as mock_client_factory:
+        mock_client = Mock()
+        mock_client.resources = Mock(return_value=_mock_arg_response([]))
+        mock_client_factory.return_value = mock_client
+
+        await run_scorecard(
+            subscription_id="sub-123",
+            checklist_ids=["54f0d8b1-22a3-4c0d-8ce2-58b9e086c93a"],
+            page_size=500,
+        )
+
+        call_args = mock_client.resources.call_args[0][0]
+        assert call_args.options.top == 500
+
+
+@pytest.mark.asyncio
+async def test_scorecard_pagination_page_token_forwarded() -> None:
+    """page_token is forwarded to Azure Resource Graph as skip_token."""
+    with patch(
+        "mcp_server_azure_architect.scorecard._get_resource_graph_client"
+    ) as mock_client_factory:
+        mock_client = Mock()
+        mock_client.resources = Mock(return_value=_mock_arg_response([]))
+        mock_client_factory.return_value = mock_client
+
+        await run_scorecard(
+            subscription_id="sub-123",
+            checklist_ids=["54f0d8b1-22a3-4c0d-8ce2-58b9e086c93a"],
+            page_token="test-token-123",
+        )
+
+        call_args = mock_client.resources.call_args[0][0]
+        assert call_args.options.skip_token == "test-token-123"
+
+
+@pytest.mark.asyncio
+async def test_scorecard_pagination_next_page_token_returned() -> None:
+    """next_page_token is returned when ARG response includes skip_token."""
+    with patch(
+        "mcp_server_azure_architect.scorecard._get_resource_graph_client"
+    ) as mock_client_factory:
+        mock_client = Mock()
+        mock_response = Mock()
+        mock_response.data = []
+        mock_response.skip_token = "next-token-456"
+        mock_client.resources = Mock(return_value=mock_response)
+        mock_client_factory.return_value = mock_client
+
+        result = await run_scorecard(
+            subscription_id="sub-123",
+            checklist_ids=["54f0d8b1-22a3-4c0d-8ce2-58b9e086c93a"],
+        )
+
+        assert result["results"][0]["next_page_token"] == "next-token-456"
+
+
+@pytest.mark.asyncio
+async def test_scorecard_pagination_page_size_boundary_invalid() -> None:
+    """page_size=0 and page_size=5001 raise ValueError."""
+    with pytest.raises(ValueError) as excinfo:
+        await run_scorecard(
+            subscription_id="sub-123",
+            checklist_ids=["54f0d8b1-22a3-4c0d-8ce2-58b9e086c93a"],
+            page_size=0,
+        )
+    assert "between 1 and 5000" in str(excinfo.value)
+
+    with pytest.raises(ValueError) as excinfo:
+        await run_scorecard(
+            subscription_id="sub-123",
+            checklist_ids=["54f0d8b1-22a3-4c0d-8ce2-58b9e086c93a"],
+            page_size=5001,
+        )
+    assert "between 1 and 5000" in str(excinfo.value)
+
+
+@pytest.mark.asyncio
+async def test_scorecard_pagination_page_size_boundary_valid() -> None:
+    """page_size=1 and page_size=5000 are accepted."""
+    with patch(
+        "mcp_server_azure_architect.scorecard._get_resource_graph_client"
+    ) as mock_client_factory:
+        mock_client = Mock()
+        mock_client.resources = Mock(return_value=_mock_arg_response([]))
+        mock_client_factory.return_value = mock_client
+
+        result = await run_scorecard(
+            subscription_id="sub-123",
+            checklist_ids=["54f0d8b1-22a3-4c0d-8ce2-58b9e086c93a"],
+            page_size=1,
+        )
+        assert result is not None
+
+        result = await run_scorecard(
+            subscription_id="sub-123",
+            checklist_ids=["54f0d8b1-22a3-4c0d-8ce2-58b9e086c93a"],
+            page_size=5000,
+        )
+        assert result is not None
+
+
+@pytest.mark.asyncio
+async def test_scorecard_timeout_after_60s() -> None:
+    """Query timeout after 60s returns unknown status with actionable error."""
+    with patch(
+        "mcp_server_azure_architect.scorecard._get_resource_graph_client"
+    ) as mock_client_factory:
+        mock_client = Mock()
+
+        # Simulate timeout by raising asyncio.TimeoutError inside wait_for
+        with patch("mcp_server_azure_architect.scorecard.asyncio.wait_for") as mock_wait_for:
+            mock_wait_for.side_effect = TimeoutError()
+
+            result = await run_scorecard(
+                subscription_id="sub-123",
+                checklist_ids=["54f0d8b1-22a3-4c0d-8ce2-58b9e086c93a"],
+            )
+
+            assert result["results"][0]["status"] == "unknown"
+            error_msg = result["results"][0]["error"]
+            assert error_msg is not None
+            assert "timed out after 60s" in error_msg.lower()
+            assert "narrow the scope" in error_msg.lower() or "pagination" in error_msg.lower()
+
+        mock_client_factory.return_value = mock_client
+

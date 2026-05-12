@@ -48,10 +48,12 @@ def _get_client() -> httpx.Client:
 
     Lazy import keeps cold-start budget clean: httpx is not loaded at server module
     import time, only when a pricing tool is actually invoked.
+
+    60-second timeout protects against DoS via slow or hung HTTP requests per issue #62.
     """
     import httpx
 
-    return httpx.Client(timeout=30.0, follow_redirects=True)
+    return httpx.Client(timeout=60.0, follow_redirects=True)
 
 
 def _escape_odata_value(value: str) -> str:

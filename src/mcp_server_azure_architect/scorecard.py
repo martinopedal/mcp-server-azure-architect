@@ -47,6 +47,7 @@ class ChecklistResult(TypedDict):
     citation: str
     sample: list[dict[str, Any]]
     error: str | None
+    next_page_token: str | None
 
 
 class AggregateSummary(TypedDict):
@@ -80,6 +81,8 @@ async def _run_single_query(
     subscription_id: str,
     checklist_id: str,
     semaphore: asyncio.Semaphore,
+    page_size: int = 1000,
+    page_token: str | None = None,
 ) -> ChecklistResult:
     """Run one ALZ query against Resource Graph and return a ChecklistResult.
 
@@ -88,6 +91,8 @@ async def _run_single_query(
         subscription_id: Azure subscription ID to scope the query.
         checklist_id: Vendored ALZ checklist ID.
         semaphore: Concurrency limiter.
+        page_size: Maximum number of items per page (default 1000, max 5000).
+        page_token: Continuation token from previous page for pagination.
 
     Returns:
         ChecklistResult with status (pass/fail/unknown), count, sample, and error if any.
@@ -101,17 +106,32 @@ async def _run_single_query(
 
             # Wrap sync SDK call in asyncio.to_thread for concurrency
             def _blocking_call() -> Any:
-                from azure.mgmt.resourcegraph.models import QueryRequest
+                from azure.mgmt.resourcegraph.models import QueryRequest, QueryRequestOptions
 
+                options = QueryRequestOptions(
+                    top=page_size,
+                    skip_token=page_token,
+                )
                 query = QueryRequest(
                     subscriptions=[subscription_id],
                     query=kql,
+                    options=options,
                 )
                 return client.resources(query)
 
-            response = await asyncio.to_thread(_blocking_call)
+            # Apply 60-second timeout to prevent DoS via large query results
+            try:
+                response = await asyncio.wait_for(
+                    asyncio.to_thread(_blocking_call), timeout=60.0
+                )
+            except TimeoutError:
+                raise Exception(
+                    "Query timed out after 60s. Narrow the scope or increase pagination."
+                ) from None
 
             rows = response.data if hasattr(response, "data") else []
+            next_page_token = getattr(response, "skip_token", None)
+
             if not rows:
                 # No violations found
                 return ChecklistResult(
@@ -122,6 +142,7 @@ async def _run_single_query(
                     citation=citation,
                     sample=[],
                     error=None,
+                    next_page_token=next_page_token,
                 )
 
             # Try to extract Count column, fall back to len(rows)
@@ -146,6 +167,7 @@ async def _run_single_query(
                 citation=citation,
                 sample=sample,
                 error=None,
+                next_page_token=next_page_token,
             )
 
         except LookupError as e:
@@ -158,6 +180,7 @@ async def _run_single_query(
                 citation="",
                 sample=[],
                 error=str(e),
+                next_page_token=None,
             )
         except Exception as e:
             # ARG query failed or other error
@@ -169,6 +192,7 @@ async def _run_single_query(
                 citation="",
                 sample=[],
                 error=str(e),
+                next_page_token=None,
             )
 
 
@@ -176,6 +200,8 @@ async def run_scorecard(
     subscription_id: str,
     pillar: str | None = None,
     checklist_ids: list[str] | None = None,
+    page_size: int | None = None,
+    page_token: str | None = None,
 ) -> ScorecardResult:
     """Run ALZ scorecard for a subscription.
 
@@ -185,12 +211,16 @@ async def run_scorecard(
             only queries from that pillar are run.
         checklist_ids: Optional explicit list of checklist IDs to run. If provided,
             overrides pillar filter and runs only these queries.
+        page_size: Maximum number of items per page in Azure Resource Graph queries
+            (default 1000, max 5000). Each checklist query respects this limit.
+        page_token: Continuation token from previous page for pagination. Pass the
+            next_page_token from a previous result to fetch the next page.
 
     Returns:
         ScorecardResult with per-checklist results and aggregate summary.
 
     Raises:
-        ValueError: if explicit checklist_ids exceeds 25.
+        ValueError: if explicit checklist_ids exceeds 25 or page_size is out of bounds.
         PermissionError: if subscription_id is not in the caller's scope (Threat S1).
     """
     # Validate that subscription_id is in caller's scope (issue #57, Threat S1)
@@ -199,6 +229,14 @@ async def run_scorecard(
         raise PermissionError(
             "Subscription ID is not in your scope. "
             "Ensure you have access to the requested subscription."
+        )
+
+    # Validate page_size and apply default
+    if page_size is None:
+        page_size = 1000
+    elif not (1 <= page_size <= 5000):
+        raise ValueError(
+            f"page_size must be between 1 and 5000 (got {page_size})."
         )
 
     # Determine which checklist IDs to run
@@ -239,7 +277,8 @@ async def run_scorecard(
     semaphore = asyncio.Semaphore(_MAX_CONCURRENT_QUERIES)
 
     tasks = [
-        _run_single_query(client, subscription_id, cid, semaphore) for cid in ids_to_run
+        _run_single_query(client, subscription_id, cid, semaphore, page_size, page_token)
+        for cid in ids_to_run
     ]
     results = await asyncio.gather(*tasks)
 
