@@ -710,6 +710,143 @@ After PR #40 merged, coordinator executed branch protection plan via `gh api` co
 
 ---
 
+## Wave 4 — Native Tools + Skills Wave (2026-05-12 — merged 2026-05-12)
+
+### PRs Merged
+
+| PR  | Title | Author | Closes | Merged |
+|-----|-------|--------|--------|--------|
+| #43 | feat(skills): ingress-migration-plan + policy-as-code-suggest | Iris | #13, #14 | ✅ |
+| #45 | feat(server): native alz_query_by_id tool with vendored loader | Forge | #9 | ✅ |
+| #46 | feat(server): native Azure retail pricing tools (lookup, compare) | Forge | #39 (partial) | ✅ |
+| #1 | deps(security): actions/dependency-review-action 4.7.2 to 5.0.0 | Dependabot | - | ✅ |
+| #3 | deps(security): actions/checkout 4 to 6 | Dependabot | - | ✅ |
+
+### Issues Closed
+
+- **#9** (Native alz_query_by_id tool) - Forge, closed by PR #45
+- **#13** (Skill: ingress-migration-plan) - Iris, closed by PR #43
+- **#14** (Skill: policy-as-code-suggest) - Iris, closed by PR #43
+- **#39** (Native Azure pricing tools) - Forge, closed by PR #46 (partial; pricing_estimate_workload deferred to #44)
+
+### Issues Filed (Wave 4 Follow-ups)
+
+- **#44** (feat(server): pricing_estimate_workload native tool) - Deferred due to missing WorkloadSpec model. Proposed signature and dependencies documented. Owner: Forge.
+
+### Decisions Consolidated from Inbox
+
+#### Native Tool: alz_query_by_id (PR #45)
+
+**Author:** Forge  
+**Decision:** Ship first substantive native tool for ALZ query lookup by checklist ID.
+
+**Design Highlights:**
+- Pure stdlib loader (json, pathlib only; no Azure SDK, no httpx). Cold-start cost sub-ms.
+- Lazy parse on first call via module-level `_INDEX` cache.
+- Wheel + editable install both supported (loader probes two paths: wheel force-include and repo root).
+- Read-only by design per ADR-003. Tool name follows `_query_*` lookup verb pattern.
+- Confused-deputy mitigation: only caller input is `checklist_id` matched against vendored allowlist. No subscription-scoped authorization decision.
+- Friendly errors with capped sample (max 10) of available IDs.
+- Added `[tool.hatch.build.targets.wheel.force-include]` to pyproject.toml to ship `data/alz-queries/` in wheel.
+
+**Patterns Established for Future Native Tools:**
+- Loader location: one module per data domain under `src/mcp_server_azure_architect/`, prefixed with domain name. Pure stdlib when possible.
+- Lazy state: module-level `_X = None` plus `_get_x()` getter. Add `reset_cache()` for tests.
+- TypedDict return shape: caller-friendly, mypy-strict-friendly. Convert to `dict[str, str]` at FastMCP boundary if schema needs it.
+- Read-only marker: every read-only data module gets `# READ-ONLY: ...` comment at top.
+- Schema test: every native tool gets registration + schema introspection test plus async roundtrip test through `ToolManager.call_tool`.
+
+**Validation:**
+- ruff clean
+- mypy strict clean (9 source files)
+- pytest 13 passed (4 baseline + 9 new)
+- Cold-start: -99ms vs baseline median (well within ±100ms variance band; comfortably under 50ms budget)
+
+**Follow-up:** Generic `alz_query_list` tool for catalog discovery (not yet filed). Static-analysis gate from ADR-003 will add CI assertion that every `_query_*` tool's source module carries READ-ONLY marker.
+
+#### Native Tools: pricing_lookup_sku + pricing_compare_skus (PR #46)
+
+**Author:** Forge  
+**Decision:** Ship two native MCP tools that call Azure Retail Prices API. Defer pricing_estimate_workload (needs WorkloadSpec model).
+
+**Design Highlights:**
+- Lazy `httpx` import inside `_get_client()`. Importing the pricing module alone does not pull httpx into sys.modules. Discovery during validation: FastMCP already loads httpx transitively, so new direct dep adds zero net cold-start cost. Lazy pattern kept for hygiene and future runtime swap protection.
+- 24h in-memory TTL cache: `dict[str, tuple[float, list[dict]]]` keyed on OData filter (with currency prefix, since currency lives in query parameter not filter).
+- OData filter escaping: single quotes in user input are doubled per OData spec. Unit-tested with SKU containing single quote.
+- Pagination cap (5 pages): defensive runaway guard. Five pages = 5000 rows worst-case, well above realistic cardinality for single SKU lookup.
+- Compare cap (10 SKUs): bounds response size for design-review skill. Empty list rejected. Both raise ValueError.
+- Hourly conversion helper (`_hourly_from_unit`): handles `1 Hour`, `100 Hours`, `10 Hours`, `1000 Hours` units. Non-hourly meters return None so caller not given misleading number.
+
+**Validation:**
+- ruff clean
+- mypy --strict clean
+- pytest 20 passed (4 prior + 16 new)
+- Cold-start: warm-import median 4.4ms, p90 7.5ms. Hard gate (2000ms) and soft gate (1000ms) both pass.
+
+**Alignment with Squad Decisions:**
+- ADR-003 (read-only): Public HTTP GET only. No Azure SDK, no mutation surface. Layer-1 AST allowlist (issue #7) will recognize as safe.
+- ADR-004 (companion bar): Canonical native-vs-companion example in ADR-004. No upstream pricing MCP exists, azure-mcp does not cover retail pricing, native fits seven criteria.
+- Threat model: Low-risk class. No auth, no PII, no caller-supplied subscription_id. Supply-chain risk on httpx bounded by `>=0.27.0,<1.0.0` pin.
+
+**Follow-up:** #44 (pricing_estimate_workload). README and skill-catalog update (separate PR). Optional threat-model addendum naming pricing endpoint explicitly.
+
+#### Skills: ingress-migration-plan + policy-as-code-suggest (PR #43)
+
+**Author:** Iris  
+**Decision:** Author two architect-shaped skills that compose with wave-4 native tools and future wave 4.5 tool surface.
+
+**Skill 1: ingress-migration-plan**
+- Cross-repo contract consumer for Azure ingress migration reasoning.
+- Distills decision framework for evaluating migration from one ingress platform to another (App Gateway to Front Door, AGIC to AppGw for Containers, NGINX-on-AKS to managed services).
+- Will consume ALZ Network pillar queries via alz_query_by_id when available.
+- Will consume output of future design-review skill (#11).
+- Confidence: Low (first capture). Refinement path: architect session feedback + ALZ Network checklist item stability.
+
+**Skill 2: policy-as-code-suggest**
+- Translates architectural intent + compliance requirements into Azure Policy + Infrastructure-as-Code (Bicep/Terraform).
+- Bridges design review to governance implementation.
+- Will consume ALZ Policy pillar queries via alz_query_by_id when available.
+- Optional follow-on to design-review skill (#11).
+- Confidence: Low (first capture). Refinement path: architect feedback + ALZ Policy pillar query stability.
+
+**Cross-Repo Contract Strategy:**
+- Both skills consume queries from vendored ALZ snapshots (martinopedal/alz-checklist-queries, martinopedal/alz-graph-queries).
+- Refresh cadence: on-demand. When new checklist item lands upstream, run alz_query_by_id and compare to prior snapshot. Update skill process step if item list changes.
+- Current snapshot pins documented in manifest.json files.
+
+**Deferral Pattern:**
+- Issues #11 (design-review) and #12 (alz-gap-check) held for wave 4.5 because they reference native tool surface currently being built.
+- Skills #13 + #14 ready now because they document how an architect thinks, independent of tool availability.
+- Will compose cleanly with #11/#12 once tools land.
+
+**Validation:**
+- ruff lint: all checks passed
+- pytest 4/4 tests pass
+- No em dashes; concise prose
+- Both skills follow .squad/templates/skill.md format
+- Worked examples realistic and actionable
+- Bicep + Terraform snippets practical
+- Citations: public, stable Microsoft Learn URLs + ALZ references
+- Cross-repo contract strategy documented
+
+**Learnings:** Cross-repo contract consumer pattern (document snapshot source + commit SHA in skill file, provide explicit refresh procedure, pin refresh cadence, note low confidence until ALZ checklist items stabilize upstream). Audit-vs-deny posture decision tree for Azure Policy. Deferral pattern demonstrates architect workflows can be documented before tool surface is ready.
+
+### Tool Surface Summary (After Wave 4)
+
+Four tools now on main: `health_check`, `alz_query_by_id`, `pricing_lookup_sku`, `pricing_compare_skus`.
+
+Test coverage: 29 tests total (4 baseline health_check + 9 alz_query_by_id + 16 pricing).
+
+All validation gates pass: ruff, mypy strict, pytest, cold-start within budget.
+
+### Open Questions for Future Waves
+
+1. **ADR-003 layer-1 AST gate (issue #7):** Scope and timeline. Should implementation block v0.1 release or land in wave 5? Currently marked as v0.2 deferred but ADR-003 PR #40 suggested it as v0.1 prerequisite. Needs Lead decision for wave 4.5 planning.
+
+2. **alz_scorecard tool + cost overlay (wave 4.5, #10):** Atlas is building alz_scorecard. Should it include cost overlay using PR #46 pricing tools, or remain independent? Design question for Atlas + Forge coordination.
+
+---
+
 ## Governance
 
 - All meaningful changes require team consensus

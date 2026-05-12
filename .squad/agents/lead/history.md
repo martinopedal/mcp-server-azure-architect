@@ -59,3 +59,19 @@ See `.squad/decisions/inbox/lead-pr22-adr001-ratified.md` for the full ADR-001 r
 ## Team Update (2026-05-12)
 
 Wave 2 complete: foundation (#22, #23, #26, #27, #33, #34) all on main. Decisions ledger consolidated. ADR-001 ratified. Next: ADR-002/003/004, branch protection (#20), threat model (#18), and v0.1 docs per Sage's gap audit.
+
+## Wave 4 Outcomes (2026-05-12)
+
+**Wave 4 native tools + skills: 3 PRs merged, 2 follow-up issues filed.** PR #43 (Iris skills ingress-migration-plan + policy-as-code-suggest, closes #13 + #14), PR #45 (Forge alz_query_by_id native tool, closes #9), PR #46 (Forge pricing_lookup_sku + pricing_compare_skus, closes #39 partial). All landed cleanly on main HEAD with zero conflicts. Dependabot PRs #1 + #3 (security updates) merged in parallel. Coordinator admin-toggled for wave 4 merges.
+
+**Native tool pattern established.** Forge's alz_query_by_id + pricing tools demonstrate end-to-end pattern: pure stdlib loaders, lazy module-level state, TypedDict returns, async schema roundtrip tests, read-only markers. Pattern documented in decisions.md. Future tool PRs from Atlas, Iris, or Forge can reference this pattern.
+
+**Skills ready before tool surface stabilizes.** Iris authored two architect-shaped skills (ingress-migration-plan, policy-as-code-suggest) that document workflows independent of tool availability. Both reference future alz_query_by_id tool calls explicitly. Skills #11 + #12 depend on alz_scorecard + alz_graph (wave 4.5), not 4.0. This deferral pattern unblocks skill documentation while parallel tool delivery continues.
+
+**Pricing tool decision aligned with ADR-004.** Forge's pricing tools represent the worked example in ADR-004 (companion bar). No upstream pricing MCP exists, azure-mcp does not cover retail pricing, native fits seven ADR-004 criteria. Decision ratified per threat model low-risk class (HTTP GET only, no auth, no PII, no confused-deputy surface).
+
+**Inbox consolidation and scribe session.** Scribe consolidated three inbox files into decisions.md (forge-alz-query-by-id.md + forge-pricing.md + iris-skills-13-14.md). Lost Forge history update rescued from local main. All agent histories cross-linked. Consolidation PR opened.
+
+**Open questions for wave 4.5:**
+1. ADR-003 layer-1 AST gate (issue #7): Should check_readonly.py implementation block v0.1 release or land in wave 5? Needs Lead decision.
+2. alz_scorecard + cost overlay: Atlas designing alz_scorecard (wave 4.5 #10). Should it include cost overlay using PR #46 pricing tools, or remain independent? Design question for Atlas + Forge coordination.
