@@ -3,10 +3,10 @@
 
 Validates the running MCP server against three invariants:
 
-1. **Tool registration completeness:** Exactly the expected 5 tools are
-   registered (health_check, alz_query_by_id, pricing_lookup_sku,
-   pricing_compare_skus, alz_scorecard). Catches tool addition/removal
-   regressions.
+1. **Tool registration completeness:** Exactly the expected 6 tools are
+   registered (health_check, alz_query_by_id, alz_query_list,
+   pricing_lookup_sku, pricing_compare_skus, alz_scorecard). Catches tool
+   addition/removal regressions.
 
 2. **JSON Schema validity:** Every tool's inputSchema has type "object"
    and a "properties" dict. This is the minimal contract for MCP clients
@@ -41,6 +41,7 @@ EXPECTED_TOOLS = frozenset(
     [
         "health_check",
         "alz_query_by_id",
+        "alz_query_list",
         "pricing_lookup_sku",
         "pricing_compare_skus",
         "alz_scorecard",

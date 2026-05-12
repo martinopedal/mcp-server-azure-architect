@@ -163,6 +163,94 @@ def get_query(checklist_id: str) -> QueryRecord:
     return record
 
 
+def list_queries(
+    pillar: str | None = None,
+    source_repo: str | None = None,
+    limit: int = 200,
+) -> dict[str, object]:
+    """Enumerate vendored ALZ checklist queries with optional filters.
+
+    Args:
+        pillar: Optional pillar filter (e.g., "checklist", "graph"). If provided,
+            only queries from that pillar are returned.
+        source_repo: Optional source repo filter (e.g.,
+            "martinopedal/alz-checklist-queries"). If provided, only queries
+            from that repo are returned.
+        limit: Maximum number of items to return (default 200). If the filtered
+            result set exceeds this limit, items are sliced alphabetically by
+            checklist_id and truncated is set to True.
+
+    Returns:
+        A dictionary with:
+        - count: int, number of matching queries (before limit applied)
+        - items: list of dicts, each with checklist_id, pillar, source_repo,
+          title (empty string if not available), and citation
+        - manifest_commit: str, composite of source commit SHAs from manifest
+        - truncated: bool, True if limit was applied
+        - filters_applied: dict with pillar and source_repo filters
+    """
+    index = _get_index()
+
+    # Apply filters
+    filtered = [
+        record for record in index.values()
+        if (pillar is None or record["pillar"] == pillar)
+        and (source_repo is None or record["source_repo"] == source_repo)
+    ]
+
+    # Sort alphabetically by checklist_id for deterministic output
+    filtered.sort(key=lambda r: r["checklist_id"])
+
+    count = len(filtered)
+    truncated = count > limit
+    if truncated:
+        filtered = filtered[:limit]
+
+    # Build items with specified keys
+    items = [
+        {
+            "checklist_id": r["checklist_id"],
+            "pillar": r["pillar"],
+            "source_repo": r["source_repo"],
+            "title": "",  # not available in current metadata
+            "citation": r["citation"],
+        }
+        for r in filtered
+    ]
+
+    # Composite manifest_commit from all sources
+    manifest_commit = _build_manifest_commit()
+
+    return {
+        "count": count,
+        "items": items,
+        "manifest_commit": manifest_commit,
+        "truncated": truncated,
+        "filters_applied": {
+            "pillar": pillar,
+            "source_repo": source_repo,
+        },
+    }
+
+
+def _build_manifest_commit() -> str:
+    """Build a composite manifest commit string from all sources.
+
+    Returns a semicolon-separated list of repo@commit pairs.
+    """
+    data_root = _resolve_data_root()
+    manifest_path = data_root / _MANIFEST_NAME
+    raw = json.loads(manifest_path.read_text(encoding="utf-8"))
+
+    commits = []
+    for source in raw.get("sources", []):
+        repo = str(source["repo"])
+        commit = str(source["commit_sha"])
+        commits.append(f"{repo}@{commit[:7]}")
+
+    return "; ".join(commits)
+
+
 def reset_cache() -> None:
     """Clear the cached manifest index. Intended for tests."""
     global _INDEX
