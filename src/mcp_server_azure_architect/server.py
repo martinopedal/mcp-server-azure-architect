@@ -134,6 +134,8 @@ async def alz_scorecard(
     subscription_id: str,
     pillar: str | None = None,
     checklist_ids: list[str] | None = None,
+    page_size: int | None = None,
+    page_token: str | None = None,
 ) -> dict[str, Any]:
     """Run Azure Landing Zone (ALZ) scorecard for a subscription.
 
@@ -147,6 +149,8 @@ async def alz_scorecard(
     Security: Validates that subscription_id is in the caller's authorized scope
     by querying Azure Resource Manager (ARM) for accessible subscriptions. Rejects
     out-of-scope subscription IDs to defend against confused-deputy attacks (issue #57).
+    Applies 60-second timeout to all Azure Resource Graph queries to prevent DoS via
+    large result sets (issue #62).
 
     Args:
         subscription_id: Azure subscription ID to evaluate.
@@ -154,19 +158,26 @@ async def alz_scorecard(
             only queries from that pillar are run.
         checklist_ids: Optional explicit list of checklist IDs to run. If provided,
             overrides pillar filter. Capped at 25 queries per call.
+        page_size: Maximum number of items per page in Azure Resource Graph queries
+            (default 1000, max 5000). Each checklist query respects this limit.
+        page_token: Continuation token from previous page for pagination. Pass the
+            next_page_token from a previous result to fetch the next page.
 
     Returns:
         ScorecardResult with `subscription_id`, `results` (list of per-checklist
-        ChecklistResult), `aggregate` (total/pass/fail/unknown counts plus by_pillar
-        breakdown), and `truncated` (bool, true if cap was applied).
+        ChecklistResult with `next_page_token` if more results available), `aggregate`
+        (total/pass/fail/unknown counts plus by_pillar breakdown), and `truncated`
+        (bool, true if cap was applied).
 
     Raises:
-        ValueError: if explicit checklist_ids exceeds 25.
+        ValueError: if explicit checklist_ids exceeds 25 or page_size is out of bounds.
         PermissionError: if subscription_id is not in caller's scope.
     """
     result = await run_scorecard(
         subscription_id=subscription_id,
         pillar=pillar,
         checklist_ids=checklist_ids,
+        page_size=page_size,
+        page_token=page_token,
     )
     return dict(result)

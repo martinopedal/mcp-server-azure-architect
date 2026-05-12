@@ -22,18 +22,25 @@ def reset_alz_cache() -> None:
 
 @pytest.fixture(autouse=True)
 def mock_scope_validation() -> Any:
-    """Mock validate_caller_scope to always return True unless overridden."""
+    """Mock validate_caller_scope and get_credential to avoid Azure auth in tests."""
+    # Ensure the module is imported (handles case where test_scorecard_no_azure_sdk_at_module_import popped it)
+    import mcp_server_azure_architect.scorecard  # noqa: F401
+
     with patch(
         "mcp_server_azure_architect.scorecard.validate_caller_scope"
-    ) as mock_validate:
+    ) as mock_validate, patch(
+        "mcp_server_azure_architect.scorecard.get_credential"
+    ) as mock_cred:
         mock_validate.return_value = True
+        mock_cred.return_value = Mock()  # Return a mock credential object
         yield mock_validate
 
 
-def _mock_arg_response(rows: list[dict[str, Any]]) -> Mock:
+def _mock_arg_response(rows: list[dict[str, Any]], skip_token: str | None = None) -> Mock:
     """Build a mock ARG response."""
     mock_response = Mock()
     mock_response.data = rows
+    mock_response.skip_token = skip_token
     return mock_response
 
 
@@ -303,6 +310,9 @@ async def test_scorecard_accepts_in_scope_subscription() -> None:
 
 def test_scorecard_no_azure_sdk_at_module_import() -> None:
     """Importing scorecard module must not pull in azure-mgmt-resourcegraph (cold-start guard)."""
+    # Save reference to current module if loaded
+    original_module = sys.modules.get("mcp_server_azure_architect.scorecard")
+
     # Pop the module if already loaded
     sys.modules.pop("mcp_server_azure_architect.scorecard", None)
     for name in list(sys.modules):
@@ -315,6 +325,10 @@ def test_scorecard_no_azure_sdk_at_module_import() -> None:
         name for name in sys.modules if name.startswith("azure.mgmt.resourcegraph")
     ]
     assert leaked == [], f"scorecard module leaked Azure SDK imports: {leaked}"
+
+    # Restore original module to avoid breaking subsequent tests
+    if original_module is not None:
+        sys.modules["mcp_server_azure_architect.scorecard"] = original_module
 
 
 @pytest.mark.asyncio
@@ -331,3 +345,176 @@ async def test_alz_scorecard_tool_registered() -> None:
     assert "subscription_id" in schema["properties"]
     assert schema["properties"]["subscription_id"]["type"] == "string"
     assert "subscription_id" in schema.get("required", [])
+
+
+@pytest.mark.asyncio
+async def test_scorecard_pagination_default_page_size() -> None:
+    """Default page_size is 1000 when not specified."""
+    captured_request = None
+
+    def capture_request(query_request: Any) -> Mock:
+        nonlocal captured_request
+        captured_request = query_request
+        return _mock_arg_response([])
+
+    with patch(
+        "mcp_server_azure_architect.scorecard._get_resource_graph_client"
+    ) as mock_client_factory:
+        mock_client = Mock()
+        mock_client.resources = Mock(side_effect=capture_request)
+        mock_client_factory.return_value = mock_client
+
+        await run_scorecard(
+            subscription_id="sub-123",
+            checklist_ids=["54f0d8b1-22a3-4c0d-8ce2-58b9e086c93a"],
+        )
+
+        # Check that QueryRequest had options.top=1000
+        assert captured_request is not None
+        assert captured_request.options is not None
+        assert captured_request.options.top == 1000
+
+
+@pytest.mark.asyncio
+async def test_scorecard_pagination_custom_page_size() -> None:
+    """Custom page_size is honored."""
+    captured_request = None
+
+    def capture_request(query_request: Any) -> Mock:
+        nonlocal captured_request
+        captured_request = query_request
+        return _mock_arg_response([])
+
+    with patch(
+        "mcp_server_azure_architect.scorecard._get_resource_graph_client"
+    ) as mock_client_factory:
+        mock_client = Mock()
+        mock_client.resources = Mock(side_effect=capture_request)
+        mock_client_factory.return_value = mock_client
+
+        await run_scorecard(
+            subscription_id="sub-123",
+            checklist_ids=["54f0d8b1-22a3-4c0d-8ce2-58b9e086c93a"],
+            page_size=500,
+        )
+
+        assert captured_request is not None
+        assert captured_request.options.top == 500
+
+
+@pytest.mark.asyncio
+async def test_scorecard_pagination_page_token_forwarded() -> None:
+    """page_token is forwarded to Azure Resource Graph as skip_token."""
+    captured_request = None
+
+    def capture_request(query_request: Any) -> Mock:
+        nonlocal captured_request
+        captured_request = query_request
+        return _mock_arg_response([])
+
+    with patch(
+        "mcp_server_azure_architect.scorecard._get_resource_graph_client"
+    ) as mock_client_factory:
+        mock_client = Mock()
+        mock_client.resources = Mock(side_effect=capture_request)
+        mock_client_factory.return_value = mock_client
+
+        await run_scorecard(
+            subscription_id="sub-123",
+            checklist_ids=["54f0d8b1-22a3-4c0d-8ce2-58b9e086c93a"],
+            page_token="test-token-123",
+        )
+
+        assert captured_request is not None
+        assert captured_request.options.skip_token == "test-token-123"
+
+
+@pytest.mark.asyncio
+async def test_scorecard_pagination_next_page_token_returned() -> None:
+    """next_page_token is returned when ARG response includes skip_token."""
+    with patch(
+        "mcp_server_azure_architect.scorecard._get_resource_graph_client"
+    ) as mock_client_factory:
+        mock_client = Mock()
+        mock_client.resources = Mock(
+            return_value=_mock_arg_response([], skip_token="next-token-456")
+        )
+        mock_client_factory.return_value = mock_client
+
+        result = await run_scorecard(
+            subscription_id="sub-123",
+            checklist_ids=["54f0d8b1-22a3-4c0d-8ce2-58b9e086c93a"],
+        )
+
+        assert result["results"][0]["next_page_token"] == "next-token-456"
+
+
+@pytest.mark.asyncio
+async def test_scorecard_pagination_page_size_boundary_invalid() -> None:
+    """page_size=0 and page_size=5001 raise ValueError."""
+    with pytest.raises(ValueError) as excinfo:
+        await run_scorecard(
+            subscription_id="sub-123",
+            checklist_ids=["54f0d8b1-22a3-4c0d-8ce2-58b9e086c93a"],
+            page_size=0,
+        )
+    assert "between 1 and 5000" in str(excinfo.value)
+
+    with pytest.raises(ValueError) as excinfo:
+        await run_scorecard(
+            subscription_id="sub-123",
+            checklist_ids=["54f0d8b1-22a3-4c0d-8ce2-58b9e086c93a"],
+            page_size=5001,
+        )
+    assert "between 1 and 5000" in str(excinfo.value)
+
+
+@pytest.mark.asyncio
+async def test_scorecard_pagination_page_size_boundary_valid() -> None:
+    """page_size=1 and page_size=5000 are accepted."""
+    with patch(
+        "mcp_server_azure_architect.scorecard._get_resource_graph_client"
+    ) as mock_client_factory:
+        mock_client = Mock()
+        mock_client.resources = Mock(return_value=_mock_arg_response([]))
+        mock_client_factory.return_value = mock_client
+
+        result = await run_scorecard(
+            subscription_id="sub-123",
+            checklist_ids=["54f0d8b1-22a3-4c0d-8ce2-58b9e086c93a"],
+            page_size=1,
+        )
+        assert result is not None
+
+        result = await run_scorecard(
+            subscription_id="sub-123",
+            checklist_ids=["54f0d8b1-22a3-4c0d-8ce2-58b9e086c93a"],
+            page_size=5000,
+        )
+        assert result is not None
+
+
+@pytest.mark.asyncio
+async def test_scorecard_timeout_after_60s() -> None:
+    """Query timeout after 60s returns unknown status with actionable error."""
+    with patch(
+        "mcp_server_azure_architect.scorecard._get_resource_graph_client"
+    ) as mock_client_factory:
+        mock_client = Mock()
+        mock_client_factory.return_value = mock_client
+
+        # Simulate timeout by raising TimeoutError inside wait_for
+        with patch("mcp_server_azure_architect.scorecard.asyncio.wait_for") as mock_wait_for:
+            mock_wait_for.side_effect = TimeoutError()
+
+            result = await run_scorecard(
+                subscription_id="sub-123",
+                checklist_ids=["54f0d8b1-22a3-4c0d-8ce2-58b9e086c93a"],
+            )
+
+            assert result["results"][0]["status"] == "unknown"
+            error_msg = result["results"][0]["error"]
+            assert error_msg is not None
+            assert "timed out after 60s" in error_msg.lower()
+            assert "narrow the scope" in error_msg.lower() or "pagination" in error_msg.lower()
+
