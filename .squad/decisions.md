@@ -370,6 +370,25 @@ All four wave 1 agents delivered on time:
 
 ---
 
+### PR #26 Cold-Start Benchmark — APPROVE pending PR #22
+
+**Date:** 2026-04-22 | **Status:** Awaiting wave 2 rebase | **Auditor:** Forge
+
+PR #26 (`copilot/investigate-cold-start-overhead`) audited as technically sound. Cold-start measurement methodology is credible (warm-up import, `time.perf_counter`, measures actual server entry point). Re-calibration to 1000 ms soft warning / 2000 ms hard fail is justified by measured data: Python 3.12 cached import is consistently ~943 ms (honors sub-1s ADR-001 intent), Python 3.11 has high variance making sub-800 ms a CI flake risk, and 2000 ms gate catches 2x regressions without flaking.
+
+**Conditions for merge:**
+1. Rebase on PR #22 post-merge (expected clean due to shared scaffold history).
+2. Unmark draft and run CI checks.
+3. Code-owner review.
+
+**Spin-offs:**
+- Issue #32 filed by Forge: tighten `mcp[cli]` and `azure-identity` version pins (post-#22 + #26 merge to avoid re-conflicting rebase).
+- Issue #19 (MCP Inspector smoke test) remains independent.
+
+**Related:** PR #26, issues #21, #19, #32, `forge-pr26-audit` orchestration log.
+
+---
+
 ## Governance
 
 - All meaningful changes require team consensus
