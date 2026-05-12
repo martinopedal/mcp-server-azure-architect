@@ -12,6 +12,16 @@ Per issue #92 (Lead synthesis 2026-05-15, Bug 2.D), all documentation in this re
 
 Note: The AKS-MCP mutation hazard identified by Sage (rec #8, finding B.3) is documented separately in `docs/companions/kubernetes.md` per issue #101 (not in scope for this addendum).
 
+## Addendum: Criterion 6 Worked Example: AKS-MCP Mutation Hazard (2026-05-XX)
+
+Issue #101 documents the [AKS-MCP mutation hazard](../companions/kubernetes.md#-hazard-mutation-capable-alternatives-aks-mcp) as a worked example of why Criterion 6 (Read-Only by Design or Config) is essential for companion server selection.
+
+**Background:** Azure/aks-mcp is an officially Microsoft-maintained MCP server for Kubernetes/AKS integration. It is mutation-capable by default, exposing `call_az` and `call_kubectl` tools that accept arbitrary CLI command strings. These tools can create, update, or delete Azure resources and Kubernetes objects depending on the input and caller's credentials.
+
+**Why Criterion 6 Matters:** This project's read-only posture (AGENTS.md, ADR-003) is non-negotiable. When wiring companion servers into a Copilot CLI that may invoke tools without user confirmation, mutation-capable tools pose a serious risk. AKS-MCP's default configuration violates Criterion 6 and is therefore excluded from the curated companion kit, even though it meets other criteria (stable upstream, signed releases, narrow scope, maintenance signal).
+
+**Mitigation:** This project includes `kubernetes-mcp-server` instead, which is read-only by design (kubectl inspection only, no CLI execution). Users who understand the risks and want AKS-MCP can wire it into their personal `mcp-config.json` with `--access-level readonly` and per-tool gating in their MCP client, but this is explicitly not recommended and deviates from the project's read-only default.
+
 ## Context
 
 The mcp-server-azure-architect project ships a curated `mcp-config.json` with a set of companion MCP servers. These companions are not bundled with the server itself; instead, they are recommended via configuration and documentation, following the "complement, don't wrap" principle stated in AGENTS.md.

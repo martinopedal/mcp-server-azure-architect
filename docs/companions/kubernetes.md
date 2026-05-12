@@ -9,6 +9,52 @@ Provides kubectl-based inspection of live Kubernetes clusters. Architects use th
 Repository: [kubernetes-mcp-server](https://github.com/mkdocs/kubernetes-mcp-server) (unverified; search results suggest community origin)  
 Maintainer: community-maintained
 
+## ⚠️ Hazard: Mutation-Capable Alternatives (AKS-MCP)
+
+Users exploring Kubernetes integration tools may discover [Azure/aks-mcp](https://github.com/Azure/aks-mcp), another community-owned Kubernetes MCP server specifically designed for AKS clusters. **AKS-MCP exposes mutation-capable tools and is incompatible with this project's read-only posture.**
+
+### Why AKS-MCP is Not Included
+
+Azure/aks-mcp provides two problematic tool categories:
+
+1. **Arbitrary CLI execution:** `call_az` and `call_kubectl` tools that accept arbitrary Azure CLI and kubectl command strings. These bypass intent analysis and enable any operation (create, delete, update, exec) depending on the CLI input and the caller's Azure credentials.
+
+2. **Configurable access level:** `--access-level` flag toggles between `readonly` and `readwrite` mode. Even the "readonly" mode can trigger read operations that return sensitive data (e.g., `kubectl exec` pod commands). The "readwrite" mode explicitly enables mutation operations.
+
+### This Project's Choice
+
+This project deliberately includes `kubernetes-mcp-server` (kubectl inspection only) instead of AKS-MCP because:
+
+- **Read-only by design:** No CLI execution, no mutations, no access level toggles. Inspection only (list pods, nodes, services; get resource YAML).
+- **Principle alignment:** ADR-003 and AGENTS.md prohibit mutation tools. "No mutation tools, ever."
+- **Safe for architects:** Architects can inspect live cluster state during design reviews without risk of accidental changes.
+
+### If You Wire AKS-MCP Instead
+
+If you choose to use AKS-MCP in your `mcp-config.json`, you must:
+
+1. **Explicitly set `--access-level readonly`** in the server args to disable write capability.
+2. **Ensure your MCP client supports per-tool gating.** Some clients (Copilot CLI, Claude Desktop) allow you to explicitly allowlist or denylist tools before invoking them. Use this feature to disable `call_az` and `call_kubectl` entirely.
+3. **Review the full tool list** in [Azure/aks-mcp README](https://github.com/Azure/aks-mcp#tools) and understand which tools are available in your access level.
+4. **Document your choice** in your team's MCP configuration docs, noting the deviation from this project's read-only default.
+
+### Example: Wiring AKS-MCP with Safety Guards
+
+If your team has audited AKS-MCP and decided to use it (against this project's recommendation), here is a cautious config:
+
+```json
+{
+  "tools": {
+    "aks-mcp": {
+      "command": "npx",
+      "args": ["-y", "@azure/aks-mcp@latest", "--access-level", "readonly"]
+    }
+  }
+}
+```
+
+**Important note:** Even with `--readonly`, the tool is NOT safe by default. MCP clients must enforce per-tool gating to disable `call_az` and `call_kubectl`. Check your client's documentation.
+
 ## Distribution
 
 Installed via npm:
