@@ -5,7 +5,7 @@ from typing import Any, Literal
 from mcp.server.fastmcp import FastMCP
 
 from mcp_server_azure_architect import __version__
-from mcp_server_azure_architect.alz_queries import get_query
+from mcp_server_azure_architect.alz_queries import get_query, list_queries
 from mcp_server_azure_architect.pricing import (
     pricing_compare_skus as _pricing_compare_skus,
 )
@@ -90,6 +90,43 @@ def pricing_compare_skus(
     return _pricing_compare_skus(
         skus=skus, region=region, term=term, currency=currency
     )
+
+
+@mcp.tool()
+def alz_query_list(
+    pillar: str | None = None,
+    source_repo: str | None = None,
+    limit: int = 200,
+) -> dict[str, Any]:
+    """List vendored Azure Landing Zone (ALZ) checklist queries.
+
+    Enumerate the vendored ALZ snapshot with optional filters by pillar or
+    source repository. Returns metadata for each query (checklist ID, pillar,
+    source repo, citation) but not the full KQL text. Use alz_query_by_id to
+    retrieve the full query.
+
+    Read-only: this tool performs static enumeration of the vendored ALZ
+    snapshot under `data/alz-queries/`. It does not call Azure and does not
+    accept a subscription ID.
+
+    Args:
+        pillar: Optional pillar filter (e.g., "checklist", "graph"). If provided,
+            only queries from that pillar are returned.
+        source_repo: Optional source repo filter (e.g.,
+            "martinopedal/alz-checklist-queries"). If provided, only queries
+            from that repo are returned.
+        limit: Maximum number of items to return (default 200). If the filtered
+            result set exceeds this limit, items are sliced alphabetically and
+            truncated is set to True.
+
+    Returns:
+        A dictionary with `count` (int, total matching queries), `items` (list
+        of dicts with checklist_id, pillar, source_repo, title, citation),
+        `manifest_commit` (str, composite of source commits), `truncated` (bool),
+        and `filters_applied` (dict with pillar and source_repo).
+    """
+    result = list_queries(pillar=pillar, source_repo=source_repo, limit=limit)
+    return result
 
 
 @mcp.tool()
