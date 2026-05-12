@@ -8,7 +8,13 @@ from mcp_server_azure_architect import __version__
 from mcp_server_azure_architect.alz_queries import get_query, list_queries
 from mcp_server_azure_architect.audit import audit_log_tool
 from mcp_server_azure_architect.pricing import (
+    WorkloadSpec,
+)
+from mcp_server_azure_architect.pricing import (
     pricing_compare_skus as _pricing_compare_skus,
+)
+from mcp_server_azure_architect.pricing import (
+    pricing_estimate_workload as _pricing_estimate_workload,
 )
 from mcp_server_azure_architect.pricing import (
     pricing_lookup_sku as _pricing_lookup_sku,
@@ -97,9 +103,22 @@ def pricing_compare_skus(
     sizing trade-off review. Raises ValueError if the cap is exceeded or skus
     is empty.
     """
-    return _pricing_compare_skus(
-        skus=skus, region=region, term=term, currency=currency
-    )
+    return _pricing_compare_skus(skus=skus, region=region, term=term, currency=currency)
+
+
+@mcp.tool()
+@audit_log_tool
+def pricing_estimate_workload(spec: dict[str, Any]) -> dict[str, Any]:
+    """Estimate monthly cost for a structured workload specification.
+
+    Composes pricing_lookup_sku results into a multi-line cost estimate with
+    VM count, region, hours/month, and storage. Returns total_monthly (Decimal),
+    currency, line_items, assumptions, and warnings. Retail prices only
+    (no EA/CSP). Designed for sizing trade-off analysis and to feed alz_scorecard
+    cost guardrail.
+    """
+    workload = WorkloadSpec.model_validate(spec)
+    return _pricing_estimate_workload(spec=workload)
 
 
 @mcp.tool()

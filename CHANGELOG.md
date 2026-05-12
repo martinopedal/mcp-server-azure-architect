@@ -2,12 +2,6 @@
 
 All notable changes to this project will be documented in this file.
 
-## [Unreleased]
-
-### Changed
-
-- **Documentation style**: second-pass cleanup of banned punctuation, wrong glyph status indicators (replaced with the project-approved set, plus a text fallback for "pending"), AI-slop language in ADRs, and voice profile consistency. Scope: README, CHANGELOG, docs/ and ADRs. Exempt: .squad/, .copilot/skills/, vendored data, code. See `.copilot/skills/docs-style/SKILL.md` for the full ruleset.
-
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
@@ -23,6 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Native MCP tool `pricing_estimate_workload` for structured workload cost estimation. Composes `pricing_lookup_sku` results into a multi-line estimate with VM count, region, hours per month, and storage. Returns total monthly cost (Decimal), currency, line items, assumptions, and warnings. Designed for sizing trade-off analysis and to feed `alz_scorecard` cost guardrail. Retail prices only (no EA/CSP). (#44)
 - **Tool docstring style guide** (`docs/dev/tool-docstring-style.md`). Pattern extracted from 5 working MCP tools. Covers required structure (summary, description, Args, Returns, Raises, Examples), parameter conventions (optionality, defaults, Literal types), common pitfalls, and test patterns. Google-style docstrings normalized across the project.
 - Native MCP tool `alz_query_list` for enumerating vendored ALZ checklist queries with optional filters (pillar, source_repo). Returns metadata (checklist_id, pillar, source_repo, citation) for up to 200 queries per call. Pairs with `alz_query_by_id` for discovery-then-fetch workflow. (#51)
 - Cold-start canary test for azure.identity lazy import (regression guard for #67).
@@ -30,6 +25,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **Documentation style**: second-pass cleanup of banned punctuation, wrong glyph status indicators (replaced with the project-approved set, plus a text fallback for "pending"), AI-slop language in ADRs, and voice profile consistency. Scope: README, CHANGELOG, docs/ and ADRs. Exempt: .squad/, .copilot/skills/, vendored data, code. See `.copilot/skills/docs-style/SKILL.md` for the full ruleset.
 - **Performance**: Lazy-imported `azure.identity` in `azure_client.get_credential()` to reduce cold-start overhead by 157ms (7.7% faster). See `docs/perf/lazy-import-results.md` for measurements. (Closes #67)
 - ADR-001 revised baseline expectations: measured cold start is 8.5-9.0 seconds on Python 3.12-3.14 (dominated by irreducible FastMCP framework overhead). See `docs/perf/coldstart-investigation.md` for detailed analysis.
 
