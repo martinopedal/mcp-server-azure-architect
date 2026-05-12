@@ -22,3 +22,11 @@ Pin versions when: (1) upstream has stable releases with semver, (2) schema stab
 ## Team Update (2026-05-12)
 
 Wave 2 complete: foundation (#22, #23, #26, #27, #33, #34) all on main. Decisions ledger consolidated. ADR-001 ratified. Next: ADR-002/003/004, branch protection (#20), threat model (#18), and v0.1 docs per Sage's gap audit.
+
+## Wave 3 Outcomes (2026-05-12)
+
+**ADR-004 companion server selection bar merged (PR #37, closed #8).** Seven-criteria framework ratified: stable upstream, signed releases, narrow scope, complementary to azure-mcp, maintenance signal, read-only design, documented install path. All 8 current companions in `.copilot/mcp-config.json` audit-confirmed passing. Triage process documented for future candidates. Sentinel's ADR-003 threat model (criterion 6: read-only) and Forge's dependency tightening (supply chain discipline) inform ADR-004's evaluation framework.
+
+**Pricing tools decision routed to issue #39.** ADR-004 body cites native pricing tools as worked example of future "value-add layer above companion kit." Issue #39 queued for wave 4. Burke will triage pricing candidates against ADR-004 bar + threat model supply-chain section. Demonstrates tight feedback loop: ADRs inform decision frameworks; frameworks guide future issues.
+
+**Quarterly companion review cadence established.** Burke now owns quarterly maintenance signal audits (recommended 2026-08-12). All 8 companions must remain within 6-month maintenance threshold or flagged for action. ADR-004 triage process lightweight (15 minutes per candidate) prevents ad-hoc decisions.

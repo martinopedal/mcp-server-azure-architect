@@ -75,9 +75,85 @@ gh pr comment 27 --body "..."
 
 ---
 
+## Session 2026-05-12: ADR-002 Authoring and PR #36
+
+### Tasks
+- Inspected vendored snapshot structure from PR #27 (manifest.json, MANIFEST.md)
+- Wrote ADR-002 documenting vendoring discipline, refresh procedure, and citation requirements
+- Updated docs/adr/README.md to add ADR-002 to index
+- Validated via ruff and pytest (no breakage)
+- Committed and pushed to docs/adr-002-vendoring branch
+- Opened PR #36 with ADR-002 document
+- Added reviewer (copilot) and summary comment
+- Cleaned up worktree
+- Created decision artifact at .squad/decisions/inbox/atlas-adr-002.md
+
+### ADR-002 Key Sections
+- **Status:** Accepted (2026-05-12)
+- **Decision:** Vendor as snapshot, pinned by commit SHA in manifest.json
+- **Refresh procedure:** Documented 7-step process (check upstream, export, update manifests, PR cycle)
+- **Citation rule:** Every query MUST cite checklist ID + source commit (non-negotiable)
+- **Validation:** Future CI gates (schema, citation, SHA resolution, integrity)
+- **Consequences:** Offline capability, reproducibility, explicit drift tracking, attribution
+
+### PR #36 Status
+- Title: docs(adr): ADR-002 - ALZ query vendoring policy
+- Branch: docs/adr-002-vendoring
+- Base: main
+- Labels: squad
+- Reviewers: copilot
+- Body includes: rationale, closes #6, co-author trailer
+
+## Learnings (Wave 2 ADR-002 Session)
+
+### Refresh Procedure Specification
+ADR-002 documents a 7-step refresh procedure that scales for monthly or on-demand cadence:
+
+1. Upstream HEAD check via `gh api` (no clone required)
+2. Query file re-export and replace
+3. manifest.json update (commit SHA, vendored_at)
+4. MANIFEST.md changelog entry (per-source delta: new/changed/removed)
+5. Commit with `chore(alz-queries): refresh snapshot to {short-sha}`
+6. PR creation with per-query diff summary + breaking-change callouts + citation count delta
+7. Review and merge (Lead approval)
+
+**Scaling insight:** This procedure can be automated as a scheduled bot (e.g., GH Actions + Dependabot-style automation) if upstream maintains a stable tagging scheme (e.g., v1.1.0, v1.2.0).
+
+### Citation Enforcement Pattern
+ADR-002 mandates citation as a project convention (non-negotiable per section "Citation Requirements"). Future CI gate (ADR-003+) should validate:
+- Each query file header or metadata references its checklist ID
+- Checklist ID exists in manifest.json
+- Source commit can be resolved via GitHub API
+
+**Reusable pattern:** This validates "provenance at the source" — enables audit trails without external catalog. Portable to other vendored dependencies (e.g., policy templates, threat models).
+
+### Manifest Schema as Extensible Baseline
+PR #27 + ADR-002 establish manifest.json schema with fields: repo, commit_sha, ref, vendored_at, subset (source_file, checklist_ids, files), file_count.
+
+**Future extensibility:** Schema can accommodate additional fields (e.g., license_spdx, checksum, breaking_changes) without breaking existing tooling. Recommend versioning the schema once tooling matures (ADR-003+: validation gates).
+
+### Offline and Audit Capability
+ADR-002 ratifies the "snapshot + citation" pattern as fundamental to offline-capable Azure architect tooling:
+- Queries are static files; no runtime resolution
+- Citations enable air-gapped deployments (no network call to upstream to resolve query ID)
+- Manifest enables reproducible builds and compliance audits (ISO 27001, FedRAMP, CMMC)
+
+**Implication for future tools:** alz_query_by_id, alz_scorecard, and quota planner can all be deployed to air-gapped environments without modification, as long as the snapshot is pre-distributed. This is a key selling point for enterprise orgs.
+
+### Alternatives Decision Summary
+ADR-002 revisits alternatives (fork, submodule, runtime fetch) and confirms rejection rationale:
+- **Fork:** Drift management unbounded
+- **Submodule:** Poor packaging UX (uvx/pip friction)
+- **Runtime fetch:** Network dependency, reproducibility failure, violates offline model
+- **No vendoring:** Can't ship static tools
+
+**Reusable pattern:** This decision structure (context + options + criteria + consequences) applies to future vendoring decisions (e.g., threat model snapshots, policy templates, compliance baseline queries).
+
 ## Next Work (Wave 2 or Future)
 
-- ADR-002 (#6) should codify the manifest schema and organizational pattern from this snapshot
+- ADR-002 (#6) PR #36 awaits review and merge
+- First refresh target: 2026-06-12 (one month post-acceptance); task owner: Atlas
+- ADR-003 and ADR-004 should define CI validation gates (schema, citation, SHA resolution, checksum)
 - Consider: kql:syntax-check linter gate for future snapshots (not in scope for v1)
 - Quarterly refresh: create a template issue from this snapshot (checklist of: choose commits, test in ARG Explorer, update manifests, ping reviewers)
 - alz_query_by_id MCP tool can consume manifest.json directly to support `query get --checklist-id <uuid>` or `query get --slug <human-slug>`
@@ -104,3 +180,11 @@ gh pr comment 27 --body "..."
 ## Team Update (2026-05-12)
 
 Wave 2 complete: foundation (#22, #23, #26, #27, #33, #34) all on main. Decisions ledger consolidated. ADR-001 ratified. Next: ADR-002/003/004, branch protection (#20), threat model (#18), and v0.1 docs per Sage's gap audit.
+
+## Wave 3 Outcomes (2026-05-12)
+
+**ADR-002 merged (PR #36, closed #6).** Vendoring policy ratified. Refresh procedure locked in: 7-step cadence (upstream HEAD check via `gh api`, re-export, manifest updates, PR cycle with dual review). Citation enforcement pattern established as non-negotiable. Sentinel's threat model identified KQL injection (T1) as top supply-chain risk for future refresh PRs — dual review (Sage + Sentinel) now standard for vendoring PRs.
+
+**Cross-agent dependencies resolved.** Sentinel's ADR-003 + threat model (PR #40, closed #7, #18) provides three-layer read-only enforcement. Burke's ADR-004 (PR #37, closed #8) validates companion pinning discipline. Forge's dependency tightening (PR #38, closed #32) eliminates azure-identity CVEs. All four wave-3 ADRs stack cleanly on ADR-001 runtime foundation.
+
+**Branch protection now enforced (issue #20 closed).** Coordinator executed protection plan immediately post-PR #40 merge. 6 required checks + 1 approval gate now active for all future PRs. All wave-3 PRs landed before protection, so no retroactive issues. Sets precedent: infrastructure enforcement is non-optional.
