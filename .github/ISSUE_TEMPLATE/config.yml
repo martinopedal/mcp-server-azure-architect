@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Security report (private)
+    url: https://github.com/martinopedal/mcp-server-azure-architect/security/advisories/new
+    about: Use the private security advisory channel for sensitive findings.
+  - name: Squad team docs
+    url: https://github.com/martinopedal/mcp-server-azure-architect/blob/main/.squad/team.md
+    about: Read the team and routing docs before opening a squad-related issue.

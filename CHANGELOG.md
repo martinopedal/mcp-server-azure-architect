@@ -32,6 +32,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **ALZ snapshot refresh automation:** Weekly scheduled GitHub Actions workflow to detect upstream drift in `martinopedal/alz-checklist-queries` and `martinopedal/alz-graph-queries`, automatically opening PRs with updated manifests when changes detected. See `.github/workflows/refresh-alz-snapshot.yml` and `scripts/refresh_alz_snapshot.py`.
 
+### Repository Infrastructure
+
+- GitHub issue and PR templates with squad routing:
+  - `.github/ISSUE_TEMPLATE/bug-report.md` - Bug report template with environment, pre-checks, credential scrubbing reminder
+  - `.github/ISSUE_TEMPLATE/feature-request.md` - Feature request template with proposed surface, ADR-004 justification, acceptance criteria
+  - `.github/ISSUE_TEMPLATE/security-finding.md` - Security finding template with threat, impact, evidence, mitigation, and disclosure policy reminder
+  - `.github/ISSUE_TEMPLATE/config.yml` - GitHub issue template configuration: disables blank issues, adds security and squad routing contact links
+  - `.github/pull_request_template.md` - PR template with validation gates (pytest, ruff, mypy, check_readonly.py, mcp_smoke.py, CHANGELOG.md)
+
 ## [0.1.0] - 2026-05-15
 
 ### Added
