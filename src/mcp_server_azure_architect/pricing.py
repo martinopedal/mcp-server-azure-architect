@@ -285,7 +285,8 @@ def pricing_lookup_sku(
     odata_filter = _build_filter(sku, region, term)
     raw_items = _fetch_with_cache(odata_filter, currency)
     items = [_shape_item(r) for r in raw_items]
-    source_url = f"{PRICING_ENDPOINT}?$filter={odata_filter}&currencyCode={currency}"
+    currency_esc = _escape_odata_value(currency)
+    source_url = f"{PRICING_ENDPOINT}?$filter={odata_filter}&currencyCode={currency_esc}"
     return {
         "sku": sku,
         "region": region,
