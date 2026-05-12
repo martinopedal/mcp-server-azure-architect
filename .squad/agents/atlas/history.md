@@ -180,3 +180,11 @@ ADR-002 revisits alternatives (fork, submodule, runtime fetch) and confirms reje
 ## Team Update (2026-05-12)
 
 Wave 2 complete: foundation (#22, #23, #26, #27, #33, #34) all on main. Decisions ledger consolidated. ADR-001 ratified. Next: ADR-002/003/004, branch protection (#20), threat model (#18), and v0.1 docs per Sage's gap audit.
+
+## Wave 3 Outcomes (2026-05-12)
+
+**ADR-002 merged (PR #36, closed #6).** Vendoring policy ratified. Refresh procedure locked in: 7-step cadence (upstream HEAD check via `gh api`, re-export, manifest updates, PR cycle with dual review). Citation enforcement pattern established as non-negotiable. Sentinel's threat model identified KQL injection (T1) as top supply-chain risk for future refresh PRs — dual review (Sage + Sentinel) now standard for vendoring PRs.
+
+**Cross-agent dependencies resolved.** Sentinel's ADR-003 + threat model (PR #40, closed #7, #18) provides three-layer read-only enforcement. Burke's ADR-004 (PR #37, closed #8) validates companion pinning discipline. Forge's dependency tightening (PR #38, closed #32) eliminates azure-identity CVEs. All four wave-3 ADRs stack cleanly on ADR-001 runtime foundation.
+
+**Branch protection now enforced (issue #20 closed).** Coordinator executed protection plan immediately post-PR #40 merge. 6 required checks + 1 approval gate now active for all future PRs. All wave-3 PRs landed before protection, so no retroactive issues. Sets precedent: infrastructure enforcement is non-optional.

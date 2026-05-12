@@ -149,3 +149,183 @@ This pattern scales to a registry of recommended servers.
 ## Team Update (2026-05-12)
 
 Wave 2 complete: foundation (#22, #23, #26, #27, #33, #34) all on main. Decisions ledger consolidated. ADR-001 ratified. Next: ADR-002/003/004, branch protection (#20), threat model (#18), and v0.1 docs per Sage's gap audit.
+
+---
+
+## Session 2: ADR-003 Final + Threat Model + Branch Protection Plan (2026-05-12)
+
+**PR:** #40 (docs/adr-003-readonly-and-threat-model)  
+**Closes:** #7 (ADR-003), #18 (threat model)  
+**Sets up:** #20 (branch protection execution by coordinator)
+
+**Artifacts delivered:**
+
+1. **`docs/adr/0003-read-only-enforcement.md`** (242 lines)
+   - Ratifies Option E from wave-1 outline: defense-in-depth with 3 layers
+   - Layer 1: AST-based import allowlist (CI gate, `.github/scripts/check_readonly.py`)
+   - Layer 2: Convention + CODEOWNERS (naming: `_get_*`, `_list_*`, `_query_*` allowed)
+   - Layer 3: Runtime guard (aspirational, v0.2+)
+   - Format matches ADR-001 structure
+   - Status: Accepted (2026-05-12, Sentinel)
+
+2. **`docs/security/threat-model.md`** (503 lines)
+   - STRIDE-Lite analysis using `.squad/skills/stride-lite-mcp-readonly/SKILL.md` framework
+   - 15 threats cataloged: 3 CRITICAL, 2 HIGH, 6 MEDIUM, 2 LOW, 2 accepted risks
+   - Top 3 critical: confused-deputy (S1/E1), compromised vendored query (T1), token leakage (I1)
+   - Supply chain risk matrix: direct deps, transitive deps, vendored content, companion servers
+   - 8 mitigations in place or partial, 7 OPEN (tracked in follow-up issues)
+   - Rationale for each threat includes attack vector, example, and concrete mitigation
+
+3. **`docs/security/branch-protection-plan.md`** (285 lines)
+   - Executable spec for coordinator to apply after PR merge
+   - 6 immediate required checks + 4 aspirational checks
+   - Settings: `required_approving_review_count=1`, `strict=true`, preserve `enforce_admins` and `required_linear_history`
+   - `gh api` commands with exact syntax for apply + rollback
+   - Admin toggle procedure for coordinator merge (disable, merge, re-enable)
+   - Test plan included (dry-run on test branch)
+
+4. **`docs/adr/README.md`** (updated)
+   - Added ADR-003 to index
+
+**Validation:** Ruff clean, pytest 4/4 passed.
+
+**Key Decisions:**
+
+- **ADR-003 Option E (combination) ratified.** Balances safety, cost, transparency. Layer 1 provides immediate CI feedback. Layers 2+3 add incremental safety. Alternatives rejected: trust-only (doesn't scale), RBAC-only (doesn't enforce read-only by design), static-only (misses dynamic dispatch).
+
+- **Threat model identifies 3 CRITICAL threats:**
+  1. **Confused-deputy via unvalidated subscription_id.** Mitigation: `validate_caller_scope()` helper (OPEN).
+  2. **Compromised vendored query (KQL injection).** Mitigation: SHA pinning (done), dual review (documented), integrity checks (OPEN).
+  3. **Token leakage via logging.** Mitigation: `token_scrub()` stub exists, integration OPEN.
+
+- **Supply chain risk matrix:** Direct deps are Microsoft/official (low-medium risk, loose constraints). Transitive deps (`cryptography`, `PyJWT`, `requests`) are high-value targets (Dependabot + dependency-review in place, lockfile discipline OPEN). Vendored content SHA-pinned (PR #27). Companion servers follow tiered trust model.
+
+- **Branch protection plan as executable spec.** 6 immediate checks (CI/test, gitleaks, dependency-review, CodeQL). 4 aspirational checks (readonly-check, mcp-inspector-smoke, coverage, license-check). Coordinator runs `gh api` commands after PR merge. Admin toggle required for coordinator merge (disable `enforce_admins`, merge, re-enable).
+
+**Follow-Up Actions:**
+
+1. Implement ADR-003 layer 1: `.github/scripts/check_readonly.py` + CI integration (issue #7, blocker for v0.1).
+2. Create tracking issues for OPEN threat mitigations (Sentinel task).
+3. Execute branch protection plan (coordinator task, issue #20).
+4. Add CODEOWNERS for `src/**/*.py` routing to Sentinel-equivalent reviewer (Lead task).
+5. Tighten dependency constraints: `mcp>=1.27.0`, `azure-identity>=1.23.0` (Forge, issue #32).
+
+**Patterns and Learnings:**
+
+### Pattern: Multi-Layer Enforcement ADRs
+
+When a non-functional requirement (e.g., read-only, no-telemetry, no-network-in-tests) is critical:
+
+1. **Layer 1 (CI gate, immediate):** Fast, automated, actionable feedback. Low false positives. Blocks merge if violated.
+2. **Layer 2 (convention + review, immediate):** Human judgment, naming clarity, enforced via CODEOWNERS.
+3. **Layer 3 (runtime guard, aspirational):** Catch dynamic cases (reflection, getattr). High implementation cost; defer to v2 unless essential.
+
+This pattern balances safety, cost, and transparency. Reusable for other enforcement scenarios.
+
+### Pattern: STRIDE-Lite for Read-Only MCP Servers
+
+Adapt STRIDE for domain-specific threat models. For read-only MCP servers:
+
+- **S (Spoofing):** Confused-deputy (unvalidated caller scope)
+- **T (Tampering):** Supply chain (transitive deps, vendored data)
+- **R (Repudiation):** Audit logging
+- **I (Information Disclosure):** Token leakage, log permissions
+- **D (Denial of Service):** Result size limits, query complexity
+- **E (Elevation of Privilege):** Mutation method exposure
+
+Focus on attack surface unique to the domain. Skip irrelevant categories. Provide concrete mitigations with status tracking. Reusable for other read-only tools (compliance checkers, audit viewers).
+
+### Pattern: Branch Protection as Executable Spec
+
+Document branch protection settings as executable `gh api` commands, not prose. Benefits:
+
+- Coordinator can copy-paste commands (no translation).
+- Rollback procedures are actionable (not aspirational).
+- Test plan included (dry-run on test branch).
+- Phased approach: immediate checks (already in CI) + aspirational checks (added as workflows land).
+
+Reusable for any repo protection documentation.
+
+### Threat Model Sequencing Insight
+
+**ADR-003 + threat model must land together.** ADR-003 ratifies enforcement mechanism. Threat model justifies why enforcement is critical (T and E threats). Splitting them breaks the narrative. Branch protection plan is a natural third artifact (enables enforcement via CI gates).
+
+### Admin Toggle for Branch Protection Merge
+
+**Context:** When `enforce_admins: true`, the coordinator (who is admin) cannot merge even with approvals. Must temporarily disable `enforce_admins`, merge, then re-enable immediately.
+
+**Pattern:** Document this in branch protection plan with explicit commands. Warn that re-enable is CRITICAL (do not leave disabled). Include validation step (`gh api` to confirm `enforce_admins` is back to true).
+
+**Risk:** If coordinator forgets to re-enable, all protections can be bypassed. Mitigation: automation script that wraps disable-merge-enable in a single transaction. Tracked as future improvement.
+
+## Learnings
+
+### ADR Format Evolution
+
+**Observation:** ADR-003 expands on ADR-001's format. New sections added:
+
+- **What "Read-Only" Means:** Defines scope (no mutation methods, no LROs, no credential writes).
+- **Threat Model Context:** Cross-references `docs/security/threat-model.md` for STRIDE context.
+- **Implementation Status:** Tracks which layers are immediate vs. aspirational.
+- **Open Questions Resolved:** Addresses all open questions from wave-1 outline.
+
+**Generalization:** ADRs for enforcement mechanisms should include:
+1. Scope definition (what does "X" mean concretely?).
+2. Threat context (why enforce X?).
+3. Implementation status (what's immediate vs. deferred?).
+4. Resolved open questions (from outline to final).
+
+### Threat Model Mitigation Status Discipline
+
+**Pattern:** Every threat includes a **Status** field: OPEN, PARTIALLY MITIGATED, MITIGATED, ACCEPTED RISK. OPEN threats reference tracking issues (issue #TBD until created). PARTIALLY MITIGATED threats list what's done and what's pending.
+
+This enables audit: external reviewers can verify mitigation status against GitHub issues. Quarterly threat model reviews can update status as issues close.
+
+### Supply Chain Risk Levels
+
+**Pattern:** Classify dependencies as Low, Medium, High risk based on:
+
+- **Official sources** (Microsoft, HashiCorp, GitHub): Low risk (signed, actively maintained).
+- **Mature community** (>1 year old, >100 stars, frequent updates): Low-Medium risk.
+- **Unmaintained** (>1 year without update) or **unknown provenance**: High risk.
+- **Loose version constraints** (e.g., `>=1.0.0` allows any 1.x): Elevate risk by one level (Low → Medium, Medium → High).
+
+Transitive deps are always Medium-High risk (not directly controlled). Mitigation: Dependabot, lockfile, periodic audit (pip-audit, safety).
+
+### Branch Protection Phased Rollout
+
+**Pattern:** Don't block on aspirational checks. Apply immediate checks (already in CI) now. Add aspirational checks as workflows land. Each addition is a single `gh api` command that replaces the entire contexts list (include all existing + new).
+
+**Rationale:** Applying non-existent checks blocks all PRs indefinitely. Phased approach balances safety (enable protections now) with pragmatism (don't block on unimplemented checks).
+
+**Rollback discipline:** If a required check breaks, coordinator can remove it from contexts list without losing other protections. Rollback procedure documented in plan.
+
+## Cross-Agent Context
+
+**From Lead:** Wave 2 foundation complete. ADR-003 + threat model are top priority for v0.1 confidence. Branch protection execution (issue #20) is coordinator task, will follow after this PR merges.
+
+**From Forge:** Issue #32 tracks dependency constraint tightening (`mcp>=1.27.0`, `azure-identity>=1.23.0`). Will address after ADR-003 lands. ADR-003 layer 1 implementation (`.github/scripts/check_readonly.py`) is Forge task, tracked in issue #7.
+
+**From Atlas:** PR #27 ALZ snapshot audit complete. SHA pinning and MANIFEST implemented. Threat model (T1) references this as partial mitigation. Integrity checks (SHA-256 validation in CI) are next step, tracked in issue #TBD.
+
+**From Sage:** v0.1 docs gap audit complete. Threat model expansion (STRIDE-lite) is a top-3 priority for v0.1 confidence. User-facing threat model summary (for architects unfamiliar with STRIDE) is a follow-up task, tracked in docs roadmap.
+
+## References
+
+- **PR #40:** https://github.com/martinopedal/mcp-server-azure-architect/pull/40
+- **Issue #7:** ADR-003 read-only enforcement
+- **Issue #18:** Threat model + supply chain doc
+- **Issue #20:** Branch protection
+- **PR #27:** Atlas's ALZ snapshot audit (SHA pinning, MANIFEST)
+- **Issue #32:** Forge's dependency constraint tightening
+- **Wave 1 outlines:** `.squad/decisions.md` (Sentinel entries)
+- **STRIDE-lite skill:** `.squad/skills/stride-lite-mcp-readonly/SKILL.md`
+- **Decision artifact:** `.squad/decisions/inbox/sentinel-adr-003-final.md`
+
+## Wave 3 Outcomes (2026-05-12)
+
+**ADR-003, threat model, and branch protection plan merged (PR #40, closed #7, #18).** All three artifacts now ratified and documented. Coordinator executed branch protection plan immediately post-merge: 6 required checks + 1 approval gate now enforced for all future PRs. No retroactive issues (all wave-3 PRs landed before protection activated).
+
+**Cross-agent alignment verified.** Atlas's ADR-002 vendoring policy aligns with threat model T1 (compromised vendored query). Burke's ADR-004 companion selection bar (criterion 6: read-only design) aligns with E1 threat (mutation method exposure). Forge's dependency tightening (PR #38) addresses T threat (compromised transitive deps). All enforcement layers (CI + convention + runtime) documented in ADR-003; layer 1 (CI gate) now assigned to Forge (issue #7, blocker for v0.1).
+
+**Supply chain risk discipline established.** Threat model supply chain section + Burke's companion pinning policy + Forge's dependency constraints create unified supply chain posture. Future companion candidates (issue #39: pricing tools) will be evaluated against both ADR-004 (companion bar) and threat model (supply chain risk level). Quarterly threat model reviews now standard (recommended 2026-08-12).

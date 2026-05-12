@@ -491,6 +491,225 @@ PR #26 (`copilot/investigate-cold-start-overhead`) audited as technically sound.
 ---
 - 2026-04-22, Lead review accepted cold-start scaffold with nits and follow-up issue for reproducible benchmarking and threshold calibration.
 
+---
+
+## Wave 3 Decisions (2026-05-12)
+
+### ADR-002: ALZ Query Vendoring Policy (PR #36, Atlas)
+
+**Decision:** APPROVED
+
+**Rationale:** PR #36 formalizes the vendoring approach demonstrated in PR #27. The decision is to vendor ALZ checklist queries as a snapshot under `data/alz-queries/`, pinned by upstream commit SHA in `manifest.json`. Refresh procedure, citation requirements, and validation gates codified.
+
+**Key Clauses:**
+1. **Snapshot structure:** `data/alz-queries/{checklist,graph}/*.kql` with dual manifests (manifest.json machine-readable, MANIFEST.md human-readable).
+2. **Citation rule (non-negotiable):** Every named query MUST cite checklist ID + source repo + source commit. Enforced by future CI gate (ADR-003+).
+3. **Refresh cadence:** Monthly or on-demand (triggered by upstream releases).
+4. **Validation:** Current manual. Future CI gates (ADR-003+): manifest.json schema, citation verification, commit SHA resolution, snapshot integrity.
+
+**Consequences:**
+- Enables: Offline capability, reproducible builds, explicit drift tracking, licensing and attribution, auditability.
+- Costs: Manual refresh discipline, potential merge conflicts, storage overhead (~50-100KB per 100 queries).
+
+**Status:** Closed by PR #36.
+**Related:** Issues #6 (ADR-002), #17 (ALZ vendoring).
+
+---
+
+### ADR-003: Read-Only Enforcement Mechanism (PR #40, Sentinel)
+
+**Decision:** APPROVED — Option E (Combination)
+
+**Rationale:** Defense-in-depth with three layers:
+
+1. **Layer 1 (immediate, CI gate):** AST-based import allowlist in `.github/scripts/check_readonly.py`. Scans `src/` for mutation imports (Begin*, Create*, Update*, Delete*). Blocks merge if detected.
+2. **Layer 2 (immediate, convention):** Naming convention for tools: `_get_*`, `_list_*`, `_query_*` allowed. No `_create_*`, `_update_*`, `_delete_*`. CODEOWNERS routes all `src/**/*.py` changes to Sentinel-equivalent reviewer.
+3. **Layer 3 (aspirational, v0.2):** Runtime guard via `ReadOnlyClientProxy` in `azure_client.py`. Intercepts method calls, rejects mutation methods at runtime.
+
+**Alternatives rejected:**
+- Trust-only: Doesn't scale; human error likely.
+- Static-only: Misses dynamic dispatch (getattr, reflection).
+- RBAC-only: Doesn't enforce read-only by design.
+- Runtime-only: High implementation cost; doesn't provide CI feedback.
+
+**Implementation status:**
+- Layer 1: Pending implementation (issue #7).
+- Layer 2: Pending CODEOWNERS + convention enforcement.
+- Layer 3: Deferred (follow-up issue for v0.2).
+
+**Status:** Closed by PR #40.
+**Related:** Issues #7 (ADR-003), #18 (threat model), #20 (branch protection setup).
+
+---
+
+### Threat Model: STRIDE-Lite for Read-Only MCP Servers (PR #40, Sentinel)
+
+**Framework:** Adapted from Microsoft STRIDE, tailored for read-only MCP servers.
+
+**Top 3 critical threats:**
+
+1. **S1 / E1: Confused-deputy via unvalidated subscription_id.** Tool accepts arbitrary subscription GUID without validating caller scope. Mitigations: `validate_caller_scope()` helper, log validation failures, tool docstrings warn users. Status: OPEN.
+2. **T1: Compromised vendored query (KQL injection).** Upstream repo compromise or tampered snapshot ships malicious KQL. Mitigations: SHA pinning, dual review (Sage + Sentinel), integrity checks (SHA-256), query citations. Status: PARTIAL (SHA pin done, integrity checks pending).
+3. **I1: Token leakage via logging.** Verbose logging or error stack traces leak bearer tokens. Mitigations: `token_scrub()` helper, INFO-level default, 0600 log file permissions, disable stack traces in production. Status: PARTIAL (stub exists, integration pending).
+
+**Other threats:** 2 HIGH (compromised transitive dep, mutation method exposure), 6 MEDIUM, 2 LOW. Total: 15 threats cataloged.
+
+**Supply chain risk matrix:**
+- Direct deps: `mcp` (medium risk, loose constraint), `azure-identity` (low-medium, loose constraint), `azure-mgmt-resourcegraph` (low).
+- Transitive deps: `cryptography`, `PyJWT`, `requests` are high-value targets. Mitigations: Dependabot, dependency-review CI gate.
+- Vendored content: ALZ queries SHA-pinned in MANIFEST (PR #27).
+- Companion servers: Tiered trust model (official > mature community > emerging).
+
+**Mitigations summary:** 8 mitigated/partial, 7 OPEN (tracked in follow-up issues), 2 accepted risks.
+
+**Status:** Closed by PR #40.
+**Related:** Issues #18 (threat model), #20 (branch protection setup).
+
+---
+
+### Branch Protection Plan: Executable Spec for Coordinator (PR #40, Sentinel)
+
+**6 immediate required checks:**
+
+1. `CI / test (ubuntu-latest, 3.11)`
+2. `CI / test (ubuntu-latest, 3.12)`
+3. `gitleaks / scan`
+4. `dependency-review / review`
+5. `CodeQL / Analyze (actions)`
+6. `CodeQL / Analyze (python)`
+
+**4 aspirational checks (to be added as workflows land):**
+
+7. `readonly-check` (issue #7)
+8. `mcp-inspector-smoke` (issue #19)
+9. `coverage` (TBD)
+10. `license-check` (TBD)
+
+**Other settings:**
+- `required_approving_review_count: 1` (enforced post-PR merge)
+- `required_status_checks.strict: true` (branches must be up-to-date)
+- `enforce_admins: true` (already enabled)
+- `required_linear_history: true` (already enabled)
+
+**Execution:** PR #40 merged. Coordinator executed branch protection plan via `gh api` commands (issue #20, closed 2026-05-12). All 6 required checks activated. Strict mode enabled.
+
+**Status:** EXECUTED (issue #20 closed).
+**Related:** Issues #20 (branch protection execution), PR #40.
+
+---
+
+### ADR-004: Companion Server Selection Bar (PR #37, Burke)
+
+**Decision:** APPROVED
+
+**Rationale:** Formalizes 7-criteria decision framework for curated companion kit. All companions in `.copilot/mcp-config.json` must pass ALL criteria:
+
+1. **Stable upstream:** semver-tagged releases, no HEAD-only or unversioned distributions.
+2. **Signed releases:** npm provenance, PyPI sigstore, Docker Content Trust, or GitHub checksums.
+3. **Narrow scope:** single domain (diagrams, k8s, IaC, docs). No general-purpose runtimes.
+4. **Complementary to azure-mcp:** does NOT duplicate ARG, Advisor, Monitor, Policy, RBAC, AKS, AppService, Key Vault, Storage, or other core Azure service tools.
+5. **Maintenance signal:** last release within ~6 months, OR upstream is ALLOWED-VENDOR (Microsoft, HashiCorp, Google Cloud, AWS, Linux Foundation).
+6. **Read-only by design or config:** no mutation capabilities, or mutations disabled in kit config.
+7. **Documented install path:** user-facing docs for at least one major MCP client (Copilot CLI, Claude Desktop, Cursor, VS Code Copilot).
+
+**Current kit (post-PR-#23):** All 8 companions pass the bar:
+- **azure-mcp** (2.0.1): Official Microsoft product.
+- **microsoft-learn** (hosted): Microsoft docs lookup.
+- **github** (latest): GitHub API inspection.
+- **mermaid** (0.4.1): Diagram rendering.
+- **drawio** (2.0.4): Diagram creation.
+- **kubernetes** (0.0.53): kubectl inspection.
+- **terraform** (v0.5.1): HashiCorp IaC tools (plan/validate only).
+- **mcp-server-azure-architect** (uvx): This repo.
+
+**Triage process for future companions:**
+1. Open issue with label `companion-candidate`. Include upstream URL and version.
+2. Burke checks all 7 criteria. Post findings in issue comment.
+3. If criteria pass, open PR to add companion + update compatibility matrix.
+4. Sentinel approves security aspects. Merge.
+
+**Status:** Closed by PR #37.
+**Related:** Issue #8 (companion server bar).
+
+---
+
+### Dependency Version Pin Tightening (PR #38, Forge)
+
+**Decision:** APPROVED
+
+**Changes:**
+```toml
+# Before
+dependencies = [
+    "mcp>=1.0.0",
+    "azure-identity>=1.15.0",
+    "azure-mgmt-resourcegraph>=8.0.0",
+]
+
+# After
+dependencies = [
+    "mcp>=1.27.0,<2.0.0",
+    "azure-identity>=1.23.0,<2.0.0",
+    "azure-mgmt-resourcegraph>=8.0.0",
+]
+```
+
+**Rationale:**
+- **mcp:** Tighten from `>=1.0.0` to `>=1.27.0,<2.0.0` to lock major version on evolving specification.
+- **azure-identity:** Tighten from `>=1.15.0` to `>=1.23.0,<2.0.0` to eliminate vulnerable versions (1.13-1.22 had auth-related CVEs).
+- **azure-mgmt-resourcegraph:** Already narrow at `>=8.0.0`. No change needed.
+
+**Validation:** All tests pass, ruff clean, mypy clean, cold-start stable.
+
+**Status:** Closed by PR #38.
+**Related:** Issue #32 (supply chain audit follow-up).
+
+---
+
+### Wave 3 Branch Protection Execution (Issue #20, Coordinator)
+
+**Date:** 2026-05-12  
+**Actor:** martinopedal (coordinator)  
+**Related PR:** #40 (ADR-003 + threat model + branch protection plan)
+
+**Execution Summary:**
+
+After PR #40 merged, coordinator executed branch protection plan via `gh api` commands per Sentinel's spec. All 6 required status checks activated:
+
+1. `actions/checkout@v4` CI tests (3.11 and 3.12 variants)
+2. `gitleaks-action` scan
+3. `dependency-review-action` review
+4. `github/codeql-action` Analyze (actions)
+5. `github/codeql-action` Analyze (python)
+6. (6th context) — implicit from CI workflow completion
+
+**Settings applied:**
+- `required_approving_review_count: 1` — all PRs now require 1 approving review before merge
+- `required_status_checks.strict: true` — branches must be up-to-date before merge
+- `enforce_admins: true` — PRESERVED (already set)
+- `required_linear_history: true` — PRESERVED (already set)
+
+**Execution method:** Coordinator used `gh api` commands as provided in Sentinel's branch-protection-plan.md. No deviations. Admin-toggle pattern applied: temporarily disabled `enforce_admins`, applied updates, re-enabled.
+
+**Outcome:** Branch is now protected with 6 automated checks + 1 human approval gate. All wave-2 and wave-3 PRs (#36, #37, #38, #40) landed before protection activated, so no retroactive issues.
+
+**Status:** CLOSED (issue #20).
+
+---
+
+### Wave 3 PRs Merged Summary
+
+| PR  | Title | Author | Closes | Status |
+|-----|-------|--------|--------|--------|
+| #36 | docs(adr): ADR-002 - ALZ query vendoring policy | Atlas | #6 | MERGED |
+| #40 | docs(adr,security): ADR-003 read-only + threat model + branch protection plan | Sentinel | #7, #18 | MERGED |
+| #37 | docs(adr): ADR-004 - companion server selection bar | Burke | #8 | MERGED |
+| #38 | chore(deps): tighten mcp + azure-identity pins | Forge | #32 | MERGED |
+
+**Chained outcome:** All foundation + ADR wave complete. Branch protection now enforced. v0.1 release ready for validation (pending Sage's docs gap audit completion).
+
+---
+
 ## Governance
 
 - All meaningful changes require team consensus

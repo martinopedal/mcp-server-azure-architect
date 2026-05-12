@@ -157,3 +157,11 @@ Python + FastMCP server runtime fully scaffolded per ADR-001. Key choices:
 ## Team Update (2026-05-12)
 
 Wave 2 complete: foundation (#22, #23, #26, #27, #33, #34) all on main. Decisions ledger consolidated. ADR-001 ratified. Next: ADR-002/003/004, branch protection (#20), threat model (#18), and v0.1 docs per Sage's gap audit.
+
+## Wave 3 Outcomes (2026-05-12)
+
+**Dependency version pin tightening merged (PR #38, closed #32).** Tightened `mcp>=1.0.0` to `>=1.27.0,<2.0.0` (lock major on evolving spec) and `azure-identity>=1.15.0` to `>=1.23.0,<2.0.0` (eliminate auth CVEs). All validation gates pass (ruff, mypy, pytest, cold-start stable). Sentinel's threat model supply chain section validates the rationale: transitive deps (`cryptography`, `PyJWT`, `requests`) are high-value targets; tightening direct-dep constraints reduces blast radius of future transitive exploits.
+
+**ADR-003 layer 1 implementation assigned (issue #7).** Sentinel's defense-in-depth model ratified. Forge now owns `.github/scripts/check_readonly.py` implementation (AST-based import allowlist, scans `src/` for mutation methods). Blocker for v0.1 release. Threat model E1 threat (mutation method exposure) justifies this CI gate. Timeline: implementation deferred to wave 4; target merge before beta validation.
+
+**ADR-003 & threat model inform future tool PRs.** CODEOWNERS convention (naming: `_get_*`, `_list_*`, `_query_*` allowed) now applied to all tool implementations. Runtime guard (layer 3, aspirational for v0.2) documented in ADR-003; complexity deferred but pattern established. ADR-004 (companion bar) + threat model (supply chain risk) frame issue #39 (native pricing tools) evaluation.

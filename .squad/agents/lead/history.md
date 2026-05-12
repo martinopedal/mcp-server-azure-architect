@@ -48,6 +48,14 @@ See `.squad/decisions/inbox/lead-pr22-adr001-ratified.md` for the full ADR-001 r
 - **2026-05-12:** PR #22 rebase, gitleaks fix, ADR triage. Foundation landed.
 - **2026-05-12 (Wave 1 Scribe):** Orchestration logs created, decisions merged to `.squad/decisions.md`, agent cross-context noted.
 
+## Wave 3 Outcomes (2026-05-12)
+
+**PR orchestration: 4 ADRs merged without conflicts.** Rebased PR #36 (Atlas ADR-002), PR #40 (Sentinel ADR-003+threat+BP), PR #37 (Burke ADR-004), PR #38 (Forge deps). All landed cleanly on main HEAD (ee987b7) with zero conflicts. Coordinator admin-toggled for merges (disabled `enforce_admins` temporarily per branch protection settings).
+
+**Branch protection executed successfully (issue #20 closed).** Post-PR #40 merge, coordinator applied Sentinel's branch-protection-plan.md executable spec. Activated 6 required checks: CI tests (3.11, 3.12), gitleaks, dependency-review, CodeQL (actions + python). Enabled `required_approving_review_count: 1`, `strict: true`. All wave-3 PRs landed before protection, so no retroactive blockers. Sets precedent: infrastructure enforcement is non-optional going forward.
+
+**ADR-002/003/004 stack validated.** ADR-001 (runtime, PR #22) established foundation. Wave 3 ADRs build cleanly on top: vendoring (ADR-002) → read-only enforcement (ADR-003) + threat model → companion bar (ADR-004). Dependencies resolved; cross-ADR references documented. Issue #39 (pricing tools) queued for wave 4; will be evaluated against ADR-004 bar + threat model supply-chain section.
+
 ## Team Update (2026-05-12)
 
 Wave 2 complete: foundation (#22, #23, #26, #27, #33, #34) all on main. Decisions ledger consolidated. ADR-001 ratified. Next: ADR-002/003/004, branch protection (#20), threat model (#18), and v0.1 docs per Sage's gap audit.
