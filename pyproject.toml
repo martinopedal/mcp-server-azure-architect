@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "mcp-server-azure-architect"
-version = "0.0.1"
+version = "0.1.0"
 description = "MCP server and Copilot CLI skills bundle for Azure architects"
 readme = "README.md"
 # Python 3.12+ is recommended for cold-start consistency. See docs/perf/coldstart-investigation.md.

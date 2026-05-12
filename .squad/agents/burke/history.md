@@ -30,3 +30,31 @@ Wave 2 complete: foundation (#22, #23, #26, #27, #33, #34) all on main. Decision
 **Pricing tools decision routed to issue #39.** ADR-004 body cites native pricing tools as worked example of future "value-add layer above companion kit." Issue #39 queued for wave 4. Burke will triage pricing candidates against ADR-004 bar + threat model supply-chain section. Demonstrates tight feedback loop: ADRs inform decision frameworks; frameworks guide future issues.
 
 **Quarterly companion review cadence established.** Burke now owns quarterly maintenance signal audits (recommended 2026-08-12). All 8 companions must remain within 6-month maintenance threshold or flagged for action. ADR-004 triage process lightweight (15 minutes per candidate) prevents ad-hoc decisions.
+
+## Session 3: Wave 5 Release Pipeline + SemVer Policy + v0.1.0 Cut (2026-05-15)
+
+Shipped the v0.1.0 release pipeline to make `uvx mcp-server-azure-architect` promise real. Created `.github/workflows/release.yml` with tag-triggered workflow: version verification, full test matrix, sdist+wheel build via `python -m build`, PyPI publish via OIDC (zero secrets), GitHub Release creation with CHANGELOG excerpt. Documented one-time PyPI trusted publishing setup in `docs/release.md` operator runbook.
+
+Ratified ADR-005 (SemVer and Release Cadence): public surface is MCP tool names/params/returns, `mcp-config.json` schema, and ALZ manifest pinning policy. Skills NOT part of public surface (free to evolve). Pre-1.0: minor bumps for tool changes or ALZ refreshes, patch for fixes. As-needed cadence.
+
+Created `CHANGELOG.md` with Keep-a-changelog format, v0.1.0 entry listing 5 tools, 1 skill, 4 ADRs, vendored ALZ snapshot (commit SHAs `e7641be` + `8a3fdda`), 7 companion servers, 6 branch protection checks, 5 per-client install docs. Bumped `pyproject.toml` version to 0.1.0.
+
+Validated locally: pytest (41 green), ruff (clean), mypy (clean), `python -m build` (sdist+wheel built successfully). No em dashes. Decision artifact in `.squad/decisions/inbox/burke-release-pipeline.md`.
+
+## Learnings
+
+### PyPI OIDC Trusted Publishing Pattern
+
+GitHub Actions can publish to PyPI without secrets via OIDC trusted publishing. Requires one-time setup: (1) Add pending publisher on PyPI with repo details + workflow name + environment name. (2) Create matching GitHub environment. (3) Use `pypa/gh-action-pypi-publish@release/v1` with `id-token: write` permission. First publish claims the package name, subsequent publishes are automatic. Zero secret rotation burden. Document the setup in operator runbook so first-time releasers have self-service path.
+
+### Tag-Triggered Workflow Design
+
+Release workflows should trigger on tag push (`on: push: tags: ['v*']`), not on branch push. This keeps the workflow out of PR CI (no required check noise). Version verification should be the first job: extract tag (strip `refs/tags/v` prefix) and `pyproject.toml` version, fail loudly if mismatch. Prevents accidental publishes with wrong version. Test suite runs as a required predecessor to build (no point building if tests fail). Changelog extraction via `awk` pattern to isolate the right section for GitHub Release body.
+
+### SemVer Public Surface for MCP Servers
+
+MCP server public surface = tool names, parameter names/types, return shapes, docstrings (act as schema docs). Skills are orchestration logic, not part of the tool contract, so they can evolve freely without version implications. Pre-1.0, minor bumps are acceptable for tool changes (low friction for early adopters, fast iteration). ALZ query refreshes = minor bumps (query content changes alter scorecard results, user-visible). `mcp-config.json` schema is also public surface (users depend on the structure).
+
+## Team Update (2026-05-15)
+
+Wave 5 release pipeline shipped. v0.1.0 ready for tag cut once PR merges and Lead approves. Pipeline tested with local build smoke test. One-time PyPI trusted publishing setup documented for first release. PR #16 (kit installer) in separate worktree, low conflict risk (different pyproject.toml sections).
