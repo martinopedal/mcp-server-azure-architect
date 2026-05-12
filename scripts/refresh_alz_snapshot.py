@@ -100,10 +100,27 @@ def extract_queries_from_checklist_repo(clone_dir: Path, dest_dir: Path) -> list
     with open(source_json) as f:
         data = json.load(f)
 
+    # Schema-shape assertion: ensure top-level key is "items" for checklist repo
+    if "items" not in data:
+        raise ValueError(
+            f"Upstream schema mismatch in alz_all_queries.json: "
+            f"expected top-level key 'items', got: {list(data.keys())}"
+        )
+
     checklist_ids = []
-    for item in data.get("items", []):
-        checklist_id = item.get("id")
-        kql_query = item.get("graph")
+    for item in data["items"]:
+        # Validate each item has required fields
+        if "id" not in item or "graph" not in item:
+            print(f"Warning: skipping item missing 'id' or 'graph': {item.get('id', 'unknown')}")
+            continue
+
+        checklist_id = item["id"]
+        kql_query = item["graph"]
+
+        # Filter: skip non-queryable items
+        if not item.get("queryable", True):
+            continue
+
         if checklist_id and kql_query:
             checklist_ids.append(checklist_id)
             # Write KQL file with vendoring header
@@ -131,10 +148,27 @@ def extract_queries_from_graph_repo(clone_dir: Path, dest_dir: Path) -> list[str
     with open(source_json) as f:
         data = json.load(f)
 
+    # Schema-shape assertion: ensure top-level key is "queries" for graph repo
+    if "queries" not in data:
+        raise ValueError(
+            f"Upstream schema mismatch in alz_additional_queries.json: "
+            f"expected top-level key 'queries', got: {list(data.keys())}"
+        )
+
     query_ids = []
-    for item in data.get("items", []):
-        query_id = item.get("id")
-        kql_query = item.get("graph")
+    for item in data["queries"]:
+        # Validate each item has required fields
+        if "guid" not in item or "graph" not in item:
+            print(f"Warning: skipping item missing 'guid' or 'graph': {item.get('guid', 'unknown')}")
+            continue
+
+        query_id = item["guid"]
+        kql_query = item["graph"]
+
+        # Filter: skip non-queryable items
+        if not item.get("queryable", False):
+            continue
+
         if query_id and kql_query:
             query_ids.append(query_id)
             kql_path = dest_dir / f"{query_id}.kql"

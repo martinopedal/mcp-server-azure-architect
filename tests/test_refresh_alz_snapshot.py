@@ -191,13 +191,23 @@ def test_extract_queries_from_graph_repo(tmp_path: Path) -> None:
     queries_dir = clone_dir / "queries"
     queries_dir.mkdir()
 
-    # Mock alz_additional_queries.json
+    # Mock alz_additional_queries.json with realistic upstream schema
     source_json = queries_dir / "alz_additional_queries.json"
     source_json.write_text(json.dumps({
-        "items": [
+        "metadata": {
+            "name": "ALZ Additional Graph Queries",
+            "version": "1.0.0"
+        },
+        "queries": [
             {
-                "id": "test-graph-1",
+                "guid": "test-graph-1",
                 "graph": "graph | where type =~ 'test'",
+                "queryable": True,
+            },
+            {
+                "guid": "test-graph-2",
+                "graph": "graph | where name =~ 'nonqueryable'",
+                "queryable": False,
             }
         ]
     }))
@@ -207,14 +217,20 @@ def test_extract_queries_from_graph_repo(tmp_path: Path) -> None:
 
     query_ids = ras.extract_queries_from_graph_repo(clone_dir, dest_dir)
 
+    # Should only extract queryable items
     assert len(query_ids) == 1
     assert "test-graph-1" in query_ids
+    assert "test-graph-2" not in query_ids
 
     kql_file = dest_dir / "test-graph-1.kql"
     assert kql_file.exists()
     content = kql_file.read_text()
     assert "test-graph-1" in content
     assert "graph | where type =~ 'test'" in content
+
+    # Verify non-queryable item was not written
+    non_queryable_file = dest_dir / "test-graph-2.kql"
+    assert not non_queryable_file.exists()
 
 
 def test_update_kql_headers(tmp_path: Path) -> None:
@@ -249,6 +265,60 @@ def test_generate_manifest_md(temp_data_dir: Path, mock_manifest: dict) -> None:
     assert "martinopedal/alz-checklist-queries" in content
     assert "e7641beeda0126cc78825f8b77764c379552f3e1" in content
     assert "54f0d8b1-22a3-4c0d-8ce2-58b9e086c93a" in content
+
+
+def test_extract_queries_schema_mismatch_graph(tmp_path: Path) -> None:
+    """Test that graph extractor raises on upstream schema change."""
+    clone_dir = tmp_path / "clone"
+    clone_dir.mkdir()
+    queries_dir = clone_dir / "queries"
+    queries_dir.mkdir()
+
+    # Mock upstream with wrong top-level key
+    source_json = queries_dir / "alz_additional_queries.json"
+    source_json.write_text(json.dumps({
+        "items": [  # Wrong key - should be "queries"
+            {
+                "guid": "test-id",
+                "graph": "resources | where type =~ 'test'",
+                "queryable": True,
+            }
+        ]
+    }))
+
+    dest_dir = tmp_path / "output"
+    dest_dir.mkdir()
+
+    # Should raise ValueError on schema mismatch
+    with pytest.raises(ValueError, match="expected top-level key 'queries'"):
+        ras.extract_queries_from_graph_repo(clone_dir, dest_dir)
+
+
+def test_extract_queries_schema_mismatch_checklist(tmp_path: Path) -> None:
+    """Test that checklist extractor raises on upstream schema change."""
+    clone_dir = tmp_path / "clone"
+    clone_dir.mkdir()
+    queries_dir = clone_dir / "queries"
+    queries_dir.mkdir()
+
+    # Mock upstream with wrong top-level key
+    source_json = queries_dir / "alz_all_queries.json"
+    source_json.write_text(json.dumps({
+        "queries": [  # Wrong key - should be "items"
+            {
+                "id": "test-id",
+                "graph": "resources | where type =~ 'test'",
+                "queryable": True,
+            }
+        ]
+    }))
+
+    dest_dir = tmp_path / "output"
+    dest_dir.mkdir()
+
+    # Should raise ValueError on schema mismatch
+    with pytest.raises(ValueError, match="expected top-level key 'items'"):
+        ras.extract_queries_from_checklist_repo(clone_dir, dest_dir)
 
 
 @patch("refresh_alz_snapshot.get_upstream_commit")
