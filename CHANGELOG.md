@@ -12,6 +12,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **SHA-256 integrity verification for vendored ALZ queries** (Closes #63). Mitigates threat T1 (compromised vendored query / KQL injection). Each query file now has a SHA-256 hash recorded in `manifest.json`. CI validates hashes on every build before tests run. Any tampered query file triggers build failure. Hash regeneration is explicit via `python scripts/verify_query_integrity.py --update`. The weekly refresh workflow automatically regenerates hashes after pulling new queries from upstream. See `data/alz-queries/CONTRIBUTING.md` for workflow documentation.
 - **Subscription scope validation** (`validate_caller_scope` in `azure_client.py`) defends against confused-deputy attacks (Threat S1, issue #57). All tools accepting `subscription_id` now validate that the requested subscription is in the caller's authorized scope by querying Azure Resource Manager. Out-of-scope subscription IDs are rejected with `PermissionError`. Validation results are cached per credential to avoid repeated ARM calls. Closes #57.
 - **Pagination and timeouts on query tools** (#62, D1). `alz_scorecard` accepts `page_size` (default 1000, max 5000) and `page_token`; results expose `next_page_token`. All Azure Resource Graph queries time out after 60 seconds with actionable error. Pricing httpx timeout aligned to 60s. Defends against denial-of-service via large query results.
+- **Audit logging for all MCP tool invocations** with rotating file handler (10MB max, 5 backups). Logs timestamp, tool name, redacted parameters, and result summaries. Sensitive values (subscription IDs, tenant IDs, API keys, tokens) are automatically redacted. Default location: `~/.mcp-server-azure-architect/logs/audit.log`. Overrideable via `MCP_AZURE_ARCHITECT_LOG_DIR` environment variable. (Closes #58)
+- **Secure log file permissions** (0600 owner read/write only) and log directory permissions (0700 owner only) to prevent information disclosure. Cross-platform implementation with POSIX `chmod` and Windows `icacls` ACL enforcement. (Closes #61)
 
 ### Added
 
@@ -30,6 +32,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Readonly-check workflow now runs on all PRs.** Removed `paths:` filter from `.github/workflows/readonly-check.yml` to fix doc-only PR blocking issue. The workflow always runs on every PR + push; it is a fast check (~30s) and correctly reports "no violations" for doc-only changes. This unblocks doc-only PRs while preserving the read-only enforcement gate as a required status check.
 
 ### Documentation
+
+- `docs/install/deployment-guide.md` - Audit logging configuration guide with log rotation settings, sensitive data redaction policies, immutable log storage upgrade paths (syslog, Azure Monitor), and cross-platform permission enforcement details
 
 - `docs/companions/` - Supply chain audit notes for all 7 companion MCP servers in the curated kit
 - `docs/perf/coldstart-investigation.md` - Comprehensive cold-start profiling report with import graph analysis and lazy-import recommendations

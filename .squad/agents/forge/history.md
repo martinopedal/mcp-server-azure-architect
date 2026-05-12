@@ -443,3 +443,26 @@ Filed `.squad/decisions/inbox/forge-docstring-style-guide.md` documenting:
 - mcp_smoke.py - Pre-existing Python 3.14 incompatibility (not related to changes)
 
 **Outcome:** PR #78 opened, all validation gates passed except pre-existing mcp_smoke.py Python 3.14 issue.
+
+### Session: Security Wave 8 - Audit Logging & File Permissions (2026-01-07)
+
+**Task:** Implement #58 (R1 audit logging) and #61 (I3 log file permissions) in single PR.
+
+**Outcome:**
+- New module src/mcp_server_azure_architect/audit.py with decorator-based audit logging
+- All MCP tools wrapped with @audit_log_tool decorator for invocation/result/error logging
+- Rotating file handler (10MB max, 5 backups) writes to ~/.mcp-server-azure-architect/logs/audit.log
+- Cross-platform file permissions: 0600 (owner read/write only) for log files, 0700 for directories
+- Token scrubbing redacts subscription IDs, tenant IDs, JWT tokens, API keys, Bearer tokens
+- Tests: 15 passed (5 skipped on Windows for POSIX-only permission checks)
+- Documentation: docs/install/deployment-guide.md with immutable storage upgrade paths
+
+**Key Design Choices:**
+1. Decorator over middleware: FastMCP doesn't expose lifecycle hooks. Decorator is cleanest interception point.
+2. Dual wrapper (sync+async): Single decorator handles both sync and async tools via inspect introspection.
+3. Cross-platform permissions: POSIX uses os.chmod, Windows uses icacls subprocess.
+4. Caller identity = unknown: MCP protocol does not surface caller identity. Documented limitation.
+5. Result summaries only: Log result type/size, not content, to avoid leaking sensitive data.
+
+**CI Gates:** pytest 119 passed, ruff clean, mypy clean, readonly check passed.
+

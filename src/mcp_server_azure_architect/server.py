@@ -6,6 +6,7 @@ from mcp.server.fastmcp import FastMCP
 
 from mcp_server_azure_architect import __version__
 from mcp_server_azure_architect.alz_queries import get_query, list_queries
+from mcp_server_azure_architect.audit import audit_log_tool
 from mcp_server_azure_architect.pricing import (
     pricing_compare_skus as _pricing_compare_skus,
 )
@@ -18,6 +19,7 @@ mcp = FastMCP("azure-architect")
 
 
 @mcp.tool()
+@audit_log_tool
 def health_check() -> dict[str, str]:
     """Check server health and version.
 
@@ -31,6 +33,7 @@ def health_check() -> dict[str, str]:
 
 
 @mcp.tool()
+@audit_log_tool
 def alz_query_by_id(checklist_id: str) -> dict[str, str]:
     """Look up a vendored Azure Landing Zone (ALZ) checklist query by ID.
 
@@ -59,6 +62,7 @@ def alz_query_by_id(checklist_id: str) -> dict[str, str]:
 
 
 @mcp.tool()
+@audit_log_tool
 def pricing_lookup_sku(
     sku: str,
     region: str,
@@ -75,6 +79,7 @@ def pricing_lookup_sku(
 
 
 @mcp.tool()
+@audit_log_tool
 def pricing_compare_skus(
     skus: list[str],
     region: str,
@@ -93,6 +98,7 @@ def pricing_compare_skus(
 
 
 @mcp.tool()
+@audit_log_tool
 def alz_query_list(
     pillar: str | None = None,
     source_repo: str | None = None,
@@ -130,6 +136,7 @@ def alz_query_list(
 
 
 @mcp.tool()
+@audit_log_tool
 async def alz_scorecard(
     subscription_id: str,
     pillar: str | None = None,

@@ -1,10 +1,12 @@
 """Entry point for the MCP server."""
 
+from mcp_server_azure_architect.audit import setup_audit_logging
 from mcp_server_azure_architect.server import mcp
 
 
 def main() -> None:
     """Run the MCP server via stdio transport."""
+    setup_audit_logging()
     mcp.run()
 
 
