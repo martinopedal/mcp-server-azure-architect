@@ -3,6 +3,7 @@
 from typing import Any, Literal
 
 from mcp.server.fastmcp import FastMCP
+from mcp.types import ToolAnnotations
 
 from mcp_server_azure_architect import __version__
 from mcp_server_azure_architect.alz_queries import get_query, list_queries
@@ -24,7 +25,15 @@ from mcp_server_azure_architect.scorecard import run_scorecard
 mcp = FastMCP("azure-architect")
 
 
-@mcp.tool()
+@mcp.tool(
+    annotations=ToolAnnotations(
+        title="Server: health check",
+        readOnlyHint=True,
+        destructiveHint=False,
+        idempotentHint=True,
+        openWorldHint=False,
+    )
+)
 @audit_log_tool
 def health_check() -> dict[str, str]:
     """Check server health and version.
@@ -38,7 +47,15 @@ def health_check() -> dict[str, str]:
     }
 
 
-@mcp.tool()
+@mcp.tool(
+    annotations=ToolAnnotations(
+        title="ALZ: get query by checklist ID",
+        readOnlyHint=True,
+        destructiveHint=False,
+        idempotentHint=True,
+        openWorldHint=True,
+    )
+)
 @audit_log_tool
 def alz_query_by_id(checklist_id: str) -> dict[str, str]:
     """Look up a vendored Azure Landing Zone (ALZ) checklist query by ID.
@@ -72,7 +89,15 @@ def alz_query_by_id(checklist_id: str) -> dict[str, str]:
     return {key: str(value) for key, value in record.items()}
 
 
-@mcp.tool()
+@mcp.tool(
+    annotations=ToolAnnotations(
+        title="Azure Pricing: look up SKU retail price",
+        readOnlyHint=True,
+        destructiveHint=False,
+        idempotentHint=True,
+        openWorldHint=True,
+    )
+)
 @audit_log_tool
 def pricing_lookup_sku(
     sku: str,
@@ -89,7 +114,15 @@ def pricing_lookup_sku(
     return _pricing_lookup_sku(sku=sku, region=region, term=term, currency=currency)
 
 
-@mcp.tool()
+@mcp.tool(
+    annotations=ToolAnnotations(
+        title="Azure Pricing: compare multiple SKUs",
+        readOnlyHint=True,
+        destructiveHint=False,
+        idempotentHint=True,
+        openWorldHint=True,
+    )
+)
 @audit_log_tool
 def pricing_compare_skus(
     skus: list[str],
@@ -106,7 +139,15 @@ def pricing_compare_skus(
     return _pricing_compare_skus(skus=skus, region=region, term=term, currency=currency)
 
 
-@mcp.tool()
+@mcp.tool(
+    annotations=ToolAnnotations(
+        title="Azure Pricing: estimate workload cost",
+        readOnlyHint=True,
+        destructiveHint=False,
+        idempotentHint=True,
+        openWorldHint=True,
+    )
+)
 @audit_log_tool
 def pricing_estimate_workload(spec: dict[str, Any]) -> dict[str, Any]:
     """Estimate monthly cost for a structured workload specification.
@@ -121,7 +162,15 @@ def pricing_estimate_workload(spec: dict[str, Any]) -> dict[str, Any]:
     return _pricing_estimate_workload(spec=workload)
 
 
-@mcp.tool()
+@mcp.tool(
+    annotations=ToolAnnotations(
+        title="ALZ: list available queries",
+        readOnlyHint=True,
+        destructiveHint=False,
+        idempotentHint=True,
+        openWorldHint=True,
+    )
+)
 @audit_log_tool
 def alz_query_list(
     pillar: str | None = None,
@@ -164,7 +213,15 @@ def alz_query_list(
     return result
 
 
-@mcp.tool()
+@mcp.tool(
+    annotations=ToolAnnotations(
+        title="ALZ: run scorecard against subscription",
+        readOnlyHint=True,
+        destructiveHint=False,
+        idempotentHint=True,
+        openWorldHint=True,
+    )
+)
 @audit_log_tool
 async def alz_scorecard(
     subscription_id: str,
