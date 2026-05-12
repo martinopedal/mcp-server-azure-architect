@@ -165,3 +165,21 @@ Wave 2 complete: foundation (#22, #23, #26, #27, #33, #34) all on main. Decision
 **ADR-003 layer 1 implementation assigned (issue #7).** Sentinel's defense-in-depth model ratified. Forge now owns `.github/scripts/check_readonly.py` implementation (AST-based import allowlist, scans `src/` for mutation methods). Blocker for v0.1 release. Threat model E1 threat (mutation method exposure) justifies this CI gate. Timeline: implementation deferred to wave 4; target merge before beta validation.
 
 **ADR-003 & threat model inform future tool PRs.** CODEOWNERS convention (naming: `_get_*`, `_list_*`, `_query_*` allowed) now applied to all tool implementations. Runtime guard (layer 3, aspirational for v0.2) documented in ADR-003; complexity deferred but pattern established. ADR-004 (companion bar) + threat model (supply chain risk) frame issue #39 (native pricing tools) evaluation.
+
+## 2026-05-12T13:30:00Z — PR #45: alz_query_by_id native tool (closes #9)
+
+First substantive native tool shipped. End-to-end: stdlib loader + FastMCP tool registration + tests + wheel packaging.
+
+**PR:** #45 `feat(server): native alz_query_by_id tool with vendored loader`
+**Closes:** #9
+**Validation:** ruff clean, mypy strict clean, pytest 13/13, cold-start -99ms vs baseline (within variance band; under +50ms budget).
+
+### Learnings
+
+- **Native tool module pattern.** Place the data-backed loader in its own module under `src/mcp_server_azure_architect/` (e.g. `alz_queries.py`), pure stdlib where possible, with a lazy module-level cache (`_X = None` + `_get_x()` getter + `reset_cache()` for tests). Tool registration in `server.py` stays a thin `@mcp.tool()` wrapper that calls into the loader. This keeps cold-start unaffected (sub-ms parse cost) and preserves the read-only invariant by construction (no Azure SDK in the data path).
+- **Lazy load > eager load for cold-start.** Importing my new module added zero measurable overhead because the manifest is only read on first call. Eager parse at import time would have added ~5-15ms of JSON + file IO.
+- **Wheel packaging for vendored data.** Hatchling's `[tool.hatch.build.targets.wheel.force-include]` is the right hook to ship `data/alz-queries/` inside the wheel. Loader probes both locations (wheel force-include path under the package, and the editable / source-checkout path at the repo root) so the same code works for `pip install -e .` and a built wheel.
+- **TypedDict + FastMCP schema gotcha.** Returning `dict(typed_dict_instance)` in a function annotated `-> dict[str, str]` fails mypy strict because TypedDict's `__getitem__` returns `object`. Use a comprehension (`{k: str(v) for k, v in record.items()}`) at the boundary to satisfy the strict type contract.
+- **Async tool roundtrip test.** With `asyncio_mode = "auto"` in `pyproject.toml`, `async def test_*` works without decorators. Use `await mcp._tool_manager.call_tool(name, args)` to validate JSON Schema dispatch end-to-end (catches schema mismatches that the synchronous direct-call test misses).
+- **Confused-deputy doesn't apply when input is an allowlist key.** `checklist_id` is matched against vendored data; there's no Azure scope to authorize against, so Sentinel's S1/E1 mitigation isn't needed for this tool. Documented this in the module docstring so future tool authors who do take `subscription_id` know to apply `validate_caller_scope()`.
+- **Sibling worktree install collision.** A concurrent Forge sibling on `C:\git\mcp-server-azure-architect-pr39` has the same package installed editable to that path. `pip install -e .` from any worktree replaces the global pointer, so concurrent agents stomp each other. Workaround: re-run `pip install -e . --force-reinstall --no-deps` immediately before any test run if the sibling has touched the install in between. Long-term: move to per-agent venvs in worktrees.
