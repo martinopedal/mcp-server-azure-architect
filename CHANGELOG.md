@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Security
 
 - **SHA-256 integrity verification for vendored ALZ queries** (Closes #63). Mitigates threat T1 (compromised vendored query / KQL injection). Each query file now has a SHA-256 hash recorded in `manifest.json`. CI validates hashes on every build before tests run. Any tampered query file triggers build failure. Hash regeneration is explicit via `python scripts/verify_query_integrity.py --update`. The weekly refresh workflow automatically regenerates hashes after pulling new queries from upstream. See `data/alz-queries/CONTRIBUTING.md` for workflow documentation.
+- **Subscription scope validation** (`validate_caller_scope` in `azure_client.py`) defends against confused-deputy attacks (Threat S1, issue #57). All tools accepting `subscription_id` now validate that the requested subscription is in the caller's authorized scope by querying Azure Resource Manager. Out-of-scope subscription IDs are rejected with `PermissionError`. Validation results are cached per credential to avoid repeated ARM calls. Closes #57.
 
 ### Added
 

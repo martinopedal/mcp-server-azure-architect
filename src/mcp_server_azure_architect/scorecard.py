@@ -28,7 +28,7 @@ import asyncio
 from typing import TYPE_CHECKING, Any, Literal, TypedDict
 
 from mcp_server_azure_architect.alz_queries import get_query, list_query_ids
-from mcp_server_azure_architect.azure_client import get_credential
+from mcp_server_azure_architect.azure_client import get_credential, validate_caller_scope
 
 if TYPE_CHECKING:
     from azure.mgmt.resourcegraph import ResourceGraphClient
@@ -191,7 +191,16 @@ async def run_scorecard(
 
     Raises:
         ValueError: if explicit checklist_ids exceeds 25.
+        PermissionError: if subscription_id is not in the caller's scope (Threat S1).
     """
+    # Validate that subscription_id is in caller's scope (issue #57, Threat S1)
+    credential = get_credential()
+    if not validate_caller_scope(subscription_id, credential):
+        raise PermissionError(
+            "Subscription ID is not in your scope. "
+            "Ensure you have access to the requested subscription."
+        )
+
     # Determine which checklist IDs to run
     if checklist_ids is not None:
         if len(checklist_ids) > _MAX_QUERIES_PER_CALL:

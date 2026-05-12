@@ -144,6 +144,10 @@ async def alz_scorecard(
     Read-only: calls ResourceGraphClient.resources() only. No mutations, no
     Begin*/Create*/Update*/Delete* operations per ADR-003.
 
+    Security: Validates that subscription_id is in the caller's authorized scope
+    by querying Azure Resource Manager (ARM) for accessible subscriptions. Rejects
+    out-of-scope subscription IDs to defend against confused-deputy attacks (issue #57).
+
     Args:
         subscription_id: Azure subscription ID to evaluate.
         pillar: Optional pillar filter (e.g., "checklist", "graph"). If provided,
@@ -158,6 +162,7 @@ async def alz_scorecard(
 
     Raises:
         ValueError: if explicit checklist_ids exceeds 25.
+        PermissionError: if subscription_id is not in caller's scope.
     """
     result = await run_scorecard(
         subscription_id=subscription_id,
