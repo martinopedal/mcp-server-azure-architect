@@ -183,3 +183,68 @@ First substantive native tool shipped. End-to-end: stdlib loader + FastMCP tool 
 - **Async tool roundtrip test.** With `asyncio_mode = "auto"` in `pyproject.toml`, `async def test_*` works without decorators. Use `await mcp._tool_manager.call_tool(name, args)` to validate JSON Schema dispatch end-to-end (catches schema mismatches that the synchronous direct-call test misses).
 - **Confused-deputy doesn't apply when input is an allowlist key.** `checklist_id` is matched against vendored data; there's no Azure scope to authorize against, so Sentinel's S1/E1 mitigation isn't needed for this tool. Documented this in the module docstring so future tool authors who do take `subscription_id` know to apply `validate_caller_scope()`.
 - **Sibling worktree install collision.** A concurrent Forge sibling on `C:\git\mcp-server-azure-architect-pr39` has the same package installed editable to that path. `pip install -e .` from any worktree replaces the global pointer, so concurrent agents stomp each other. Workaround: re-run `pip install -e . --force-reinstall --no-deps` immediately before any test run if the sibling has touched the install in between. Long-term: move to per-agent venvs in worktrees.
+
+## Wave 4 Outcomes (PR #46): Native Azure Retail Pricing Tools
+
+**Closes #39 (partial):** `pricing_lookup_sku` and `pricing_compare_skus` shipped. `pricing_estimate_workload` deferred to follow-up #44 because it needs a `WorkloadSpec` data model that is not yet defined.
+
+**Cold-start:** warm-import median 4.4ms, p90 7.5ms. Soft (1000ms) and hard (2000ms) gates both pass. Net delta well under the 50ms budget.
+
+## Learnings
+
+### Lazy-import pattern for cold-start hygiene
+
+**Pattern:** Wrap third-party imports inside the function that needs them, not at module top:
+```python
+def _get_client() -> httpx.Client:
+    import httpx  # lazy
+    return httpx.Client(...)
+
+if TYPE_CHECKING:
+    import httpx  # only for type annotations
+```
+Combined with `from __future__ import annotations`, type hints stay valid without forcing the import.
+
+**Discovery during validation:** `FastMCP` already loads `httpx` transitively, so adding it as a direct dep had zero net cold-start cost. The lazy pattern was kept anyway because it is correct hygiene and protects against a future server runtime swap.
+
+**Test:** Run the import check in a subprocess. Popping modules from `sys.modules` in the same test process leaks stale references and breaks unrelated tests downstream. `test_no_httpx_at_pricing_module_top` uses `subprocess.run` for isolation.
+
+### OData filter escaping
+
+**Gotcha:** Single quotes in user input must be doubled inside OData literals (per the OData URI conventions spec). Without this, a SKU name like `Foo'Bar` either truncates the filter or causes a server-side parse error. Always escape user-controlled strings before interpolating into an OData ``.
+
+**Helper:** `_escape_odata_value(value: str) -> str` returns `value.replace("'", "''")`. Unit-tested with a SKU containing a single quote.
+
+### In-memory TTL cache pattern
+
+**Pattern:** No new dep needed for a 24h TTL cache. Module-level `dict[str, tuple[float, list[dict]]]` where the value is `(expiry_unix_ts, items)`:
+```python
+_CACHE: dict[str, tuple[float, list[dict]]] = {}
+
+def _cache_get(key):
+    entry = _CACHE.get(key)
+    if entry is None: return None
+    expiry, items = entry
+    if time.time() >= expiry:
+        _CACHE.pop(key, None)
+        return None
+    return items
+```
+
+**Cache key construction:** Include any orthogonal axis as a prefix. For pricing, `currency` is a query parameter (not part of the OData filter), so the key prefixes currency: `f"{currency}|{odata_filter}"`. Without this, USD and EUR results would collide.
+
+**Test helper:** Expose `_clear_cache_for_tests()` and call it from an autouse pytest fixture. Otherwise tests that exercise caching leak state to subsequent tests.
+
+### Pagination cap as defensive measure
+
+**Pattern:** When following `NextPageLink` (or any cursor pagination), set a hard upper bound on page count. The cap is not a feature, it is a runaway guard. Document the cap in the module docstring.
+
+**Number choice:** 5 pages = 5000 rows worst-case for the Retail Prices API. Any single-SKU lookup that needs more than 5000 rows is almost certainly a malformed filter, not a legitimate query. Five gives plenty of headroom for legitimate pagination while bounding the blast radius.
+
+### Editable-install gotcha across worktrees
+
+**Symptom:** Running `pip install -e .[dev] --upgrade` in a new worktree may report success but leave the editable `.pth` pointing at the OLD worktree's `src/` directory. Subsequent `python -c "import package"` then loads stale code, causing baffling test failures (e.g., real API calls from inside a mocked test).
+
+**Diagnosis:** `Get-Content C:\Python<ver>\Lib\site-packages\_editable_impl_<package>.pth` shows where the install actually points.
+
+**Fix:** `pip install -e . --force-reinstall --no-deps` overwrites the `.pth`. Worth knowing when squad members create fresh worktrees in a shared interpreter.
