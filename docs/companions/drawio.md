@@ -52,13 +52,13 @@ Tools are diagram creation and export functions. Output is SVG, PNG, or PDF. Dia
 
 ## ADR-004 Fit
 
-- ✓ **Criterion 1 (Stable Upstream):** YES. Semver releases with release notes.
-- ✓ **Criterion 2 (Signed Releases):** YES. npm provenance signatures.
-- ✓ **Criterion 3 (Narrow Scope):** YES. Diagram creation and export only.
-- ✓ **Criterion 4 (Complementary to azure-mcp):** YES. Diagrams are orthogonal to Azure resource queries.
-- ✓ **Criterion 5 (Maintenance Signal):** YES. Last release 2026-Q1; active community.
-- ✓ **Criterion 6 (Read-Only):** YES. Creation and export only. No mutations to external systems.
-- ✓ **Criterion 7 (Documented Install):** YES. Documented in `docs/install/`.
+- ✅ **Criterion 1 (Stable Upstream):** YES. Semver releases with release notes.
+- ✅ **Criterion 2 (Signed Releases):** YES. npm provenance signatures.
+- ✅ **Criterion 3 (Narrow Scope):** YES. Diagram creation and export only.
+- ✅ **Criterion 4 (Complementary to azure-mcp):** YES. Diagrams are orthogonal to Azure resource queries.
+- ✅ **Criterion 5 (Maintenance Signal):** YES. Last release 2026-Q1; active community.
+- ✅ **Criterion 6 (Read-Only):** YES. Creation and export only. No mutations to external systems.
+- ✅ **Criterion 7 (Documented Install):** YES. Documented in `docs/install/`.
 
 ## Removal Cost
 

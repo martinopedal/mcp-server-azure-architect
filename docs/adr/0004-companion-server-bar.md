@@ -219,7 +219,7 @@ When a companion no longer meets the bar:
 
 **Decision:** REJECT. azure-mcp is the authoritative source for Azure services. Use azure-mcp's tools instead. If azure-mcp is missing Service Bus endpoints, open an issue against microsoft/mcp (repo for azure-mcp) instead.
 
-### azure-pricing-mcp (Proposed, Routed to Native — Issue #39)
+### azure-pricing-mcp (Proposed, Routed to Native: Issue #39)
 
 **Candidate:** azure-pricing-mcp (hypothetical MCP companion to expose Azure Retail Prices API)
 
@@ -231,7 +231,7 @@ When a companion no longer meets the bar:
 - Criterion 5 (maintenance signal): FAIL. No upstream to monitor for maintenance or deprecation.
 - Criterion 6 (read-only by design): PASS. API is read-only. No mutation capability.
 
-**Decision:** REJECT as companion. ROUTE TO NATIVE instead. Rationale: The bar correctly identifies that building a standalone MCP wrapper for a direct API call adds bloat with no upstream-maintenance benefit. Native integration in the server yields zero cold-start tax, zero auth-surface expansion, and seamless composition with planned scorecard and quota planner. Pricing logic belongs in this server, not as a delegated companion. See issue #39 (Forge, wave 4).
+**Decision:** REJECT as companion. ROUTE TO NATIVE instead. Rationale: The bar correctly identifies that building a standalone MCP wrapper for a direct API call adds bloat with no upstream-maintenance benefit. Native integration in the server yields zero cold-start tax, zero auth-surface expansion, and native composition with planned scorecard and quota planner. Pricing logic belongs in this server, not as a delegated companion. See issue #39 (Forge, wave 4).
 
 ## Consequences
 

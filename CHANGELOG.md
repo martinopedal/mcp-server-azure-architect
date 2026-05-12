@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [Unreleased]
+
+### Changed
+
+- **Documentation style**: second-pass cleanup addressing em-dashes (replaced with periods, commas, colons), wrong emoji glyphs (✓/✗/○ to ✅/❌, "pending" text), AI-slop language in ADRs (robust, leverage, comprehensive, seamless), and voice profile consistency. Scope: README, CHANGELOG, docs/ and ADRs. Exempt: .squad/, .copilot/skills/, vendored data, code.
+
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 

@@ -158,9 +158,9 @@ If both lazy-import opportunities are implemented:
 1. The gap between claimed (200-800ms) and measured (8.56s) is dominated by FastMCP framework overhead (7.3s), which is irreducible without changing runtimes.
 2. The two concrete lazy-import opportunities (azure.identity and httpx) yield only 28% reduction, bringing total to ~6.1s.
 3. Further optimization would require either:
-   - Switching to a compiled runtime (Go, Rust, Node.js) — outside scope per ADR-001 decision
-   - Deferring `@mcp.tool()` registration until first use — breaks MCP protocol contract
-   - Using Native AOT for Python (unavailable) — not practical
+   - Switching to a compiled runtime (Go, Rust, Node.js): outside scope per ADR-001 decision
+   - Deferring `@mcp.tool()` registration until first use: breaks MCP protocol contract
+   - Using Native AOT for Python (unavailable): not practical
 4. The current 8.56s baseline is acceptable for a single-process server serving long-lived requests. Cold start is not a bottleneck for typical MCP usage (the server runs once per client session).
 
 ## ADR-001 Revision

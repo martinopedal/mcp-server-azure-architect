@@ -60,11 +60,11 @@ Total tests: **82 passed** (up from 80).
 
 All gates passed:
 
-- ✅ `python scripts/check_readonly.py src/` — no mutation methods
-- ✅ `python -m pytest -q` — 82 tests passed
-- ✅ `python -m ruff check .` — clean
-- ✅ `python -m mypy src/ tests/ scripts/` — clean
-- ✅ `python scripts/mcp_smoke.py` — server starts, 5 tools registered
+- ✅ `python scripts/check_readonly.py src/` no mutation methods
+- ✅ `python -m pytest -q` 82 tests passed
+- ✅ `python -m ruff check .` clean
+- ✅ `python -m mypy src/ tests/ scripts/` clean
+- ✅ `python scripts/mcp_smoke.py` server starts, 5 tools registered
 
 ## Future work
 

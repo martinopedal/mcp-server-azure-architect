@@ -157,10 +157,10 @@ Installer output:
 === mcp-server-azure-architect Kit Installer ===
 
 Step 1: Checking prerequisites...
-  ✓ python: Python 3.12
-  ✓ node: v20.11.0
-  ✓ docker: Docker version 24.0.7
-  ✗ gh: not found
+  ✅ python: Python 3.12
+  ✅ node: v20.11.0
+  ✅ docker: Docker version 24.0.7
+  ❌ gh: not found
 
 Warning: GitHub CLI not found. The 'github' companion will not work.
 
@@ -178,7 +178,7 @@ Detected clients:
   - copilot-cli
 
 Available clients:
-  1. [✓] copilot-cli
+  1. [✅] copilot-cli
   2. [ ] claude-desktop
   3. [ ] cursor
   4. [ ] vscode-copilot
@@ -193,8 +193,8 @@ Step 4: Merging curated config into client configs...
 Wrote config to C:\Users\martin\.copilot\mcp-config.json
 
 Step 5: Authentication checks...
-  ✓ Azure: az CLI authenticated
-  ✗ GitHub: gh CLI not found
+  ✅ Azure: az CLI authenticated
+  ❌ GitHub: gh CLI not found
 
 Warning: GitHub CLI not authenticated. The 'github' companion will not work.
 Run 'gh auth login' if you plan to use it.

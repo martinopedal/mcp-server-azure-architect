@@ -52,13 +52,13 @@ Tools are diagram rendering functions. Output is SVG or PNG; no external systems
 
 ## ADR-004 Fit
 
-- ✓ **Criterion 1 (Stable Upstream):** YES. Semver releases with release notes.
-- ✓ **Criterion 2 (Signed Releases):** YES. npm provenance signatures.
-- ✓ **Criterion 3 (Narrow Scope):** YES. Diagram rendering only.
-- ✓ **Criterion 4 (Complementary to azure-mcp):** YES. Diagrams are orthogonal to Azure resource queries.
-- ✓ **Criterion 5 (Maintenance Signal):** YES. Last release 2026-Q1; active community.
-- ✓ **Criterion 6 (Read-Only):** YES. Rendering only. No mutations.
-- ✓ **Criterion 7 (Documented Install):** YES. Documented in `docs/install/`.
+- ✅ **Criterion 1 (Stable Upstream):** YES. Semver releases with release notes.
+- ✅ **Criterion 2 (Signed Releases):** YES. npm provenance signatures.
+- ✅ **Criterion 3 (Narrow Scope):** YES. Diagram rendering only.
+- ✅ **Criterion 4 (Complementary to azure-mcp):** YES. Diagrams are orthogonal to Azure resource queries.
+- ✅ **Criterion 5 (Maintenance Signal):** YES. Last release 2026-Q1; active community.
+- ✅ **Criterion 6 (Read-Only):** YES. Rendering only. No mutations.
+- ✅ **Criterion 7 (Documented Install):** YES. Documented in `docs/install/`.
 
 ## Removal Cost
 
