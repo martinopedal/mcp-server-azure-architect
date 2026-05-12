@@ -17,7 +17,7 @@ MCP server + Copilot CLI skills bundle for Azure architects, v0.1.0 RC. Ships 6 
 
 1. **First PyPI publish (v0.1.0).** Cut tag, release workflow runs, package lands on PyPI. Blocks external adoption.
 2. **Perf work (Forge):** Issues #67, #68. Lazy-import azure.identity and httpx to reduce cold start by 2.4s total. Re-measure.
-3. **v0.2 planning.** New tools (quota planner, advisor surfacing per AGENTS.md mission scope). Threat model resolution for issues #57-63. Skill expansion.
+3. **v0.2 planning.** Vendored catalogue expansion (graph bulk vendor for 132 items per Atlas roadmap). Threat model resolution for issues #57-63. Skill expansion (alz-gap-check, alz-quota-planner-compose as skill not tool).
 
 ## Open Issues
 
