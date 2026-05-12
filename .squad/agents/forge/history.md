@@ -264,3 +264,21 @@ Shipped the alz_scorecard MCP tool: runs vendored ALZ queries against Azure Reso
 - **Alphabetical slicing for deterministic truncation.** When full sweep or pillar filter exceeds 25-query cap, slice to first 25 alphabetical and set truncated: true. Alphabetical order is neutral and reproducible.
 - **asyncio.to_thread for sync SDK in async context.** ResourceGraphClient.resources() is synchronous. Wrap in asyncio.to_thread(_blocking_call) to enable concurrent gather without blocking the event loop. This pattern enables async tool signatures in FastMCP while composing with sync Azure SDK clients.
 - **Composition > duplication.** Scorecard reuses get_query() and list_query_ids() from alz_queries.py (PR #45). No duplication. Single source of truth for query text and metadata.
+
+## 2026-05-12T15:00:00Z - PR #TBD: MCP Inspector smoke test in CI (closes #19)
+
+Shipped `scripts/mcp_smoke.py` and `inspector-smoke` CI job to catch tool registration regressions, JSON Schema validity failures, and basic protocol breakage.
+
+**PR:** #TBD test(ci): add MCP Inspector smoke test  
+**Closes:** #19  
+**Validation:** smoke test exits 0 locally, ruff clean, mypy clean (extended to scripts/), pytest 41/41.
+
+### Learnings
+
+- **Python mcp.client.stdio > npm Inspector for CI.** The `mcp` SDK's stdio_client lets us spawn the server and validate the protocol without npm install overhead. Smoke test runtime < 5s, total CI job time < 60s. This is the same path Copilot CLI skills will use, so we validate the real client integration.
+- **Separate CI job for smoke tests.** Protocol-level smoke tests belong in their own job, not mixed with unit tests. Different failure modes (subprocess server spawn vs mocked FastMCP), cleaner signal when something breaks.
+- **Hardcoded tool list is acceptable at this scale.** `EXPECTED_TOOLS` frozenset in the smoke script must be updated when tools are added/removed. At 5 tools, manual update is fine. If we hit 10+, consider introspecting `server.py` exports at test time.
+- **async with context manager combining.** Python 3.10+ `async with (ctx1, ctx2):` syntax (ruff SIM117) is cleaner than nested `async with` blocks. Applied to stdio_client + ClientSession pairing.
+- **MCP tool results are JSON-serialized strings.** FastMCP returns dicts from tool functions, but the MCP protocol layer serializes them to JSON text in `result.content[0].text`. Smoke test must `json.loads()` to validate structure.
+- **Exit code + stderr is the CI contract.** Smoke script exits 0 on success, non-zero with human-readable diagnostics to stderr on failure. No logging or external deps needed, CI parses exit code.
+

@@ -108,6 +108,36 @@ All tools are read-only by design. No Azure write operations are exposed.
 
 For more details on the runtime choice, see [docs/adr/0001-runtime-choice.md](docs/adr/0001-runtime-choice.md).
 
+## Development
+
+### Run Smoke Tests
+
+Before pushing changes or as part of local validation, run the MCP smoke test to verify tool registration, JSON Schema validity, and basic invocability:
+
+```bash
+python scripts/mcp_smoke.py
+```
+
+This test validates that:
+- All expected tools are registered (health_check, alz_query_by_id, pricing_lookup_sku, pricing_compare_skus, alz_scorecard)
+- Every tool has a valid JSON Schema for its inputs
+- The health_check tool can be invoked successfully
+
+The smoke test does NOT call Azure, it only exercises the MCP protocol layer.
+
+### Run Tests
+
+```bash
+pytest -v
+```
+
+### Linting and Type Checking
+
+```bash
+ruff check .
+mypy src
+```
+
 ## License
 
 MIT.
