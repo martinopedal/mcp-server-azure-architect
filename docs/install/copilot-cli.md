@@ -94,14 +94,14 @@ copilot mcp servers
 Expected output includes:
 
 ```
-✓ azure-mcp
-✓ microsoft-learn
-✓ github
-✓ mermaid
-✓ drawio
-✓ kubernetes
-✓ terraform
-✓ mcp-server-azure-architect
+✅ azure-mcp
+✅ microsoft-learn
+✅ github
+✅ mermaid
+✅ drawio
+✅ kubernetes
+✅ terraform
+✅ mcp-server-azure-architect
 ```
 
 If any fail to load, check the error message. Common issues:

@@ -20,15 +20,15 @@ Each companion is evaluated against the criteria defined in `docs/adr/0004-compa
 
 Each entry documents:
 
-1. **Purpose** — architecture workflow served
-2. **Source** — maintainer and repository
-3. **Distribution** — installation method (npm, docker, uvx, etc.)
-4. **Auth model** — credentials required at runtime
-5. **Network egress** — external endpoints accessed
-6. **Read-only posture** — mutation capabilities and constraints
-7. **Supply chain notes** — versioning, provenance, CVE status
-8. **ADR-004 fit** — which criteria are satisfied
-9. **Removal cost** — architect capabilities lost if uninstalled
+1. **Purpose.** Architecture workflow served.
+2. **Source.** Maintainer and repository.
+3. **Distribution.** Installation method (npm, docker, uvx, etc.).
+4. **Auth model.** Credentials required at runtime.
+5. **Network egress.** External endpoints accessed.
+6. **Read-only posture.** Mutation capabilities and constraints.
+7. **Supply chain notes.** Versioning, provenance, CVE status.
+8. **ADR-004 fit.** Which criteria are satisfied.
+9. **Removal cost.** Architect capabilities lost if uninstalled.
 
 ## Adding a Companion
 

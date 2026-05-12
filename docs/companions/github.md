@@ -65,13 +65,13 @@ No tools for creating, updating, deleting repositories or issues. No push, merge
 
 ## ADR-004 Fit
 
-- ✓ **Criterion 1 (Stable Upstream):** YES. Official GitHub product with stable API.
-- ✓ **Criterion 2 (Signed Releases):** YES. Docker images signed via Docker Content Trust.
-- ✓ **Criterion 3 (Narrow Scope):** YES. GitHub API only; no compute, no cloud platforms.
-- ✓ **Criterion 4 (Complementary to azure-mcp):** YES. Version control APIs are orthogonal to Azure resource management.
-- ✓ **Criterion 5 (Maintenance Signal):** YES. GitHub maintains; actively updated.
-- ✓ **Criterion 6 (Read-Only):** YES. Read-only query surface. No mutation tools.
-- ✓ **Criterion 7 (Documented Install):** YES. Documented in `docs/install/` with PAT setup.
+- ✅ **Criterion 1 (Stable Upstream):** YES. Official GitHub product with stable API.
+- ✅ **Criterion 2 (Signed Releases):** YES. Docker images signed via Docker Content Trust.
+- ✅ **Criterion 3 (Narrow Scope):** YES. GitHub API only; no compute, no cloud platforms.
+- ✅ **Criterion 4 (Complementary to azure-mcp):** YES. Version control APIs are orthogonal to Azure resource management.
+- ✅ **Criterion 5 (Maintenance Signal):** YES. GitHub maintains; actively updated.
+- ✅ **Criterion 6 (Read-Only):** YES. Read-only query surface. No mutation tools.
+- ✅ **Criterion 7 (Documented Install):** YES. Documented in `docs/install/` with PAT setup.
 
 ## Removal Cost
 

@@ -28,12 +28,12 @@ The following CI checks must pass before a PR can merge to `main`. These are cat
 
 These checks are already defined in `.github/workflows/` and should be added to the required list now:
 
-1. **`CI / test (ubuntu-latest, 3.11)`** — Test suite on Python 3.11 (Ubuntu)
-2. **`CI / test (ubuntu-latest, 3.12)`** — Test suite on Python 3.12 (Ubuntu)
-3. **`gitleaks / scan`** — Secret scanning with gitleaks
-4. **`dependency-review / review`** — Dependency vulnerability scanning
-5. **`CodeQL / Analyze (actions)`** — CodeQL security analysis (GitHub Actions)
-6. **`CodeQL / Analyze (python)`** — CodeQL security analysis (Python)
+1. **`CI / test (ubuntu-latest, 3.11)`** Test suite on Python 3.11 (Ubuntu).
+2. **`CI / test (ubuntu-latest, 3.12)`** Test suite on Python 3.12 (Ubuntu).
+3. **`gitleaks / scan`** Secret scanning with gitleaks.
+4. **`dependency-review / review`** Dependency vulnerability scanning.
+5. **`CodeQL / Analyze (actions)`** CodeQL security analysis (GitHub Actions).
+6. **`CodeQL / Analyze (python)`** CodeQL security analysis (Python).
 
 **Total immediate checks:** 6
 
@@ -41,10 +41,10 @@ These checks are already defined in `.github/workflows/` and should be added to 
 
 These checks are planned but not yet implemented. They should be added to the required list once their workflows land:
 
-7. **`Read-Only Enforcement Check / Check for mutation methods`** — ADR-003 layer 1 enforcement (`scripts/check_readonly.py`). **COMPLETED** in PR #TBD. Coordinator should add this to required checks after PR merge.
-8. **`mcp-inspector-smoke`** — MCP Inspector validation (all tools list with valid JSON Schema). Tracked in issue #19.
-9. **`coverage`** — Code coverage gate (threshold TBD, likely 80%). Tracked in issue #TBD.
-10. **`license-check`** — License compliance check (all deps have acceptable licenses). Tracked in issue #TBD.
+7. **`Read-Only Enforcement Check / Check for mutation methods`** ADR-003 layer 1 enforcement (`scripts/check_readonly.py`). **COMPLETED** in PR #TBD. Coordinator should add this to required checks after PR merge.
+8. **`mcp-inspector-smoke`** MCP Inspector validation (all tools list with valid JSON Schema). Tracked in issue #19.
+9. **`coverage`** Code coverage gate (threshold TBD, likely 80%). Tracked in issue #TBD.
+10. **`license-check`** License compliance check (all deps have acceptable licenses). Tracked in issue #TBD.
 
 **Total aspirational checks:** 4
 

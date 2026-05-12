@@ -50,13 +50,13 @@ Tools are read-only search operations over published Microsoft documentation.
 
 ## ADR-004 Fit
 
-- ✓ **Criterion 1 (Stable Upstream):** YES. Hosted endpoint with stable URL.
-- ✓ **Criterion 2 (Signed Releases):** N/A (hosted endpoint; Microsoft infrastructure is trust boundary).
-- ✓ **Criterion 3 (Narrow Scope):** YES. Documentation lookup only.
-- ✓ **Criterion 4 (Complementary to azure-mcp):** YES. Docs, not APIs. No overlap with resource queries.
-- ✓ **Criterion 5 (Maintenance Signal):** YES. Microsoft maintains continuously.
-- ✓ **Criterion 6 (Read-Only):** YES. Search and retrieval only.
-- ✓ **Criterion 7 (Documented Install):** YES. Documented in `docs/install/`.
+- ✅ **Criterion 1 (Stable Upstream):** YES. Hosted endpoint with stable URL.
+- ✅ **Criterion 2 (Signed Releases):** N/A (hosted endpoint; Microsoft infrastructure is trust boundary).
+- ✅ **Criterion 3 (Narrow Scope):** YES. Documentation lookup only.
+- ✅ **Criterion 4 (Complementary to azure-mcp):** YES. Docs, not APIs. No overlap with resource queries.
+- ✅ **Criterion 5 (Maintenance Signal):** YES. Microsoft maintains continuously.
+- ✅ **Criterion 6 (Read-Only):** YES. Search and retrieval only.
+- ✅ **Criterion 7 (Documented Install):** YES. Documented in `docs/install/`.
 
 ## Removal Cost
 

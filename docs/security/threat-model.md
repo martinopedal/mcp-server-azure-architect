@@ -24,7 +24,7 @@ mcp-server-azure-architect
   ├─ DefaultAzureCredential (local to process, env/MI/az cli)
   ├─ Tools: alz_checklist_query, advisor_recommendations, quota_plan
   ├─ Vendored Data: data/alz-queries/ (KQL snapshots)
-  └─→ Azure APIs (Resource Graph, Advisor, Key Vault) [HTTPS + OAuth]
+  └─ Azure APIs (Resource Graph, Advisor, Key Vault) [HTTPS + OAuth]
        ↓
   Companion MCP Servers (azure-mcp, microsoft-learn, mermaid, etc.)
 ```
@@ -185,9 +185,9 @@ Developer enables DEBUG logging. Stack trace from Azure SDK exception includes H
 
 **Mitigation:**
 - **Token-scrub helper.** Implement `token_scrub(text: str) -> str` in `src/mcp_server_azure_architect/auth.py`. Regex-based redaction for:
-  - Bearer tokens: `Authorization: Bearer ...` → `Authorization: Bearer [REDACTED]`
-  - Azure GUIDs: subscription IDs, tenant IDs → `[REDACTED-GUID]`
-  - Secrets in tags: `tag:secret=...` → `tag:secret=[REDACTED]`
+  - Bearer tokens: `Authorization: Bearer ...` becomes `Authorization: Bearer [REDACTED]`
+  - Azure GUIDs: subscription IDs, tenant IDs become `[REDACTED-GUID]`
+  - Secrets in tags: `tag:secret=...` becomes `tag:secret=[REDACTED]`
 - **Integrate token_scrub into logging.** Use custom `logging.Handler` or `logging.Formatter` that applies `token_scrub()` to all log records before emit.
 - **Default to INFO level.** Disable DEBUG logging in production. Require explicit opt-in (env var `MCP_LOG_LEVEL=DEBUG`) with warning in docs.
 - **Disable stack traces in production.** Log exception type and line number only. Full stack traces only in DEBUG mode.
@@ -352,8 +352,8 @@ Transitive dependencies are not directly controlled by this project but are pull
 
 | Server | Source | Trust Level | Version Pin | Recommendation |
 |--------|--------|-------------|-------------|----------------|
-| `@modelcontextprotocol/server-azure` | Microsoft (official) | High | Pin `@latest` → `@1.x` (tracked by Burke) | Quarterly update review. Auto-update minor versions. |
-| `@modelcontextprotocol/server-microsoft-learn` | Microsoft (official) | High | Pin `@latest` → `@1.x` (tracked by Burke) | Quarterly update review. |
+| `@modelcontextprotocol/server-azure` | Microsoft (official) | High | Pin `@latest` to `@1.x` (tracked by Burke) | Quarterly update review. Auto-update minor versions. |
+| `@modelcontextprotocol/server-microsoft-learn` | Microsoft (official) | High | Pin `@latest` to `@1.x` (tracked by Burke) | Quarterly update review. |
 | `mermaid-mcp` | npm (community) | Medium | Pin major.minor (e.g., `^2.1.0`) | Manual quarterly review. Check last update <6 months, >100 stars. |
 | `drawio-mcp` | npm (community) | Medium | Pin major.minor | Manual quarterly review. |
 | `kubernetes-mcp` | npm (community) | Medium | Pin major.minor | Manual quarterly review. |

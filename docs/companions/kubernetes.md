@@ -68,13 +68,13 @@ No tools for creating, updating, or deleting resources. No kubectl apply, kubect
 
 ## ADR-004 Fit
 
-- ✓ **Criterion 1 (Stable Upstream):** YES. Semver releases (early version, but stable).
-- ✓ **Criterion 2 (Signed Releases):** YES. npm provenance signatures.
-- ✓ **Criterion 3 (Narrow Scope):** YES. Kubernetes cluster inspection only.
-- ✓ **Criterion 4 (Complementary to azure-mcp):** YES. Kubernetes APIs are orthogonal to Azure resource management (though Kubernetes cluster runs on Azure).
-- ✓ **Criterion 5 (Maintenance Signal):** YES. Last release 2026-Q1; community active.
-- ✓ **Criterion 6 (Read-Only):** YES. Inspection only. No mutations to cluster.
-- ✓ **Criterion 7 (Documented Install):** YES. Documented in `docs/install/` with kubeconfig setup.
+- ✅ **Criterion 1 (Stable Upstream):** YES. Semver releases (early version, but stable).
+- ✅ **Criterion 2 (Signed Releases):** YES. npm provenance signatures.
+- ✅ **Criterion 3 (Narrow Scope):** YES. Kubernetes cluster inspection only.
+- ✅ **Criterion 4 (Complementary to azure-mcp):** YES. Kubernetes APIs are orthogonal to Azure resource management (though Kubernetes cluster runs on Azure).
+- ✅ **Criterion 5 (Maintenance Signal):** YES. Last release 2026-Q1; community active.
+- ✅ **Criterion 6 (Read-Only):** YES. Inspection only. No mutations to cluster.
+- ✅ **Criterion 7 (Documented Install):** YES. Documented in `docs/install/` with kubeconfig setup.
 
 ## Removal Cost
 

@@ -5,21 +5,21 @@ This matrix tracks which companions are tested with `mcp-server-azure-architect`
 ## Status Key
 
 - **Pinned version:** The exact version locked in `.copilot/mcp-config.json` for reproducibility.
-- **Tested with this server:** Green (✓) = confirmed working; Yellow (○) = pending; Red (✗) = known issue.
+- **Tested with this server:** ✅ = confirmed working; pending = not yet tested; ❌ = known issue.
 - **Known issues:** Blockers or workarounds.
 
 ## Matrix
 
 | Companion | Repository | Pinned Version | Tested | Known Issues |
 |-----------|-----------|---|---|---|
-| **azure-mcp** | [Microsoft/mcp](https://github.com/microsoft/mcp) | `2.0.1` | ✓ | None. Microsoft's stable. |
-| **microsoft-learn** | [Microsoft Learn Hosted](https://learn.microsoft.com/api/mcp) | N/A (hosted) | ✓ | Requires internet connection. |
-| **github** | [github/github-mcp-server](https://github.com/github/github-mcp-server) | `latest` | ○ | Requires Docker. GitHub PAT must be set. |
-| **mermaid** | [hustcc/mcp-mermaid](https://github.com/hustcc/mcp-mermaid) | `0.4.1` | ○ | Package name corrected from `@mermaid-js/mermaid-mcp` (which does not exist on npm). |
-| **drawio** | [lgazo/drawio-mcp-server](https://github.com/lgazo/drawio-mcp-server) | `2.0.4` | ○ | None known. Requires npm or Docker. |
-| **kubernetes** | [kubernetes-mcp-server](https://www.npmjs.com/package/kubernetes-mcp-server) | `0.0.53` | ○ | Requires kubectl context and kubeconfig. |
-| **terraform** | [hashicorp/terraform-mcp-server](https://github.com/hashicorp/terraform-mcp-server) | `v0.5.1` | ○ | Requires Docker. Terraform CLI recommended. |
-| **mcp-server-azure-architect** | [martinopedal/mcp-server-azure-architect](https://github.com/martinopedal/mcp-server-azure-architect) | uvx (unpinned; PyPI pending) | ○ | Runtime: Python + FastMCP (ADR-001 approved). End users: `uvx mcp-server-azure-architect`. Dev: `uv run mcp-server-azure-architect`. Version pinning deferred until PyPI publication. |
+| **azure-mcp** | [Microsoft/mcp](https://github.com/microsoft/mcp) | `2.0.1` | ✅ | None. Microsoft's stable. |
+| **microsoft-learn** | [Microsoft Learn Hosted](https://learn.microsoft.com/api/mcp) | N/A (hosted) | ✅ | Requires internet connection. |
+| **github** | [github/github-mcp-server](https://github.com/github/github-mcp-server) | `latest` | pending | Requires Docker. GitHub PAT must be set. |
+| **mermaid** | [hustcc/mcp-mermaid](https://github.com/hustcc/mcp-mermaid) | `0.4.1` | pending | Package name corrected from `@mermaid-js/mermaid-mcp` (which does not exist on npm). |
+| **drawio** | [lgazo/drawio-mcp-server](https://github.com/lgazo/drawio-mcp-server) | `2.0.4` | pending | None known. Requires npm or Docker. |
+| **kubernetes** | [kubernetes-mcp-server](https://www.npmjs.com/package/kubernetes-mcp-server) | `0.0.53` | pending | Requires kubectl context and kubeconfig. |
+| **terraform** | [hashicorp/terraform-mcp-server](https://github.com/hashicorp/terraform-mcp-server) | `v0.5.1` | pending | Requires Docker. Terraform CLI recommended. |
+| **mcp-server-azure-architect** | [martinopedal/mcp-server-azure-architect](https://github.com/martinopedal/mcp-server-azure-architect) | uvx (unpinned; PyPI pending) | pending | Runtime: Python + FastMCP (ADR-001 approved). End users: `uvx mcp-server-azure-architect`. Dev: `uv run mcp-server-azure-architect`. Version pinning deferred until PyPI publication. |
 
 ## Version Rationale
 

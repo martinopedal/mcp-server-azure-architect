@@ -89,7 +89,7 @@ Azure SDK for .NET is best-in-class. DefaultAzureCredential in `Azure.Identity` 
 .NET 8+ with Native AOT or single-file publish can achieve sub-500ms cold start for small apps. Without AOT, cold start is ~300-1500ms typical (includes runtime init). Meets sub-1-second requirement with optimization.
 
 **Install/Distribution:**  
-`dotnet tool install -g mcp-server-azure-architect`. Global or local (manifest-based) install. NuGet packaging is robust. Cross-platform (Windows, macOS, Linux). .NET 8+ required.
+`dotnet tool install -g mcp-server-azure-architect`. Global or local (manifest-based) install. NuGet packages are well-maintained and well-documented. Cross-platform (Windows, macOS, Linux). .NET 8+ required.
 
 **JSON Schema Tooling:**  
 Use `Newtonsoft.Json.Schema` or `NJsonSchema` for validation and schema generation from C# classes. Strong type safety. Reflection-based schema generation is well-supported.
@@ -147,7 +147,7 @@ Forge implements the server in Python using FastMCP. Atlas (ARG/KQL Engineer) pr
 
 1. **Fast iteration.** No build step. Change code, run server. Inspector sees changes immediately.
 2. **Wide contributor base.** Python is accessible to ops engineers, data scientists, and cloud architects.
-3. **Azure SDK leverage.** Mature libraries for Resource Graph, Key Vault, Storage, Advisor. DefaultAzureCredential is well-documented.
+3. **Azure SDK use.** Mature libraries for Resource Graph, Key Vault, Storage, Advisor. DefaultAzureCredential is well-documented.
 4. **JSON Schema generation.** FastMCP decorators auto-generate schema from function signatures and type hints.
 5. **uvx distribution.** Single command install: `uvx mcp-server-azure-architect`. No global pollution.
 
@@ -204,7 +204,7 @@ Forge implements the server in Python using FastMCP. Atlas (ARG/KQL Engineer) pr
 Initial empirical measurement of cold-start performance on Python 3.12 revealed approximately 943ms startup time. Cost was dominated by MCP framework imports (~1.3s), not Azure SDK.
 
 **Update (2026-05-15):**  
-Comprehensive profiling on Python 3.14 revealed actual cold start of 8.56 seconds. Gap analysis shows:
+Profiling on Python 3.14 revealed actual cold start of 8.56 seconds. Gap analysis shows:
 - MCP framework and dependencies: 7.3 seconds (85% of total, irreducible)
 - Azure SDK eager imports: 945ms (should be lazy-imported)
 - HTTP client eager imports: 1.46s (should be lazy-imported)
@@ -230,6 +230,6 @@ The 200-800ms claim in literature does not match this project's measured baselin
 - If sub-500ms cold start becomes a requirement, project must switch runtimes (Go, Rust, Node.js)
 
 **Evidence:**  
-- `docs/perf/coldstart-investigation.md` (comprehensive analysis)
+- `docs/perf/coldstart-investigation.md` (detailed analysis)
 - `docs/perf/importtime-baseline-3.14.log` (raw import trace, first 200 lines)
 - Lazy-import follow-up issues (filed in this cycle)

@@ -66,13 +66,13 @@ Examples of read-only operations:
 
 ## ADR-004 Fit
 
-- ✓ **Criterion 1 (Stable Upstream):** YES. Semver releases with release notes.
-- ✓ **Criterion 2 (Signed Releases):** YES. Docker images signed via DCT. Official HashiCorp product.
-- ✓ **Criterion 3 (Narrow Scope):** YES. Terraform tooling only (plan, validate, registry lookup).
-- ✓ **Criterion 4 (Complementary to azure-mcp):** YES. IaC design is orthogonal to live resource queries. (Terraform can manage Azure, but this server only exposes read-only operations.)
-- ✓ **Criterion 5 (Maintenance Signal):** YES. HashiCorp maintains; last release 2026-Q1.
-- ✓ **Criterion 6 (Read-Only):** YES. Plan and validate only; no apply.
-- ✓ **Criterion 7 (Documented Install):** YES. Documented in `docs/install/` with Docker setup.
+- ✅ **Criterion 1 (Stable Upstream):** YES. Semver releases with release notes.
+- ✅ **Criterion 2 (Signed Releases):** YES. Docker images signed via DCT. Official HashiCorp product.
+- ✅ **Criterion 3 (Narrow Scope):** YES. Terraform tooling only (plan, validate, registry lookup).
+- ✅ **Criterion 4 (Complementary to azure-mcp):** YES. IaC design is orthogonal to live resource queries. (Terraform can manage Azure, but this server only exposes read-only operations.)
+- ✅ **Criterion 5 (Maintenance Signal):** YES. HashiCorp maintains; last release 2026-Q1.
+- ✅ **Criterion 6 (Read-Only):** YES. Plan and validate only; no apply.
+- ✅ **Criterion 7 (Documented Install):** YES. Documented in `docs/install/` with Docker setup.
 
 ## Removal Cost
 

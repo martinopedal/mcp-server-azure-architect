@@ -69,13 +69,13 @@ No tools for creating, updating, or deleting Azure resources.
 
 ## ADR-004 Fit
 
-- ✓ **Criterion 1 (Stable Upstream):** YES. Semver releases with release notes.
-- ✓ **Criterion 2 (Signed Releases):** YES. npm provenance, official Microsoft registry.
-- ✓ **Criterion 3 (Narrow Scope):** YES. Azure REST APIs only.
-- ✓ **Criterion 4 (Complementary to azure-mcp):** N/A (azure-mcp itself is the source of truth).
-- ✓ **Criterion 5 (Maintenance Signal):** YES. Microsoft maintains; last release 2026-Q1.
-- ✓ **Criterion 6 (Read-Only):** YES. All tools are read-only queries.
-- ✓ **Criterion 7 (Documented Install):** YES. Per-client guides in `docs/install/`.
+- ✅ **Criterion 1 (Stable Upstream):** YES. Semver releases with release notes.
+- ✅ **Criterion 2 (Signed Releases):** YES. npm provenance, official Microsoft registry.
+- ✅ **Criterion 3 (Narrow Scope):** YES. Azure REST APIs only.
+- ✅ **Criterion 4 (Complementary to azure-mcp):** N/A (azure-mcp itself is the source of truth).
+- ✅ **Criterion 5 (Maintenance Signal):** YES. Microsoft maintains; last release 2026-Q1.
+- ✅ **Criterion 6 (Read-Only):** YES. All tools are read-only queries.
+- ✅ **Criterion 7 (Documented Install):** YES. Per-client guides in `docs/install/`.
 
 ## Removal Cost
 
