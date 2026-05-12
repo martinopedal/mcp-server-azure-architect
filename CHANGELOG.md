@@ -36,6 +36,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **ALZ snapshot refresh automation:** Weekly scheduled GitHub Actions workflow to detect upstream drift in `martinopedal/alz-checklist-queries` and `martinopedal/alz-graph-queries`, automatically opening PRs with updated manifests when changes detected. See `.github/workflows/refresh-alz-snapshot.yml` and `scripts/refresh_alz_snapshot.py`.
 
+### Security
+
+- **Gitleaks allowlist tightened.** Added `tests/.*` and `data/alz-queries/manifest.json` to the global path allowlist. Test fixtures legitimately contain mock JWT and API key strings to exercise the `token_scrub()` redaction logic, and the ALZ query manifest contains 64-character hex SHA-256 hashes that the default `azure-tenant-or-subscription-id-in-non-doc` rule misclassified as Azure GUIDs. Both paths are non-shipping artifacts and are correctly excluded from secret scanning.
+
 ### Repository Infrastructure
 
 - GitHub issue and PR templates with squad routing:
