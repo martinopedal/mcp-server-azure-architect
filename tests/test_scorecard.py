@@ -30,10 +30,11 @@ def mock_scope_validation() -> Any:
         yield mock_validate
 
 
-def _mock_arg_response(rows: list[dict[str, Any]]) -> Mock:
+def _mock_arg_response(rows: list[dict[str, Any]], skip_token: str | None = None) -> Mock:
     """Build a mock ARG response."""
     mock_response = Mock()
     mock_response.data = rows
+    mock_response.skip_token = skip_token
     return mock_response
 
 
@@ -336,11 +337,18 @@ async def test_alz_scorecard_tool_registered() -> None:
 @pytest.mark.asyncio
 async def test_scorecard_pagination_default_page_size() -> None:
     """Default page_size is 1000 when not specified."""
+    captured_request = None
+
+    def capture_request(query_request: Any) -> Mock:
+        nonlocal captured_request
+        captured_request = query_request
+        return _mock_arg_response([])
+
     with patch(
         "mcp_server_azure_architect.scorecard._get_resource_graph_client"
     ) as mock_client_factory:
         mock_client = Mock()
-        mock_client.resources = Mock(return_value=_mock_arg_response([]))
+        mock_client.resources = Mock(side_effect=capture_request)
         mock_client_factory.return_value = mock_client
 
         await run_scorecard(
@@ -348,19 +356,27 @@ async def test_scorecard_pagination_default_page_size() -> None:
             checklist_ids=["54f0d8b1-22a3-4c0d-8ce2-58b9e086c93a"],
         )
 
-        # Check that resources was called with QueryRequest having options.top=1000
-        call_args = mock_client.resources.call_args[0][0]
-        assert call_args.options.top == 1000
+        # Check that QueryRequest had options.top=1000
+        assert captured_request is not None
+        assert captured_request.options is not None
+        assert captured_request.options.top == 1000
 
 
 @pytest.mark.asyncio
 async def test_scorecard_pagination_custom_page_size() -> None:
     """Custom page_size is honored."""
+    captured_request = None
+
+    def capture_request(query_request: Any) -> Mock:
+        nonlocal captured_request
+        captured_request = query_request
+        return _mock_arg_response([])
+
     with patch(
         "mcp_server_azure_architect.scorecard._get_resource_graph_client"
     ) as mock_client_factory:
         mock_client = Mock()
-        mock_client.resources = Mock(return_value=_mock_arg_response([]))
+        mock_client.resources = Mock(side_effect=capture_request)
         mock_client_factory.return_value = mock_client
 
         await run_scorecard(
@@ -369,18 +385,25 @@ async def test_scorecard_pagination_custom_page_size() -> None:
             page_size=500,
         )
 
-        call_args = mock_client.resources.call_args[0][0]
-        assert call_args.options.top == 500
+        assert captured_request is not None
+        assert captured_request.options.top == 500
 
 
 @pytest.mark.asyncio
 async def test_scorecard_pagination_page_token_forwarded() -> None:
     """page_token is forwarded to Azure Resource Graph as skip_token."""
+    captured_request = None
+
+    def capture_request(query_request: Any) -> Mock:
+        nonlocal captured_request
+        captured_request = query_request
+        return _mock_arg_response([])
+
     with patch(
         "mcp_server_azure_architect.scorecard._get_resource_graph_client"
     ) as mock_client_factory:
         mock_client = Mock()
-        mock_client.resources = Mock(return_value=_mock_arg_response([]))
+        mock_client.resources = Mock(side_effect=capture_request)
         mock_client_factory.return_value = mock_client
 
         await run_scorecard(
@@ -389,8 +412,8 @@ async def test_scorecard_pagination_page_token_forwarded() -> None:
             page_token="test-token-123",
         )
 
-        call_args = mock_client.resources.call_args[0][0]
-        assert call_args.options.skip_token == "test-token-123"
+        assert captured_request is not None
+        assert captured_request.options.skip_token == "test-token-123"
 
 
 @pytest.mark.asyncio
@@ -400,10 +423,9 @@ async def test_scorecard_pagination_next_page_token_returned() -> None:
         "mcp_server_azure_architect.scorecard._get_resource_graph_client"
     ) as mock_client_factory:
         mock_client = Mock()
-        mock_response = Mock()
-        mock_response.data = []
-        mock_response.skip_token = "next-token-456"
-        mock_client.resources = Mock(return_value=mock_response)
+        mock_client.resources = Mock(
+            return_value=_mock_arg_response([], skip_token="next-token-456")
+        )
         mock_client_factory.return_value = mock_client
 
         result = await run_scorecard(
