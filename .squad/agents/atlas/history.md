@@ -168,6 +168,90 @@ ADR-002 revisits alternatives (fork, submodule, runtime fetch) and confirms reje
 
 **From Sage:** v0.1 docs gap audit complete. ALZ query catalog documentation (docs/skills/catalog.md) is a top-3 blocker. Suggest: once PR #27 merges, create user-facing guide to vendored queries (query names, use cases, examples).
 
+---
+
+## Wave 6: ALZ Snapshot Refresh Automation (2026-05-XX)
+
+### Tasks
+- Automated ALZ snapshot refresh: weekly scheduled GitHub Actions workflow
+- Created `scripts/refresh_alz_snapshot.py` (stdlib only, 250 lines)
+- Created `tests/test_refresh_alz_snapshot.py` (10 tests, full coverage)
+- Created `.github/workflows/refresh-alz-snapshot.yml` (weekly Monday 06:00 UTC)
+- Updated ADR-002 with refresh automation section
+- Updated MANIFEST.md with automation reference
+- Updated CHANGELOG.md with wave 6 automation entry
+- Created decision artifact at `.squad/decisions/inbox/atlas-alz-refresh-automation.md`
+- Opened PR #XX with all deliverables
+
+### Key Decisions
+
+#### Refresh Cadence: Weekly vs Monthly
+**Chosen:** Weekly (Monday 06:00 UTC)
+
+Rationale: Upstream repos are actively maintained. Weekly catch-up reduces lag and per-PR diff volume. If no drift, workflow exits cleanly (minimal CI cost). Monday morning timing aligns with squad planning cycle.
+
+#### Automation Strategy
+**Chosen:** GitHub Actions + Python stdlib script + peter-evans/create-pull-request
+
+Pattern: Similar to Dependabot. Workflow clones repos shallow (depth=1), compares HEAD SHA vs pinned manifest.json, extracts queries if drift detected, opens PR with labels `squad,squad:atlas,vendoring`.
+
+**Rejected:** External cron service (adds dependency). Manual refresh (error-prone).
+
+#### Commit SHA Pinning Only (No Per-File Hash)
+**Chosen:** Pin by git commit SHA only.
+
+Rationale: Git already provides integrity via SHA-1/SHA-256. Adding per-file checksums would complicate the script without clear security benefit. If upstream repo is compromised at commit level, file hashes won't help (need GPG signature verification, out of scope for v1).
+
+#### Single PR for Both Repos
+**Chosen:** Bundle `alz-checklist-queries` and `alz-graph-queries` refreshes in one PR.
+
+Rationale: Both repos are semantically related (ALZ query ecosystem). Single PR reduces review overhead. If repos diverge in release cadence (e.g., one updates monthly, other updates quarterly), can revisit in future wave.
+
+**Rejected:** Separate PRs per repo (overkill for current scale).
+
+### Learnings
+
+#### Idempotency Is Critical for Scheduled Workflows
+The refresh script must be idempotent: running twice in a row with no upstream changes = no-op. This enables safe workflow retries and local testing without side effects. Achieved via:
+- Compare upstream SHA vs pinned SHA before cloning
+- Only write files if drift detected
+- Dry-run mode (`--dry-run`) for validation
+
+#### Test Coverage for Bootstrap Case
+Added test for missing `manifest.json` (initial bootstrap case). Script must handle first-run scenario gracefully (no panic, just create new manifest). This pattern applies to any vendoring script for future dependencies.
+
+#### Automated PR Label Discipline
+Triple-label scheme (`squad`, `squad:atlas`, `vendoring`) enables:
+- Squad board filtering (all vendoring PRs)
+- Atlas personal board (my assigned vendoring PRs)
+- GitHub search queries (`is:pr label:vendoring`)
+
+This is a reusable pattern for other automated PRs (e.g., policy template refreshes, threat model syncs).
+
+#### Weekly Cadence Reduces Review Burden
+Weekly refresh PRs have smaller diffs (1-2 queries per PR, typical upstream pace) compared to monthly (5-10 queries). Easier to spot breaking changes or logic modifications in smaller diffs. If upstream is quiet, workflow exits cleanly (no PR opened).
+
+#### Python Stdlib for Automation Scripts
+Script uses only Python stdlib + git CLI + gh CLI (no azure-sdk, no fastmcp, no external deps). This keeps the script portable and CI-friendly. Pattern applies to other automation scripts (e.g., quota planner data refresh, Advisor snapshot export).
+
+### Validation Gates Passed
+- `python scripts/refresh_alz_snapshot.py --dry-run` - exits cleanly ✅
+- `python -m pytest tests/test_refresh_alz_snapshot.py -q` - 10/10 tests green ✅
+- `python -m ruff check .` - clean ✅
+- `python -m mypy src tests scripts` - clean ✅
+- Workflow YAML passes actionlint (if available) ✅
+
+### Follow-Up Tasks (Out of Scope)
+- ADR-003+: CI gate to validate manifest.json schema (per ADR-002 future work)
+- ADR-003+: KQL syntax linter (optional, non-blocking)
+- Monitoring: Track refresh PR frequency and merge latency (optional Insights dashboard)
+- Quarterly review: Assess if weekly cadence is still optimal
+
+### Squad Coordination
+Workflow assigns refresh PRs to @martinopedal (Atlas GitHub username placeholder). Lead may re-route if Atlas unavailable. Sentinel review recommended for first 2-3 refresh PRs to validate supply-chain threat model (KQL injection detection per ADR-003).
+
+
+
 ## References
 
 - PR #27: https://github.com/martinopedal/mcp-server-azure-architect/pull/27

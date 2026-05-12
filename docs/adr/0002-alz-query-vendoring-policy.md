@@ -102,9 +102,18 @@ This is non-negotiable. Citations are enforced by tooling (future CI gate) and m
 
 ### Refresh Procedure
 
-**Cadence:** Monthly or on-demand (triggered by upstream release tags or high-priority security queries).
+**Cadence:** Weekly (automated via GitHub Actions, every Monday 06:00 UTC) or on-demand via workflow_dispatch.
 
-**Steps:**
+**Automation:** The refresh is automated via `.github/workflows/refresh-alz-snapshot.yml` and `scripts/refresh_alz_snapshot.py`. The workflow:
+
+1. Fetches latest commit SHAs from both upstream repos via GitHub API
+2. Compares against pinned SHAs in `manifest.json`
+3. If drift detected: clones repos (shallow), extracts queries, updates manifests, opens PR
+4. If no drift: exits cleanly (no-op)
+
+The automated PR is labeled `squad,squad:atlas,vendoring` and assigned to Atlas for review.
+
+**Manual Steps (if needed):**
 
 1. **Check upstream HEAD:**
    ```bash
@@ -113,26 +122,18 @@ This is non-negotiable. Citations are enforced by tooling (future CI gate) and m
      --jq '.sha | .[0:12]' > /tmp/upstream_sha.txt
    ```
 
-2. **Export upstream queries:**  
-   From the upstream repo, fetch the query files and save to `data/alz-queries/{checklist,graph}/`. Use the `alz-* repo's own export tooling or manual export from JSON or KQL files.
+2. **Run refresh script:**
+   ```bash
+   python scripts/refresh_alz_snapshot.py --dry-run  # check for drift
+   python scripts/refresh_alz_snapshot.py            # apply changes
+   ```
 
-3. **Update `manifest.json`:**  
-   - Update `commit_sha` to the new upstream SHA.
-   - Update `vendored_at` to current UTC timestamp (ISO 8601).
-   - Keep `ref` aligned with the commit (or tag if releasing from a stable tag).
+3. **Review changes:**
+   ```bash
+   git diff data/alz-queries/
+   ```
 
-4. **Update `MANIFEST.md`:**  
-   - Add an entry to a "Changelog" section.
-   - Format: `## [YYYY-MM-DD] - Snapshot to {short-sha} (N queries changed/added/removed)`
-   - Summarize per-source: new checklist IDs, removed IDs, modified queries.
-   - Example:
-     ```markdown
-     ## [2026-05-15] - Snapshot to e7641be (4 queries changed)
-     - alz-checklist-queries: 1 new checklist query added, 0 modified, 0 removed
-     - alz-graph-queries: 0 new, 1 modified (bugfix), 2 removed (deprecated)
-     ```
-
-5. **Commit and open PR:**
+4. **Commit and open PR:**
    ```bash
    git add data/alz-queries/
    git commit -m "chore(alz-queries): refresh snapshot to {short-sha}
@@ -142,18 +143,20 @@ This is non-negotiable. Citations are enforced by tooling (future CI gate) and m
    - alz-graph-queries: {changes}
 
    Upstream diff: {link to github.com diff}
-   Breaking changes: {none|list}"
+   Breaking changes: {none|list}
+   
+   Co-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>"
    git push -u origin chore/alz-refresh-{date}
    gh pr create --title "chore(alz-queries): refresh snapshot to {short-sha}" ...
    ```
 
-6. **PR body MUST include:**
+5. **PR body MUST include:**
    - Per-source diff summary (new/changed/removed checklist IDs).
    - Breaking change callouts (e.g., if a query logic changed and affects results).
    - Query count delta (before/after).
    - Link to the upstream commit range.
 
-7. **Review and merge:**  
+6. **Review and merge:**  
    - Lead or designee reviews the diff and changelog for accuracy.
    - Once approved, merge to main.
 
