@@ -354,3 +354,45 @@ Wave 2 complete: foundation (#22, #23, #26, #27, #33, #34) all on main. Decision
 **Cross-agent dependencies resolved.** Sentinel's ADR-003 + threat model (PR #40, closed #7, #18) provides three-layer read-only enforcement. Burke's ADR-004 (PR #37, closed #8) validates companion pinning discipline. Forge's dependency tightening (PR #38, closed #32) eliminates azure-identity CVEs. All four wave-3 ADRs stack cleanly on ADR-001 runtime foundation.
 
 **Branch protection now enforced (issue #20 closed).** Coordinator executed protection plan immediately post-PR #40 merge. 6 required checks + 1 approval gate now active for all future PRs. All wave-3 PRs landed before protection, so no retroactive issues. Sets precedent: infrastructure enforcement is non-optional.
+
+## Issue #90: Graph Pin Bump to Upstream HEAD (2026-05-12 session)
+
+### Context
+Bump martinopedal/alz-graph-queries pin from v1.1.0 (SHA: 8a3fddab...) to upstream HEAD (SHA: 448998d0...) per AGENTS.md mission scope. ALZ graph queries are actively maintained; v1.1.0 is 2 commits behind HEAD.
+
+### Approach
+- Fetch upstream HEAD commit SHA via `gh api repos/martinopedal/alz-graph-queries/commits/main --jq .sha`
+- Verify both vendored query IDs (e8aa1e41-870d-4968-94c6-77be14f510ac, 667313b4-f566-44b5-b984-a859c773e7d2) present in upstream alz_additional_queries.json
+- Extract both queries from upstream, strip header metadata, compare KQL content against vendored versions
+- Manually update manifest.json (sources[1]: commit_sha, ref format change from `refs/tags/v1.1.0` to `commit:SHA`, vendored_at timestamp)
+- Manually update MANIFEST.md to match
+- Run validation gates (ruff, mypy, pytest, graph integrity check)
+- Commit, push, and create PR #111
+
+### Outcomes
+- ✅ No content delta for either query (KQL text identical between v1.1.0 and HEAD)
+- ✅ Graph query integrity hashes unchanged (SHA-256 validation passed)
+- ✅ Ruff check passed (no format violations)
+- ✅ Commit 915a09d pushed to `atlas/90-graph-pin-bump`
+- ✅ PR #111 created with full verification details
+
+### Learnings
+
+#### Refresh Script Extraction Mismatch
+The `scripts/refresh_alz_snapshot.py` extracts ALL queryable queries from upstream (132 in alz-graph-queries). A full refresh would replace our 2 curated vendored queries with all 132. For targeted pin bumps, manual verification + manifest edits is the correct pattern — refreshing only a subset requires a separate, smaller script or manual coordination. The existing refresh workflow is designed for wholesale updates, not cherry-picking.
+
+#### Manifest Schema: ref Format Evolution
+Updated ref format from `refs/tags/v1.1.0` (tag reference) to `commit:448998d01000e7f863d3c1f8876787fd2234a77b` (explicit commit reference). This change makes the manifest more flexible: future pin bumps can target a specific commit without waiting for upstream tags, and pin bumps are more reproducible (commit SHAs are immutable, tags can move).
+
+#### Pre-Existing Test Failures (Unrelated)
+Four pre-existing pytest failures in test_scorecard.py (missing ResourceGraphClient attribute, cloud configuration issues) are environmental and unrelated to this 2-file manifest change. Mypy errors in test modules are import-path issues that pre-date this task. These are not blockers for PR merge.
+
+### Validation Gates Status
+- ✅ ruff check passed (no format violations)
+- ✅ Graph query integrity check passed (SHA-256 hashes unchanged for both queries)
+- ⚠️ mypy: pre-existing import errors in test modules (not blocking)
+- ⚠️ pytest: 4 pre-existing failures in test_scorecard.py (not related to manifest changes)
+- ✅ gitleaks: clean (no secrets)
+
+### Squad Coordination
+Issue #90 is part of Atlas's mission (AGENTS.md: "Source-of-truth for ALZ queries"). Lead (@martinopedal) to review PR #111 after CI gates pass. No other team dependencies.

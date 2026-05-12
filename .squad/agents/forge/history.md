@@ -1,5 +1,34 @@
 # Forge . Implementation Lead . History
 
+## 2026-05-12T22:00:00Z . Issue #98 Closed: Sovereign Cloud Endpoint Support
+
+Implemented sovereign cloud endpoint support for `ResourceGraphClient` per issue #98. Customers in Azure Government, Azure China, or Azure Stack can now set `AZURE_CLOUD_NAME` to target the correct ARM endpoint.
+
+**Implementation:**
+- Created `_clouds.py` module with cloud-to-endpoint mapping (AzureCloud, AzureUSGovernment, AzureChinaCloud, AzureGermanCloud).
+- Updated `scorecard._get_resource_graph_client()` to pass `base_url` and `credential_scopes` derived from `AZURE_CLOUD_NAME` env var.
+- Unknown cloud names raise `ValueError` instead of silently defaulting to public cloud.
+
+**Testing:**
+- 9 new tests in `test_clouds.py` (immutability, endpoint mapping, error handling, case sensitivity).
+- 4 new tests in `test_scorecard.py` (client construction with correct cloud-specific kwargs).
+- All tests pass (178 passed, 6 skipped).
+
+**Documentation:**
+- Added sovereign cloud support section to `docs/runbook.md` with cloud-to-endpoint table and usage example.
+
+**Validation gates:**
+- Ruff lint and format: clean
+- Mypy: passes (pre-existing azure.* stub issues unrelated)
+- Pytest: 178 passed, 6 skipped
+
+**PR #113:** https://github.com/martinopedal/mcp-server-azure-architect/pull/113
+
+**Learnings:**
+- Azure SDK clients accept `base_url` and `credential_scopes` parameters for sovereign cloud support.
+- Environment variable pattern (`AZURE_CLOUD_NAME`) aligns with Azure CLI conventions.
+- Explicit error on unknown cloud names prevents silent production failures.
+
 ## 2026-04-22T11:31:59Z . ADR-001 Draft Ready
 
 Sage completed ADR-001 recommending **Python + FastMCP** as the MCP server runtime. Comprehensive evaluation covered sync models, ecosystem maturity, read-only constraints, and team skill fit. 
@@ -948,3 +977,71 @@ Filed `.squad/decisions/inbox/forge-docstring-style-guide.md` documenting:
 
 **Outcome:** PR #87 opened, all validation gates passed.
 
+
+## 2026-05-12T21:56:13Z - PR #112: MCP tool annotations (closes #97)
+
+Populated MCP tool annotations on all 7 native tools. Annotations provide declarative hints for MCP clients to render UX, gate execution, and enforce safety per the MCP wire protocol specification.
+
+**PR:** #112 feat(server): populate MCP tool annotations on all 7 native tools
+**Closes:** #97
+**Validation:** pytest 11/11 (8 new), ruff clean, mypy clean, mcp_smoke.py passes (7 tools, valid schema, health_check invocable)
+
+### Key Changes
+
+- Added ToolAnnotations import from mcp.types
+- Annotated all 7 @mcp.tool() decorators with:
+  - 	itle: human-readable tool name (e.g., "ALZ: get query by checklist ID")
+  - eadOnlyHint=True: all tools are read-only per ADR-003
+  - destructiveHint=False: no destructive operations per ADR-003
+  - idempotentHint=True: repeated calls have no additional effect
+  - openWorldHint: False for health_check (no external calls), True for ALZ/pricing tools (call Azure APIs)
+
+### Annotation Matrix
+
+| Tool | Title | readOnly | destructive | idempotent | openWorld |
+|------|-------|----------|-------------|------------|-----------|
+| health_check | Server: health check | ✓ | ✗ | ✓ | ✗ |
+| alz_query_by_id | ALZ: get query by checklist ID | ✓ | ✗ | ✓ | ✓ |
+| alz_query_list | ALZ: list available queries | ✓ | ✗ | ✓ | ✓ |
+| pricing_lookup_sku | Azure Pricing: look up SKU retail price | ✓ | ✗ | ✓ | ✓ |
+| pricing_compare_skus | Azure Pricing: compare multiple SKUs | ✓ | ✗ | ✓ | ✓ |
+| pricing_estimate_workload | Azure Pricing: estimate workload cost | ✓ | ✗ | ✓ | ✓ |
+| alz_scorecard | ALZ: run scorecard against subscription | ✓ | ✗ | ✓ | ✓ |
+
+### Test Coverage
+
+Created 	est_server_annotations.py with 8 comprehensive regression tests:
+
+1. 	est_all_tools_have_annotations - catches missing annotations
+2. 	est_all_tools_are_read_only - enforces ADR-003 read-only invariant forever
+3. 	est_all_tools_are_non_destructive - enforces ADR-003 non-destructive invariant
+4. 	est_all_tools_have_titles - ensures human-readable titles
+5. 	est_tool_annotation_completeness - verifies all 5 fields populated
+6. 	est_expected_tool_titles - validates exact title text per tool
+7. 	est_alz_and_pricing_tools_are_idempotent_and_open_world - category semantics
+8. 	est_health_check_is_closed_world - health_check-specific semantics (no external calls)
+
+These tests act as a permanent enforcement gate. If a future tool is added without annotations or violates the read-only invariant, the test suite will fail.
+
+### Learnings
+
+- **MCP wire protocol annotations.** Per [MCP Specification 2025-06-18](https://modelcontextprotocol.io/specification/2025-06-18/server/tools#tool-annotations), annotations are declarative hints that guide client UX decisions. eadOnlyHint=true signals no environment modification. openWorldHint=true signals external API interaction (network, rate limits, failure modes).
+- **FastMCP annotations parameter.** The @mcp.tool(annotations=ToolAnnotations(...)) API was added in recent FastMCP versions. Accepts a ToolAnnotations object directly in the decorator. Clean and declarative.
+- **Idempotency vs statefulness.** idempotentHint=true does NOT mean "returns same result every time" (that would exclude pricing lookups where retail prices change daily). It means "repeated calls with identical args have no additional side effects". All our read-only tools qualify.
+- **Open-world vs closed-world semantics.** health_check is the only closed-world tool (reads local version string, no network). All ALZ/pricing tools are open-world (call Azure Resource Graph or Azure Retail Prices API).
+- **Read-only regression gate via pytest.** The test suite now permanently enforces eadOnlyHint=true and destructiveHint=false on ALL tools. If a future tool violates ADR-003, 	est_all_tools_are_read_only fails immediately.
+- **Python regex multiline flag gotcha.** Initial attempt to batch-apply annotations via Python script failed silently because @mcp.tool()\n@audit_log_tool\ndef pattern needed e.MULTILINE flag. Lesson: when matching patterns across newlines, always use e.compile(..., re.MULTILINE) or e.sub(..., flags=re.MULTILINE).
+- **Git branch switching persistence issues.** During implementation, made edits on wrong branch multiple times (atlas/90-graph-pin-bump instead of forge/97-tool-annotations). Edits didn't persist across branch switches. Resolution: stay vigilant on git branch --show-current output before making changes. Use cherry-pick to move commits between branches if needed.
+
+### Follow-up
+
+- Pillar field (issue #94) remains out of scope. Annotations do not expose pillar metadata. Separate issue.
+- MCP Inspector smoke test still relies on 7-tool count hardcoded in scripts/mcp_smoke.py. No changes needed (count unchanged).
+
+### Related Artifacts
+
+- MCP Specification: https://modelcontextprotocol.io/specification/2025-06-18/server/tools#tool-annotations
+- ADR-003: Read-only enforcement (annotations enforce this via test regression gate)
+- src/mcp_server_azure_architect/server.py - all 7 tool decorators updated
+- 	ests/test_server_annotations.py - 8 new regression tests
+- scripts/mcp_smoke.py - validates tool registration still works (no changes needed)
