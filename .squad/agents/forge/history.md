@@ -129,6 +129,23 @@ Python + FastMCP server runtime fully scaffolded per ADR-001. Key choices:
 
 **Why it matters:** Prevents premature merge of untested code.
 
+### Dependency Constraint Tightening Workflow
+
+**Pattern:** When implementing audit findings to tighten loose dependency constraints:
+1. Query PyPI for available versions: `pip index versions <pkg>`.
+2. Confirm target versions exist (e.g., mcp 1.27.0, azure-identity 1.23.0).
+3. Edit `pyproject.toml`: apply `>=X.Y.Z,<X+1.0.0` constraints.
+4. Install with new pins: `pip install -e ".[dev]" --upgrade`.
+5. Run full validation: ruff, mypy, pytest, smoke cold-start benchmark.
+6. Commit with audit rationale in message; reference prior Sentinel findings.
+7. File decision artifact documenting chosen versions + rationale.
+
+**Why it matters:** Tightening is a compliance action (addressing security gaps) but needs validation to avoid surprise breaking changes. The workflow ensures both security rigor and operational stability.
+
+**Evidence:** Session 2 (PR #38) applied this pattern; all gates passed, no regressions.
+
+**Reference:** `.squad/decisions/inbox/forge-deps-tighten-32.md` (this session's decision).
+
 ---
 
 ## Decisions Awaiting Ratification
@@ -153,6 +170,24 @@ Python + FastMCP server runtime fully scaffolded per ADR-001. Key choices:
 - `docs/adr/0001-runtime-choice.md` (ADR update)
 - `.squad/decisions/inbox/lead-pr22-adr001-ratified.md` (PR #22 context)
 - `.squad/decisions/inbox/sentinel-threat-model-outline.md` (supply chain audit)
+
+### Session 2: Dependency Version Pin Tightening (Issue #32, PR #38) (Wave 2+)
+
+**Task:** Tighten `mcp` and `azure-identity` version constraints per Sentinel's wave-1 supply-chain audit.
+
+**Outcome:**
+- PR #38 merged with tightened pins:
+  - mcp: `>=1.0.0` → `>=1.27.0,<2.0.0`
+  - azure-identity: `>=1.15.0` → `>=1.23.0,<2.0.0`
+- All validation gates pass (ruff, mypy, pytest 4/4, cold-start stable).
+- Decision artifact filed: `.squad/decisions/inbox/forge-deps-tighten-32.md`
+
+**Key findings:**
+1. **Supply chain discipline matters.** Loose dependency constraints (`>=X.Y.Z` without upper bound) expose projects to silent breaking changes. MCP spec is still evolving (currently 1.27.1), so major-version pinning is essential.
+2. **CVE context shapes lower bounds.** azure-identity 1.15-1.22 had auth CVEs; tightening to 1.23.0 eliminates known vulnerable versions while preserving patch flexibility.
+3. **PyPI version query is reliable.** `pip index versions <pkg>` provides authoritative available versions for constraint validation.
+
+---
 
 ## Team Update (2026-05-12)
 
