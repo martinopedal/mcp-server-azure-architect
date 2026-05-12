@@ -154,5 +154,5 @@ Adapt the classifications, permitted uses, and contact details to match your org
 
 - **Deployment and Operations:** `docs/install/deployment-guide.md`
 - **Operator Runbook:** `docs/runbook.md`
-- **Threat Model and Security Considerations:** `docs/threat-model.md` (if available)
+- **Threat Model and Security Considerations:** `docs/security/threat-model.md` (if available)
 - **Compliance Guidance:** Contact your organization's Data Office or Compliance team
