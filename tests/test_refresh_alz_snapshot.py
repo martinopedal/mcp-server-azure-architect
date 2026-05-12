@@ -10,7 +10,7 @@ from unittest.mock import Mock, patch
 import pytest
 
 sys.path.insert(0, str(Path(__file__).parent.parent / "scripts"))
-import refresh_alz_snapshot as ras
+import refresh_alz_snapshot as ras  # noqa: E402, I001
 
 
 @pytest.fixture
@@ -56,14 +56,14 @@ def mock_manifest() -> dict:
     }
 
 
-def test_load_manifest_missing(temp_data_dir: Path):
+def test_load_manifest_missing(temp_data_dir: Path) -> None:
     """Test load_manifest returns empty structure when file missing."""
     manifest_path = temp_data_dir / "manifest.json"
     result = ras.load_manifest(manifest_path)
     assert result == {"sources": []}
 
 
-def test_load_manifest_existing(temp_data_dir: Path, mock_manifest: dict):
+def test_load_manifest_existing(temp_data_dir: Path, mock_manifest: dict) -> None:
     """Test load_manifest loads existing manifest correctly."""
     manifest_path = temp_data_dir / "manifest.json"
     with open(manifest_path, "w") as f:
@@ -76,7 +76,7 @@ def test_load_manifest_existing(temp_data_dir: Path, mock_manifest: dict):
     assert result["sources"][1]["repo"] == "martinopedal/alz-graph-queries"
 
 
-def test_save_manifest(temp_data_dir: Path, mock_manifest: dict):
+def test_save_manifest(temp_data_dir: Path, mock_manifest: dict) -> None:
     """Test save_manifest writes valid JSON with trailing newline."""
     manifest_path = temp_data_dir / "manifest.json"
     ras.save_manifest(mock_manifest, manifest_path)
@@ -89,7 +89,7 @@ def test_save_manifest(temp_data_dir: Path, mock_manifest: dict):
     assert loaded == mock_manifest
 
 
-def test_manifest_comparison_no_drift(mock_manifest: dict):
+def test_manifest_comparison_no_drift(mock_manifest: dict) -> None:
     """Test manifest comparison logic: same SHA means no refresh needed."""
     sources = mock_manifest["sources"]
     existing = sources[0]
@@ -101,7 +101,7 @@ def test_manifest_comparison_no_drift(mock_manifest: dict):
     assert upstream_sha == pinned_sha
 
 
-def test_manifest_comparison_drift_detected(mock_manifest: dict):
+def test_manifest_comparison_drift_detected(mock_manifest: dict) -> None:
     """Test manifest comparison logic: different SHA means refresh needed."""
     sources = mock_manifest["sources"]
     existing = sources[0]
@@ -112,7 +112,7 @@ def test_manifest_comparison_drift_detected(mock_manifest: dict):
     # Simulation: refresh needed
 
 
-def test_manifest_regeneration_valid_structure(temp_data_dir: Path):
+def test_manifest_regeneration_valid_structure(temp_data_dir: Path) -> None:
     """Test manifest regeneration produces valid JSON with required keys."""
     new_manifest = {
         "sources": [
@@ -146,7 +146,7 @@ def test_manifest_regeneration_valid_structure(temp_data_dir: Path):
     assert "checklist_ids" in source["subset"]
 
 
-def test_extract_queries_from_checklist_repo(tmp_path: Path):
+def test_extract_queries_from_checklist_repo(tmp_path: Path) -> None:
     """Test extracting queries from checklist repo mock."""
     clone_dir = tmp_path / "clone"
     clone_dir.mkdir()
@@ -184,7 +184,7 @@ def test_extract_queries_from_checklist_repo(tmp_path: Path):
     assert "resources | where type =~ 'microsoft.test'" in content
 
 
-def test_extract_queries_from_graph_repo(tmp_path: Path):
+def test_extract_queries_from_graph_repo(tmp_path: Path) -> None:
     """Test extracting queries from graph repo mock."""
     clone_dir = tmp_path / "clone"
     clone_dir.mkdir()
@@ -217,7 +217,7 @@ def test_extract_queries_from_graph_repo(tmp_path: Path):
     assert "graph | where type =~ 'test'" in content
 
 
-def test_update_kql_headers(tmp_path: Path):
+def test_update_kql_headers(tmp_path: Path) -> None:
     """Test updating placeholder {sha} and {timestamp} in KQL files."""
     kql_dir = tmp_path
     test_file = kql_dir / "test.kql"
@@ -236,7 +236,7 @@ def test_update_kql_headers(tmp_path: Path):
     assert "2026-12-01T10:00:00Z" in content
 
 
-def test_generate_manifest_md(temp_data_dir: Path, mock_manifest: dict):
+def test_generate_manifest_md(temp_data_dir: Path, mock_manifest: dict) -> None:
     """Test MANIFEST.md generation from manifest.json."""
     manifest_md_path = temp_data_dir / "MANIFEST.md"
     ras.generate_manifest_md(mock_manifest, manifest_md_path)
@@ -263,7 +263,7 @@ def test_refresh_snapshot_no_drift(
     tmp_path: Path,
     mock_manifest: dict,
     monkeypatch: pytest.MonkeyPatch,
-):
+) -> None:
     """Test refresh_snapshot with no upstream drift."""
     # Setup
     data_dir = tmp_path / "data" / "alz-queries"
@@ -301,7 +301,7 @@ def test_refresh_snapshot_dry_run_with_drift(
     tmp_path: Path,
     mock_manifest: dict,
     monkeypatch: pytest.MonkeyPatch,
-):
+) -> None:
     """Test refresh_snapshot in dry-run mode with drift detected."""
     # Setup
     data_dir = tmp_path / "data" / "alz-queries"

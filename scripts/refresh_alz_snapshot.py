@@ -14,7 +14,7 @@ import subprocess
 import sys
 import tempfile
 from collections.abc import Callable
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any, TypedDict
 
@@ -192,7 +192,7 @@ def refresh_snapshot(dry_run: bool = False) -> bool:
     manifest = load_manifest(manifest_path)
 
     # Source repo definitions
-    repos = [
+    repos: list[RepoConfig] = [
         {
             "repo": "martinopedal/alz-checklist-queries",
             "dest_subdir": "checklist",
