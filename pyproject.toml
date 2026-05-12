@@ -7,13 +7,14 @@ name = "mcp-server-azure-architect"
 version = "0.0.1"
 description = "MCP server and Copilot CLI skills bundle for Azure architects"
 readme = "README.md"
+# Python 3.12+ is recommended for cold-start consistency. See docs/perf/coldstart-investigation.md.
 requires-python = ">=3.11"
 license = { text = "MIT" }
 authors = [
     { name = "Martin Opedal", email = "martinopedal@users.noreply.github.com" }
 ]
 dependencies = [
-    "mcp[cli]>=1.0.0",
+    "mcp>=1.0.0",
     "azure-identity>=1.15.0",
     "azure-mgmt-resourcegraph>=8.0.0",
 ]

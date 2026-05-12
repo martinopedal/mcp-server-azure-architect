@@ -388,6 +388,7 @@ PR #26 (`copilot/investigate-cold-start-overhead`) audited as technically sound.
 **Related:** PR #26, issues #21, #19, #32, `forge-pr26-audit` orchestration log.
 
 ---
+- 2026-04-22, Lead review accepted cold-start scaffold with nits and follow-up issue for reproducible benchmarking and threshold calibration.
 
 ## Governance
 

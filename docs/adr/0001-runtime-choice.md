@@ -118,7 +118,7 @@ Supported. C# SDK ships with inspector-compatible tool listings. CI gate passes.
 | **Weighted Total** | | **247** | **229** | **222** | Python: 247, TypeScript: 229, .NET: 222 |
 
 **Scoring:**  
-Each criterion is scored 1-10 (10 = best). Weighted total = sum of (score × weight).
+Each criterion is scored 1-10 (10 = best). Weighted total = sum of (score ├ù weight).
 
 **Justifications:**  
 - **Azure SDK Quality:** .NET gets 10 (reference implementation for Azure). Python gets 8 (mature, well-supported). TypeScript gets 7 (solid, but less investment than .NET).
@@ -195,3 +195,27 @@ Forge implements the server in Python using FastMCP. Atlas (ARG/KQL Engineer) pr
 **Follow-up checklist (non-blocking):**
 - [ ] Reference 8 (TM Dev Lab, 2026) needs a URL or note that source is unpublished/internal.
 - [ ] Consider inlining a uvx link near line 39 for clarity (currently only FastMCP docs link is at the end).
+
+---
+
+## Addendum: Cold-Start Calibration (2026-04-23)
+
+**Context:**  
+Empirical measurement of this repository's cold-start performance reveals Python 3.12 cached startup at approximately 943ms, with Python 3.11 showing greater variability. Startup cost is dominated by `mcp` imports, not Azure SDK imports.
+
+**Revision:**  
+The original sub-1-second target remains achievable on Python 3.12 cached runs. To ensure CI stability across Python 3.11 and 3.12, the enforceable cold-start expectations are revised as follows:
+
+- **Soft target:** 1000ms (for visibility and performance awareness)
+- **Hard gate:** 2000ms (enforced in tests for reproducibility across supported Python versions)
+- **Recommendation:** Python 3.12+ for best cold-start consistency while retaining `>=3.11` compatibility
+
+**Consequences:**  
+- The server remains within the original sub-1-second intent on Python 3.12 cached runs.
+- CI can remain stable across supported Python versions without failing on expected 3.11 variance.
+- Performance work can continue incrementally without blocking baseline runtime adoption.
+
+**Evidence:**  
+- `docs/perf/coldstart-investigation.md`
+- `docs/perf/coldstart-importtime-3.12.txt`
+- `tests/test_cold_start.py`
