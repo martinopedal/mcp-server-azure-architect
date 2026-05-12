@@ -22,11 +22,17 @@ def reset_alz_cache() -> None:
 
 @pytest.fixture(autouse=True)
 def mock_scope_validation() -> Any:
-    """Mock validate_caller_scope to always return True unless overridden."""
+    """Mock validate_caller_scope and get_credential to avoid Azure auth in tests."""
+    # Ensure the module is imported (handles case where test_scorecard_no_azure_sdk_at_module_import popped it)
+    import mcp_server_azure_architect.scorecard  # noqa: F401
+
     with patch(
         "mcp_server_azure_architect.scorecard.validate_caller_scope"
-    ) as mock_validate:
+    ) as mock_validate, patch(
+        "mcp_server_azure_architect.scorecard.get_credential"
+    ) as mock_cred:
         mock_validate.return_value = True
+        mock_cred.return_value = Mock()  # Return a mock credential object
         yield mock_validate
 
 
@@ -304,6 +310,9 @@ async def test_scorecard_accepts_in_scope_subscription() -> None:
 
 def test_scorecard_no_azure_sdk_at_module_import() -> None:
     """Importing scorecard module must not pull in azure-mgmt-resourcegraph (cold-start guard)."""
+    # Save reference to current module if loaded
+    original_module = sys.modules.get("mcp_server_azure_architect.scorecard")
+
     # Pop the module if already loaded
     sys.modules.pop("mcp_server_azure_architect.scorecard", None)
     for name in list(sys.modules):
@@ -316,6 +325,10 @@ def test_scorecard_no_azure_sdk_at_module_import() -> None:
         name for name in sys.modules if name.startswith("azure.mgmt.resourcegraph")
     ]
     assert leaked == [], f"scorecard module leaked Azure SDK imports: {leaked}"
+
+    # Restore original module to avoid breaking subsequent tests
+    if original_module is not None:
+        sys.modules["mcp_server_azure_architect.scorecard"] = original_module
 
 
 @pytest.mark.asyncio
