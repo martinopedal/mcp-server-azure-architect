@@ -6,7 +6,7 @@ Exposes official Microsoft Azure REST APIs via the Model Context Protocol. Cover
 
 ## Source
 
-Repository: [microsoft/mcp](https://github.com/microsoft/azure-mcp)  
+Repository: [microsoft/mcp](https://github.com/microsoft/mcp/tree/main/servers/Azure.Mcp.Server) (moved from Azure/azure-mcp on 2026-02-06, now archived)  
 Maintainer: Microsoft (official product)
 
 ## Distribution
@@ -21,8 +21,25 @@ Or installed on demand via npx in `.copilot/mcp-config.json`:
 
 ```
 "command": "npx",
-"args": ["-y", "@azure/mcp@2.0.1"]
+"args": ["-y", "@azure/mcp@2.0.1", "server", "start", "--read-only"]
 ```
+
+## Recommended Client Flags
+
+The Azure MCP Server supports several configuration flags that control tool surface and read-only posture:
+
+- `--read-only`: Enables read-only mode. All tools that could potentially mutate Azure resources are disabled. **Recommended for all architect workflows.** This flag is included in the curated `.copilot/mcp-config.json`.
+- `--mode namespace`: Returns only top-level namespace tools (e.g., `azure_arg`, `azure_advisor`) instead of all 40+ granular service tools. Reduces context cost in MCP clients with limited context windows. Use when you need compact tool lists.
+- `--namespace <name>`: Whitelist specific namespaces to load (e.g., `--namespace arg --namespace advisor`). Combine with `--mode namespace` for fine-grained control. Use when you know which Azure services you need and want to minimize noise.
+
+Example config with namespace filtering:
+
+```
+"command": "npx",
+"args": ["-y", "@azure/mcp@2.0.1", "server", "start", "--read-only", "--mode", "namespace", "--namespace", "arg", "--namespace", "advisor"]
+```
+
+For full flag documentation, see [Azure MCP Server README](https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/README.md).
 
 ## Auth Model
 
@@ -90,7 +107,9 @@ If azure-mcp is uninstalled:
 
 ## References
 
-- [microsoft/azure-mcp](https://github.com/microsoft/azure-mcp)
+- [microsoft/mcp Azure MCP Server](https://github.com/microsoft/mcp/tree/main/servers/Azure.Mcp.Server)
+- [Azure MCP Server README](https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/README.md)
 - [npm registry @azure/mcp](https://www.npmjs.com/package/@azure/mcp)
-- `.copilot/mcp-config.json` (pinned version)
+- [Azure/azure-mcp (archived 2026-02-06)](https://github.com/Azure/azure-mcp)
+- `.copilot/mcp-config.json` (pinned version with --read-only)
 - `docs/install/` (per-client setup)

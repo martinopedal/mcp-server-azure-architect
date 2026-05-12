@@ -6,7 +6,7 @@
       "_purpose": "Official Microsoft Azure MCP. Source of truth for ARG, Quota, Advisor, Monitor, Policy, RBAC, AKS, AppService.",
       "_disabled_instructions": "Set disabled:true to opt out of this server.",
       "command": "npx",
-      "args": ["-y", "@azure/mcp@2.0.1"]
+      "args": ["-y", "@azure/mcp@2.0.1", "server", "start", "--read-only"]
     },
     "microsoft-learn": {
       "_purpose": "Grounded Microsoft Learn doc lookup. Reduces architect hallucination. No self-host needed; uses hosted endpoint.",

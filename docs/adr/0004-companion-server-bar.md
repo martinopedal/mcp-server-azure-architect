@@ -4,6 +4,14 @@
 
 Accepted (2026-05-12, Burke)
 
+## Addendum: Azure MCP Server Archive and Namespace Reorganization (2026-05-15)
+
+On 2026-02-06, Microsoft archived `Azure/azure-mcp` and consolidated all Azure MCP development into the unified `microsoft/mcp` monorepo under `servers/Azure.Mcp.Server`. The new canonical location is [microsoft/mcp/servers/Azure.Mcp.Server](https://github.com/microsoft/mcp/tree/main/servers/Azure.Mcp.Server). The package name remains `@azure/mcp` on npm, but the repository structure and installation commands have changed. The server now exposes `server start` subcommand and supports `--read-only`, `--mode`, and `--namespace` flags for fine-grained control.
+
+Per issue #92 (Lead synthesis 2026-05-15, Bug 2.D), all documentation in this repository has been updated to reference the new canonical location and recommend the `--read-only` flag by default in `.copilot/mcp-config.json`.
+
+Note: The AKS-MCP mutation hazard identified by Sage (rec #8, finding B.3) is documented separately in `docs/companions/kubernetes.md` per issue #101 (not in scope for this addendum).
+
 ## Context
 
 The mcp-server-azure-architect project ships a curated `mcp-config.json` with a set of companion MCP servers. These companions are not bundled with the server itself; instead, they are recommended via configuration and documentation, following the "complement, don't wrap" principle stated in AGENTS.md.
