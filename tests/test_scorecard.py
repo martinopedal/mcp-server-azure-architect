@@ -516,5 +516,93 @@ async def test_scorecard_timeout_after_60s() -> None:
             error_msg = result["results"][0]["error"]
             assert error_msg is not None
             assert "timed out after 60s" in error_msg.lower()
-            assert "narrow the scope" in error_msg.lower() or "pagination" in error_msg.lower()
+            assert (
+                "narrow the scope" in error_msg.lower()
+                or "pagination" in error_msg.lower()
+            )
+
+
+def test_get_resource_graph_client_default_cloud(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """_get_resource_graph_client constructs with AzureCloud endpoints by default."""
+    from mcp_server_azure_architect.scorecard import _get_resource_graph_client
+
+    monkeypatch.delenv("AZURE_CLOUD_NAME", raising=False)
+
+    with patch(
+        "mcp_server_azure_architect.scorecard.get_credential"
+    ) as mock_cred, patch(
+        "azure.mgmt.resourcegraph.ResourceGraphClient"
+    ) as mock_client_class:
+        mock_cred.return_value = Mock()
+
+        _get_resource_graph_client()
+
+        mock_client_class.assert_called_once()
+        call_kwargs = mock_client_class.call_args.kwargs
+        assert call_kwargs["base_url"] == "https://management.azure.com"
+        assert call_kwargs["credential_scopes"] == [
+            "https://management.azure.com/.default"
+        ]
+
+
+def test_get_resource_graph_client_us_government(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """_get_resource_graph_client constructs with AzureUSGovernment endpoints."""
+    from mcp_server_azure_architect.scorecard import _get_resource_graph_client
+
+    monkeypatch.setenv("AZURE_CLOUD_NAME", "AzureUSGovernment")
+
+    with patch(
+        "mcp_server_azure_architect.scorecard.get_credential"
+    ) as mock_cred, patch(
+        "azure.mgmt.resourcegraph.ResourceGraphClient"
+    ) as mock_client_class:
+        mock_cred.return_value = Mock()
+
+        _get_resource_graph_client()
+
+        call_kwargs = mock_client_class.call_args.kwargs
+        assert call_kwargs["base_url"] == "https://management.usgovcloudapi.net"
+        assert call_kwargs["credential_scopes"] == [
+            "https://management.usgovcloudapi.net/.default"
+        ]
+
+
+def test_get_resource_graph_client_china_cloud(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """_get_resource_graph_client constructs with AzureChinaCloud endpoints."""
+    from mcp_server_azure_architect.scorecard import _get_resource_graph_client
+
+    monkeypatch.setenv("AZURE_CLOUD_NAME", "AzureChinaCloud")
+
+    with patch(
+        "mcp_server_azure_architect.scorecard.get_credential"
+    ) as mock_cred, patch(
+        "azure.mgmt.resourcegraph.ResourceGraphClient"
+    ) as mock_client_class:
+        mock_cred.return_value = Mock()
+
+        _get_resource_graph_client()
+
+        call_kwargs = mock_client_class.call_args.kwargs
+        assert call_kwargs["base_url"] == "https://management.chinacloudapi.cn"
+        assert call_kwargs["credential_scopes"] == [
+            "https://management.chinacloudapi.cn/.default"
+        ]
+
+
+def test_get_resource_graph_client_unknown_cloud_raises(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """_get_resource_graph_client raises ValueError for unknown cloud names."""
+    from mcp_server_azure_architect.scorecard import _get_resource_graph_client
+
+    monkeypatch.setenv("AZURE_CLOUD_NAME", "InvalidCloud")
+
+    with pytest.raises(ValueError, match="Unknown AZURE_CLOUD_NAME 'InvalidCloud'"):
+        _get_resource_graph_client()
 
