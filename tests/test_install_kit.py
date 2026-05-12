@@ -17,9 +17,9 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-# Import the installer module
+# Import the installer module from scripts/ (not on sys.path by default)
 sys.path.insert(0, str(Path(__file__).parent.parent / "scripts"))
-import install_kit
+import install_kit  # noqa: E402, I001
 
 
 
