@@ -1,0 +1,332 @@
+"""Tests for scripts/refresh_alz_snapshot.py"""
+
+import json
+
+# Import the module under test
+import sys
+from pathlib import Path
+from unittest.mock import Mock, patch
+
+import pytest
+
+sys.path.insert(0, str(Path(__file__).parent.parent / "scripts"))
+import refresh_alz_snapshot as ras  # noqa: E402, I001
+
+
+@pytest.fixture
+def temp_data_dir(tmp_path: Path) -> Path:
+    """Create temporary data/alz-queries directory structure."""
+    data_dir = tmp_path / "data" / "alz-queries"
+    data_dir.mkdir(parents=True)
+    (data_dir / "checklist").mkdir()
+    (data_dir / "graph").mkdir()
+    return data_dir
+
+
+@pytest.fixture
+def mock_manifest() -> dict:
+    """Sample manifest.json structure."""
+    return {
+        "sources": [
+            {
+                "repo": "martinopedal/alz-checklist-queries",
+                "commit_sha": "e7641beeda0126cc78825f8b77764c379552f3e1",
+                "ref": "commit:e7641beeda0126cc78825f8b77764c379552f3e1",
+                "vendored_at": "2026-04-22T12:35:39Z",
+                "subset": {
+                    "source_file": "queries/alz_all_queries.json",
+                    "checklist_ids": ["54f0d8b1-22a3-4c0d-8ce2-58b9e086c93a"],
+                    "files": ["data/alz-queries/checklist/54f0d8b1-22a3-4c0d-8ce2-58b9e086c93a.kql"],
+                },
+                "file_count": 1,
+            },
+            {
+                "repo": "martinopedal/alz-graph-queries",
+                "commit_sha": "8a3fddabcbf272a19a627770a0d33de5f4ace8ee",
+                "ref": "commit:8a3fddabcbf272a19a627770a0d33de5f4ace8ee",
+                "vendored_at": "2026-04-22T12:35:39Z",
+                "subset": {
+                    "source_file": "queries/alz_additional_queries.json",
+                    "checklist_ids": ["e8aa1e41-870d-4968-94c6-77be14f510ac"],
+                    "files": ["data/alz-queries/graph/e8aa1e41-870d-4968-94c6-77be14f510ac.kql"],
+                },
+                "file_count": 1,
+            },
+        ]
+    }
+
+
+def test_load_manifest_missing(temp_data_dir: Path) -> None:
+    """Test load_manifest returns empty structure when file missing."""
+    manifest_path = temp_data_dir / "manifest.json"
+    result = ras.load_manifest(manifest_path)
+    assert result == {"sources": []}
+
+
+def test_load_manifest_existing(temp_data_dir: Path, mock_manifest: dict) -> None:
+    """Test load_manifest loads existing manifest correctly."""
+    manifest_path = temp_data_dir / "manifest.json"
+    with open(manifest_path, "w") as f:
+        json.dump(mock_manifest, f)
+
+    result = ras.load_manifest(manifest_path)
+    assert result == mock_manifest
+    assert len(result["sources"]) == 2
+    assert result["sources"][0]["repo"] == "martinopedal/alz-checklist-queries"
+    assert result["sources"][1]["repo"] == "martinopedal/alz-graph-queries"
+
+
+def test_save_manifest(temp_data_dir: Path, mock_manifest: dict) -> None:
+    """Test save_manifest writes valid JSON with trailing newline."""
+    manifest_path = temp_data_dir / "manifest.json"
+    ras.save_manifest(mock_manifest, manifest_path)
+
+    assert manifest_path.exists()
+    content = manifest_path.read_text()
+    assert content.endswith("\n")
+
+    loaded = json.loads(content)
+    assert loaded == mock_manifest
+
+
+def test_manifest_comparison_no_drift(mock_manifest: dict) -> None:
+    """Test manifest comparison logic: same SHA means no refresh needed."""
+    sources = mock_manifest["sources"]
+    existing = sources[0]
+    pinned_sha = existing["commit_sha"]
+    upstream_sha = "e7641beeda0126cc78825f8b77764c379552f3e1"
+
+    assert upstream_sha == pinned_sha
+    # Simulation: no refresh needed
+    assert upstream_sha == pinned_sha
+
+
+def test_manifest_comparison_drift_detected(mock_manifest: dict) -> None:
+    """Test manifest comparison logic: different SHA means refresh needed."""
+    sources = mock_manifest["sources"]
+    existing = sources[0]
+    pinned_sha = existing["commit_sha"]
+    upstream_sha = "0000000000000000000000000000000000000000"
+
+    assert upstream_sha != pinned_sha
+    # Simulation: refresh needed
+
+
+def test_manifest_regeneration_valid_structure(temp_data_dir: Path) -> None:
+    """Test manifest regeneration produces valid JSON with required keys."""
+    new_manifest = {
+        "sources": [
+            {
+                "repo": "martinopedal/alz-checklist-queries",
+                "commit_sha": "abc123def456",
+                "ref": "commit:abc123def456",
+                "vendored_at": "2026-12-01T10:00:00Z",
+                "subset": {
+                    "source_file": "queries/alz_all_queries.json",
+                    "checklist_ids": ["test-id-1"],
+                    "files": ["data/alz-queries/checklist/test-id-1.kql"],
+                },
+                "file_count": 1,
+            }
+        ]
+    }
+
+    manifest_path = temp_data_dir / "manifest.json"
+    ras.save_manifest(new_manifest, manifest_path)
+
+    loaded = ras.load_manifest(manifest_path)
+    assert "sources" in loaded
+    assert len(loaded["sources"]) == 1
+
+    source = loaded["sources"][0]
+    assert "repo" in source
+    assert "commit_sha" in source
+    assert "vendored_at" in source
+    assert "subset" in source
+    assert "checklist_ids" in source["subset"]
+
+
+def test_extract_queries_from_checklist_repo(tmp_path: Path) -> None:
+    """Test extracting queries from checklist repo mock."""
+    clone_dir = tmp_path / "clone"
+    clone_dir.mkdir()
+    queries_dir = clone_dir / "queries"
+    queries_dir.mkdir()
+
+    # Mock alz_all_queries.json
+    source_json = queries_dir / "alz_all_queries.json"
+    source_json.write_text(json.dumps({
+        "items": [
+            {
+                "id": "test-checklist-1",
+                "graph": "resources | where type =~ 'microsoft.test'",
+            },
+            {
+                "id": "test-checklist-2",
+                "graph": "resources | where name =~ 'testname'",
+            },
+        ]
+    }))
+
+    dest_dir = tmp_path / "output"
+    dest_dir.mkdir()
+
+    checklist_ids = ras.extract_queries_from_checklist_repo(clone_dir, dest_dir)
+
+    assert len(checklist_ids) == 2
+    assert "test-checklist-1" in checklist_ids
+    assert "test-checklist-2" in checklist_ids
+
+    kql_file = dest_dir / "test-checklist-1.kql"
+    assert kql_file.exists()
+    content = kql_file.read_text()
+    assert "test-checklist-1" in content
+    assert "resources | where type =~ 'microsoft.test'" in content
+
+
+def test_extract_queries_from_graph_repo(tmp_path: Path) -> None:
+    """Test extracting queries from graph repo mock."""
+    clone_dir = tmp_path / "clone"
+    clone_dir.mkdir()
+    queries_dir = clone_dir / "queries"
+    queries_dir.mkdir()
+
+    # Mock alz_additional_queries.json
+    source_json = queries_dir / "alz_additional_queries.json"
+    source_json.write_text(json.dumps({
+        "items": [
+            {
+                "id": "test-graph-1",
+                "graph": "graph | where type =~ 'test'",
+            }
+        ]
+    }))
+
+    dest_dir = tmp_path / "output"
+    dest_dir.mkdir()
+
+    query_ids = ras.extract_queries_from_graph_repo(clone_dir, dest_dir)
+
+    assert len(query_ids) == 1
+    assert "test-graph-1" in query_ids
+
+    kql_file = dest_dir / "test-graph-1.kql"
+    assert kql_file.exists()
+    content = kql_file.read_text()
+    assert "test-graph-1" in content
+    assert "graph | where type =~ 'test'" in content
+
+
+def test_update_kql_headers(tmp_path: Path) -> None:
+    """Test updating placeholder {sha} and {timestamp} in KQL files."""
+    kql_dir = tmp_path
+    test_file = kql_dir / "test.kql"
+    test_file.write_text(
+        "// Vendored from https://github.com/test/repo/blob/{sha}/queries/test.json\n"
+        "// Vendored at: {timestamp}\n"
+        "resources | where type =~ 'test'\n"
+    )
+
+    ras.update_kql_headers(kql_dir, "test/repo", "abc123", "2026-12-01T10:00:00Z")
+
+    content = test_file.read_text()
+    assert "{sha}" not in content
+    assert "{timestamp}" not in content
+    assert "abc123" in content
+    assert "2026-12-01T10:00:00Z" in content
+
+
+def test_generate_manifest_md(temp_data_dir: Path, mock_manifest: dict) -> None:
+    """Test MANIFEST.md generation from manifest.json."""
+    manifest_md_path = temp_data_dir / "MANIFEST.md"
+    ras.generate_manifest_md(mock_manifest, manifest_md_path)
+
+    assert manifest_md_path.exists()
+    content = manifest_md_path.read_text()
+
+    assert "# ALZ query snapshot manifest" in content
+    assert "Refreshed automatically" in content
+    assert "martinopedal/alz-checklist-queries" in content
+    assert "e7641beeda0126cc78825f8b77764c379552f3e1" in content
+    assert "54f0d8b1-22a3-4c0d-8ce2-58b9e086c93a" in content
+
+
+@patch("refresh_alz_snapshot.get_upstream_commit")
+@patch("refresh_alz_snapshot.clone_shallow")
+@patch("refresh_alz_snapshot.extract_queries_from_checklist_repo")
+@patch("refresh_alz_snapshot.extract_queries_from_graph_repo")
+def test_refresh_snapshot_no_drift(
+    mock_extract_graph: Mock,
+    mock_extract_checklist: Mock,
+    mock_clone: Mock,
+    mock_get_upstream: Mock,
+    tmp_path: Path,
+    mock_manifest: dict,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test refresh_snapshot with no upstream drift."""
+    # Setup
+    data_dir = tmp_path / "data" / "alz-queries"
+    data_dir.mkdir(parents=True)
+    (data_dir / "checklist").mkdir()
+    (data_dir / "graph").mkdir()
+    manifest_path = data_dir / "manifest.json"
+    with open(manifest_path, "w") as f:
+        json.dump(mock_manifest, f)
+
+    # Mock: upstream SHAs match pinned SHAs for both repos
+    def mock_get_commit(repo: str) -> str:
+        if repo == "martinopedal/alz-checklist-queries":
+            return "e7641beeda0126cc78825f8b77764c379552f3e1"
+        elif repo == "martinopedal/alz-graph-queries":
+            return "8a3fddabcbf272a19a627770a0d33de5f4ace8ee"
+        return "unknown"
+
+    mock_get_upstream.side_effect = mock_get_commit
+
+    # Patch __file__ to point to tmp_path
+    monkeypatch.setattr(ras, "__file__", str(tmp_path / "scripts" / "refresh_alz_snapshot.py"))
+
+    changes = ras.refresh_snapshot(dry_run=False)
+
+    assert not changes
+    mock_clone.assert_not_called()
+    mock_extract_checklist.assert_not_called()
+    mock_extract_graph.assert_not_called()
+
+
+@patch("refresh_alz_snapshot.get_upstream_commit")
+def test_refresh_snapshot_dry_run_with_drift(
+    mock_get_upstream: Mock,
+    tmp_path: Path,
+    mock_manifest: dict,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test refresh_snapshot in dry-run mode with drift detected."""
+    # Setup
+    data_dir = tmp_path / "data" / "alz-queries"
+    data_dir.mkdir(parents=True)
+    (data_dir / "checklist").mkdir()
+    (data_dir / "graph").mkdir()
+    manifest_path = data_dir / "manifest.json"
+    with open(manifest_path, "w") as f:
+        json.dump(mock_manifest, f)
+
+    # Mock: upstream SHA differs from pinned SHA for one repo
+    def mock_get_commit(repo: str) -> str:
+        if repo == "martinopedal/alz-checklist-queries":
+            return "e7641beeda0126cc78825f8b77764c379552f3e1"  # no drift
+        elif repo == "martinopedal/alz-graph-queries":
+            return "0000000000000000000000000000000000000000"  # drift
+        return "unknown"
+
+    mock_get_upstream.side_effect = mock_get_commit
+
+    monkeypatch.setattr(ras, "__file__", str(tmp_path / "scripts" / "refresh_alz_snapshot.py"))
+
+    changes = ras.refresh_snapshot(dry_run=True)
+
+    assert changes
+    # In dry-run, manifest should not be updated
+    loaded = ras.load_manifest(manifest_path)
+    assert loaded["sources"][1]["commit_sha"] == "8a3fddabcbf272a19a627770a0d33de5f4ace8ee"

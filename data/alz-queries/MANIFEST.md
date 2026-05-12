@@ -1,5 +1,7 @@
 # ALZ query snapshot manifest
 
+Refreshed automatically; see .github/workflows/refresh-alz-snapshot.yml
+
 Vendored at: 2026-04-22T12:35:39Z
 
 This snapshot is pinned to commit SHAs. No `main` or `latest` references are used for source content.
