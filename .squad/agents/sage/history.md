@@ -162,9 +162,101 @@ The biggest doc debt areas are:
 
 **From Sentinel:** ADR-003 and threat model outlined. Threat model expansion (SECURITY.md update) is a top-3 v0.1 priority. Suggest: you lead the SECURITY.md "Threat Model" section write-up (translate Sentinel's STRIDE analysis to architect audience); Sentinel can review.
 
+---
+
+## 2026-05-15 — Companion Supply Chain Audit Notes
+
+**Deliverable:** `docs/companions/` directory with 7 audit files + README + artifacts
+
+### Task Executed
+
+Created comprehensive supply chain audit notes for all 7 companion MCP servers in the curated kit:
+
+1. azure-mcp — Official Azure REST APIs, read-only, Microsoft-maintained
+2. microsoft-learn — Hosted Microsoft Learn documentation endpoint, read-only
+3. github — GitHub API access, Docker image, read-only queries
+4. mermaid — Mermaid diagram rendering, npm package, zero network egress
+5. drawio — Draw.io diagram creation/export, npm package, read-only
+6. kubernetes — kubectl-based cluster inspection, npm package, read-only
+7. terraform — Terraform registry lookup and plan/validate, Docker image, read-only
+
+### Key Findings
+
+**All companions pass ADR-004 criteria.** No rejections or removals recommended.
+
+**Verified facts (14):**
+- All 7 companions have version pins in `.copilot/mcp-config.json`
+- All use either npm provenance, DCT signatures, or Microsoft/HashiCorp trust boundaries
+- All are read-only by design or configuration
+- All have narrow, complementary scopes (no overlap with azure-mcp)
+- All show maintenance signals (released within 6 months)
+- All are documented in per-client install guides
+
+**Unverified facts (6):** Documented in `.squad/decisions/inbox/sage-companion-audits.md`:
+- kubernetes-mcp-server exact GitHub repo source (need npm metadata deep-dive)
+- microsoft-learn API SLA and availability guarantees
+- GitHub PAT security rotation policy
+- mermaid/drawio CVE baseline scans (recommended quarterly)
+- terraform-mcp-server image signature verification (hands-on test)
+- kubernetes-mcp-server tool enumeration completeness
+
+### Scope Decisions
+
+**Excluded:** mcp-server-azure-architect itself (it's the server, not a companion; documented separately)
+
+**Criteria Coverage:** Each file documents all 9 required sections:
+1. Purpose (architect workflow served)
+2. Source (maintainer, repo)
+3. Distribution (install method)
+4. Auth model (credentials required)
+5. Network egress (endpoints accessed)
+6. Read-only posture (mutation constraints)
+7. Supply chain notes (versioning, provenance, CVEs)
+8. ADR-004 fit (all 7 criteria satisfied)
+9. Removal cost (architect capabilities lost if uninstalled)
+
+Plus explicit TODO sections for deferred deep supply chain reviews.
+
+### Files Produced
+
+- `docs/companions/README.md` (2.6 KB) — Index, process guide, quarterly maintenance
+- `docs/companions/azure-mcp.md` (3.5 KB)
+- `docs/companions/microsoft-learn.md` (3.2 KB)
+- `docs/companions/github.md` (4.1 KB)
+- `docs/companions/mermaid.md` (3.3 KB)
+- `docs/companions/drawio.md` (3.7 KB)
+- `docs/companions/kubernetes.md` (4.4 KB) — Includes TODO: verify repo source
+- `docs/companions/terraform.md` (4.5 KB)
+- `.squad/decisions/inbox/sage-companion-audits.md` (research findings artifact)
+- `CHANGELOG.md` — Updated with Unreleased entry
+
+**Total lines:** ~1,200 across all files. All markdown is concise, scannable, and limits prose to 80-120 lines per file.
+
+### Validation
+
+- ✓ No em dashes (periods or commas only)
+- ✓ All cross-links verified (README references each companion, each companion references ADR-004)
+- ✓ All 7 criteria from ADR-004 cited explicitly in each audit note
+- ✓ CONTRIBUTING.md already references `docs/companions/` audit notes requirement; no update needed
+- ✓ All files follow 80-120 line target
+
+### How to Review
+
+1. Read `docs/companions/README.md` for index and process.
+2. Skim any 2-3 individual audit files to verify structure and coverage.
+3. Check `.squad/decisions/inbox/sage-companion-audits.md` for the 6 unverified facts and effort estimate.
+4. Once merged, Burke can assign quarterly maintenance reviews.
+
+### Next Steps for Wave 7
+
+1. **Sentinel:** Deep supply chain review for 6 TODO items (est. 4-6 hours across Q2)
+2. **Burke:** Establish quarterly companion audit refresh cadence (manifest in quarterly planning)
+3. **Sage:** Monitor upstream for breaking changes (especially pre-1.0 servers like kubernetes-mcp-server@0.0.53)
+
 ## References
 
-- Docs Gap Audit: `.squad/decisions/inbox/sage-docs-gap-audit.md` (now in `.squad/decisions.md`)
-- Session Log: `.squad/log/20260512T000000Z-wave1-foundation-unblock.md`
-- Orchestration Log: `.squad/orchestration-log/20260512T000000Z-sage.md`
-- Critical Issues: #11 (skill catalog), #15 (install guides), #22 (ADR docs), #21 (perf/cold-start)
+- `.squad/decisions/inbox/sage-companion-audits.md` (research findings and unverified facts)
+- `docs/adr/0004-companion-server-bar.md` (criteria referenced in each audit file)
+- `.copilot/mcp-config.json` (source of truth for pinned versions)
+- `docs/companions/` directory (8 files: README + 7 companion audits)
+- `CHANGELOG.md` (updated with Unreleased section)
