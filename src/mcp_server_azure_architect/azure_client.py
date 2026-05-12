@@ -1,8 +1,12 @@
 """Azure client helpers with lazy credential initialization."""
 
-import re
+from __future__ import annotations
 
-from azure.identity import DefaultAzureCredential
+import re
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from azure.identity import DefaultAzureCredential
 
 _credential: DefaultAzureCredential | None = None
 
@@ -11,12 +15,16 @@ def get_credential() -> DefaultAzureCredential:
     """Lazily construct and return a DefaultAzureCredential.
 
     This defers credential initialization until first use to minimize cold start time.
+    The azure.identity import happens inside this function to avoid ~435ms import cost
+    at module load time (perf: issue #67).
 
     Returns:
         Azure DefaultAzureCredential instance.
     """
     global _credential
     if _credential is None:
+        from azure.identity import DefaultAzureCredential
+
         _credential = DefaultAzureCredential()
     return _credential
 

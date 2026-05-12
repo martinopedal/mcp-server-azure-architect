@@ -12,6 +12,12 @@ Caveats surfaced in tool docstrings:
 - USD default currency. The currencyCode parameter is forwarded to the API.
 - No real-time freshness SLA from Microsoft.
 - Reservation discounts only where Microsoft publishes them in the meter.
+
+Performance note (issue #68): httpx (~213ms import cost) is already lazy-imported in
+_get_client() below. However, httpx is also eagerly imported by FastMCP itself via
+mcp.shared._httpx_utils, so our lazy import only defers the cost until the pricing
+tool is first invoked, not until server startup. The FastMCP import is upstream and
+not under our control.
 """
 
 from __future__ import annotations
