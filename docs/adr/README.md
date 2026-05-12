@@ -5,3 +5,4 @@ This directory contains Architecture Decision Records (ADRs) for the mcp-server-
 ## Index
 
 - [ADR-001: MCP Server Runtime Choice](0001-runtime-choice.md) - Decision on the runtime (Python, TypeScript, or .NET) for the MCP server implementation, including evaluation of SDK maturity, Azure SDK quality, cold start performance, distribution, JSON Schema tooling, ecosystem fit, and contributor friction.
+- [ADR-002: ALZ Query Vendoring Policy](0002-alz-query-vendoring-policy.md) - Decision to vendor ALZ checklist queries as a snapshot under `data/alz-queries/`, pinned by upstream commit SHA in `manifest.json`. Covers refresh procedure, citation requirements, and validation gates.
