@@ -79,3 +79,19 @@ Wave 2 complete: foundation (#22, #23, #26, #27, #33, #34) all on main. Decision
 ## Wave 5 Outcomes (2026-05-13)
 
 **AGENTS.md reconciliation against ADR-004:** Mission statement updated to remove quota planner and Advisor surfacing (out-of-scope per ADR-004 criterion 4, no duplication of azure-mcp). Clarified scope: named ALZ queries, ALZ scorecard, pricing SKU lookups, architect skills. Validation gates upgraded from placeholder ("to be defined") to concrete enforcement: ruff, mypy, pytest (3.11/3.12), MCP Inspector smoke, readonly AST gate, gitleaks, CodeQL, dependency-review, branch protection strict. Cross-linked ADR-004 in Related section. This completes the Critical wave 5 AGENTS.md reconciliation task.
+
+## Wave 7 Outcomes (2026-05-15)
+
+**POLISH templates: GitHub issue and PR templates landed in PR #73.** Created standardized templates to enforce squad workflows and validation gates. Five deliverables shipped: bug-report.md, feature-request.md, security-finding.md, config.yml, pull_request_template.md. CHANGELOG.md updated.
+
+**Template design highlights:**
+- bug-report: Severity, reproduction, environment (Python, OS, MCP client, server version), pre-checks (mcp_smoke.py, verbose flag), credential scrub reminder
+- feature-request: Goal, proposed surface (name/sig/returns), ADR-004 justification framework, acceptance criteria (read-only, tests, schema, provenance, CHANGELOG)
+- security-finding: Threat, impact, evidence, mitigation, disclosure policy link to SECURITY.md (gates active exploits to private advisory channel)
+- config.yml: Disables blank issues (forces template use), adds security advisory contact link + squad team docs link
+- pull_request_template.md: Summary, related issue, changes, validation gates (pytest/ruff/mypy, conditional check_readonly/mcp_smoke, CHANGELOG.md update), ADR/design notes, squad reviewer routing
+
+**Field optionality doctrine:** feature-request (mostly optional, ADR-004 pre-filled), bug-report (logs optional with scrub reminder), security-finding (no optional fields, all critical for triage). Rationale documented in decision artifact.
+
+**Validation complete:** All YAML front matter parses, linked paths exist (SECURITY.md, .squad/team.md, .squad/routing.md, ADR-004), no em dashes. PR #73 ready for merge.
+
