@@ -15,7 +15,48 @@ Sage is the research and documentation specialist for the project. Primary respo
 
 ## Sage: Session History
 
-## 2026-05-15 — Cold-Start Investigation (Issue #52)
+## 2026-05-16 - Polish Wave 7: Runbook + Identity Hint + README 6-Tool Update
+
+**Deliverables:**
+1. `docs/runbook.md` (260 lines) - Operator manual covering daily operation, authentication, 6 common errors, logging, maintenance, and references to supporting docs
+2. `.squad/identity/now.md` (updated) - Continuity hint with current focus, recent waves 4-7, next priorities, open issues inventory
+3. `README.md` (surgical update) - Changed "two native tool families" prose to explicit 6-tool list (alz_query_list added from PR #70)
+4. `CHANGELOG.md` - Added entries for runbook and identity hint under Documentation
+5. `.squad/decisions/inbox/sage-runbook-polish.md` - Structure and rationale decisions
+6. `.squad/agents/sage/history.md` - This entry
+
+### Task Executed
+
+Polish phase before v0.1.0 PyPI publish. Three months into squad workflow; project has 6 native tools, 1 skill, 5 ADRs, and branch protection with 8 required CI checks. Operator runbook was missing. Identity continuity hint needed for inter-session handoffs. README tool count had drifted from 5 (PR #55 era) to 6 (PR #70 alz_query_list).
+
+### Runbook Structure Rationale
+
+Operator runbook organized by workflow phase (daily operation, authentication, troubleshooting, maintenance) rather than alphabetical or tool-centric structure. Six common errors sourced from actual project history (token expiry, rate limiting, subscription ID format, cold-start observations, tool discovery). Links to existing docs (release.md, ADRs, perf/, SECURITY.md) to avoid redundancy; runbook is single entry point for operators on-call. No em dashes per AGENTS.md style. Logs section clarifies that server is stateless and token-scrub policy applies. Companion section on ALZ snapshot refresh and new tool addition procedures.
+
+### Identity Hint Rationale
+
+Separates "working snapshot" (now.md) from "archive" (history.md archives). Five sections: Current Focus (one paragraph status), Recent Waves (context for next session), Next Priorities (unblocking v0.1.0 publish), Open Issues (enumerated for triage), and metadata. Open issues regenerated via `gh issue list` before handoff. Future maintainers can update focus and issues at end of each major wave without deep historical review.
+
+### README Tool Update Rationale
+
+Surgical change (one line, line 21). Old: "two native tool families: alz_query_by_id and alz_scorecard". New: explicit 6-tool list. Preserves all other content from PR #55 rewrite. No mermaid diagram was present, so no architectural diagram updates needed. Tool family grouping (alz queries, pricing, scorecard) still implicit in list order.
+
+### Validation
+
+1. No em dashes (checked all new content)
+2. Cross-links verified to exist: docs/release.md, docs/adr/*.md, SECURITY.md, docs/perf/coldstart-investigation.md, docs/companions/
+3. Tool count = 6 verified: health_check, alz_query_by_id, alz_query_list, pricing_lookup_sku, pricing_compare_skus, alz_scorecard
+4. Branch protection: doc-only PR passes all 8 required checks (no code changes, linters skipped)
+
+### References
+
+- [.github/copilot-instructions.md](../../.github/copilot-instructions.md) - No em dashes
+- [AGENTS.md](../../AGENTS.md) - Validation gates
+- [docs/release.md](../../docs/release.md) - Release procedure (runbook complements)
+- [docs/adr/0001-runtime-choice.md](../../docs/adr/0001-runtime-choice.md) - Cold-start baseline
+- [docs/perf/coldstart-investigation.md](../../docs/perf/coldstart-investigation.md) - Detailed profiling
+
+## 2026-05-15 - Cold-Start Investigation (Issue #52)
 
 **Deliverable:** `.squad/decisions/inbox/sage-coldstart-investigation.md` + comprehensive investigation report
 
