@@ -1,6 +1,6 @@
-# Forge — Implementation Lead — History
+# Forge . Implementation Lead . History
 
-## 2026-04-22T11:31:59Z — ADR-001 Draft Ready
+## 2026-04-22T11:31:59Z . ADR-001 Draft Ready
 
 Sage completed ADR-001 recommending **Python + FastMCP** as the MCP server runtime. Comprehensive evaluation covered sync models, ecosystem maturity, read-only constraints, and team skill fit. 
 
@@ -12,11 +12,11 @@ Sage completed ADR-001 recommending **Python + FastMCP** as the MCP server runti
 
 Next: Monitor `.squad/decisions/inbox/` for Lead's approval signal.
 
-## 2026-04-22T11:33:32Z — ADR-001 Accepted
+## 2026-04-22T11:33:32Z . ADR-001 Accepted
 
 ADR-001 accepted. Runtime: Python + FastMCP. Implementation can begin.
 
-## 2026-04-22T13:36:15Z — FastMCP Runtime Scaffolded
+## 2026-04-22T13:36:15Z . FastMCP Runtime Scaffolded
 
 Python + FastMCP server runtime fully scaffolded per ADR-001. Key choices:
 
@@ -166,7 +166,7 @@ Wave 2 complete: foundation (#22, #23, #26, #27, #33, #34) all on main. Decision
 
 **ADR-003 & threat model inform future tool PRs.** CODEOWNERS convention (naming: `_get_*`, `_list_*`, `_query_*` allowed) now applied to all tool implementations. Runtime guard (layer 3, aspirational for v0.2) documented in ADR-003; complexity deferred but pattern established. ADR-004 (companion bar) + threat model (supply chain risk) frame issue #39 (native pricing tools) evaluation.
 
-## 2026-05-12T13:30:00Z — PR #45: alz_query_by_id native tool (closes #9)
+## 2026-05-12T13:30:00Z . PR #45: alz_query_by_id native tool (closes #9)
 
 First substantive native tool shipped. End-to-end: stdlib loader + FastMCP tool registration + tests + wheel packaging.
 
@@ -308,4 +308,60 @@ Shipped `scripts/mcp_smoke.py` and `inspector-smoke` CI job to catch tool regist
 - **async with context manager combining.** Python 3.10+ `async with (ctx1, ctx2):` syntax (ruff SIM117) is cleaner than nested `async with` blocks. Applied to stdio_client + ClientSession pairing.
 - **MCP tool results are JSON-serialized strings.** FastMCP returns dicts from tool functions, but the MCP protocol layer serializes them to JSON text in `result.content[0].text`. Smoke test must `json.loads()` to validate structure.
 - **Exit code + stderr is the CI contract.** Smoke script exits 0 on success, non-zero with human-readable diagnostics to stderr on failure. No logging or external deps needed, CI parses exit code.
+
+## 2026-05-15T16:30:00Z - POLISH Wave 7: Docstring Style Guide and Readonly Workflow Fix
+
+Shipped two deliverables: (A) tool docstring style guide, (B) readonly-check workflow fix.
+
+**PR:** #TBD feat(docs,ci): tool docstring style guide + readonly-check workflow fix
+**Closes:** Wave 7 POLISH deliverables
+
+### Deliverable A: Tool Docstring Style Guide
+
+Created `docs/dev/tool-docstring-style.md` (174 lines). Comprehensive pattern guide extracted from the 5 working MCP tools in `server.py`. Sections cover:
+
+1. **Why docstrings matter** . FastMCP extracts docstrings to JSON Schema; they are the end-user-facing descriptions in Copilot CLI and Claude Desktop.
+2. **Required structure** . one-line summary (under 80 chars), blank line, 2-4 sentence description, Args/Returns/Raises sections, optional Examples.
+3. **Parameter conventions** . Python 3.11+ union syntax (`X | None`, not `Optional[X]`), defaults in function signature (not docstring), `list[X]` and `dict[K, V]`, `Literal` for enums.
+4. **Citations** . two real worked examples from server.py: `alz_query_by_id` (simple static lookup) and `pricing_lookup_sku` (public API with multiple params). Copy-pasted verbatim, no invented examples.
+5. **Pitfalls** . multi-line description merged into summary, missing Returns shape, vague exception types, ambiguous parameter semantics.
+6. **Test pattern** . every tool should have at least 4 tests (happy path, edge case, error path, schema validation). Reference implementations in `tests/test_alz_queries.py`, `tests/test_pricing.py`, `tests/test_scorecard.py`.
+7. **Format choice** . Google-style docstrings (PEP 257 recommended, used by Google and many open-source projects). Readable in raw source, compatible with Sphinx/mkdocs generators.
+
+### Deliverable B: Readonly-Check Workflow Fix
+
+**Problem:** `.github/workflows/readonly-check.yml` had a `paths:` filter that excluded doc-only PRs. But `Check for mutation methods` is a required status check on `main`. Result: doc-only PRs were blocked because the required check never reported.
+
+**Fix:** Removed the `paths:` filter entirely. The workflow now runs on every PR + push to main. The check is fast (~30s) and correctly reports "no violations" for doc-only changes. This unblocks doc-only PRs while preserving the read-only enforcement gate.
+
+**Change:** Removed `paths:` block from both `pull_request:` and `push:` sections. Workflow is now:
+```yaml
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+```
+
+### Decision Artifact
+
+Filed `.squad/decisions/inbox/forge-docstring-style-guide.md` documenting:
+- Problem (no reference for tool authors).
+- Decision (adopt Google-style, extract pattern, document in style guide).
+- Rationale (readability, industry practice, compatibility with generators).
+- Enforcement (code review gate, no automated linting needed at current scale).
+
+### Validation
+
+- Style guide examples are copy-pasted verbatim from `server.py` (lines 33-74), not invented.
+- No em dashes in docs or decision artifact (per project style guide).
+- CHANGELOG.md updated with both changes (Fixed and Added sections).
+- Worktree created and cleaned up at end.
+
+### Learnings
+
+- **Docstring as schema source.** FastMCP extracts the docstring and function signature to produce JSON Schema. The schema is then sent to MCP clients (Copilot CLI, Claude Desktop, etc.). A poor docstring results in poor UX. This is different from traditional Python docs where docstrings are supplementary.
+- **Google-style is the right choice.** Numpy and reST styles are alternatives, but Google is more readable in raw source and compatible with modern doc generators. It is also the most familiar to Python developers.
+- **Workflow path filters can block required checks.** If a required check has a path filter and those paths are not touched in a PR, the check never reports, and the PR is blocked despite passing all checks it ran. The simplest correct fix is to drop the path filter entirely (checks are usually fast enough to run unconditionally).
+- **Pattern extraction from working examples.** Instead of inventing a style guide from scratch, extracting from 5 real, shipped examples ensures the guide is grounded in reality and builds on what is already working. This also provides confidence that the pattern is feasible and tested.
 

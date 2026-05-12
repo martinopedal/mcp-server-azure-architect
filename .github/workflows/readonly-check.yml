@@ -2,16 +2,9 @@ name: Read-Only Enforcement Check
 
 on:
   pull_request:
-    paths:
-      - 'src/**/*.py'
-      - 'scripts/check_readonly.py'
-      - '.github/workflows/readonly-check.yml'
   push:
     branches:
       - main
-    paths:
-      - 'src/**/*.py'
-      - 'scripts/check_readonly.py'
 
 permissions:
   contents: read
