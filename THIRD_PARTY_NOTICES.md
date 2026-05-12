@@ -79,7 +79,7 @@ This repository invokes, references, or depends on the following open-source pro
 - **Source:** https://github.com/martinopedal/alz-checklist-queries (and/or `alz-graph-queries`)
 - **Copyright:** Copyright (c) Microsoft Corporation (original ALZ checklist data, derived), Copyright (c) 2026 martinopedal (KQL adaptations)
 - **License:** MIT License
-- **Usage:** Vendored snapshot under `queries/` (planned). Pinned by commit SHA in `queries/MANIFEST.md`. Refreshed quarterly.
+- **Usage:** Vendored snapshot under `data/alz-queries/`. Pinned by commit SHA in `data/alz-queries/MANIFEST.md`. Refreshed quarterly.
 
 ---
 

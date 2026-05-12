@@ -46,7 +46,7 @@ Any hard-coded Azure identifier (policy ID, initiative ID, role definition ID, r
 - `# provenance: public-source <repo or doc URL>` (e.g., `martinopedal/alz-checklist-queries@<sha>`)
 - `# provenance: must-not-ship`
 
-The vendored ALZ checklist snapshot lives in `queries/` with a `MANIFEST.md` that records the source repo and pinned commit SHA.
+The vendored ALZ checklist snapshot lives in `data/alz-queries/` with a `MANIFEST.md` that records the source repo and pinned commit SHA.
 
 ## Companion MCP servers
 

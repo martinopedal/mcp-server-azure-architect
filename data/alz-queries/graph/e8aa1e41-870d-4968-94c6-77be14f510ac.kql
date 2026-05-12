@@ -1,0 +1,4 @@
+// Vendored from https://github.com/martinopedal/alz-graph-queries/blob/8a3fddabcbf272a19a627770a0d33de5f4ace8ee/queries/alz_additional_queries.json
+// Source checklist ID: e8aa1e41-870d-4968-94c6-77be14f510ac
+// Vendored at: 2026-04-22T12:35:39Z
+ResourceContainers | where type =~ 'microsoft.resources/subscriptions' | extend mgChain = tolower(tostring(properties.managementGroupAncestorsChain)) | where mgChain has 'identity' | join kind=leftouter (Resources | where type in~ ('microsoft.compute/virtualmachines', 'microsoft.aad/domainservices') | summarize regionCount = dcount(location) by subscriptionId) on subscriptionId | extend compliant = iff(coalesce(toint(regionCount), 0) > 1, 1, 0) | project name, subscriptionId, regionCount, compliant

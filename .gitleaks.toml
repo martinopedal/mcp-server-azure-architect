@@ -12,7 +12,7 @@ description = "Allowlist for placeholders, examples, and built-in public identif
 paths = [
   '''(.*?)\.md''',
   '''docs/.*''',
-  '''queries/MANIFEST\.md''',
+  '''data/alz-queries/MANIFEST\.md''',
 ]
 regexes = [
   '''00000000-0000-0000-0000-000000000000''',

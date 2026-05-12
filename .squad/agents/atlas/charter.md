@@ -21,7 +21,7 @@
 - Vendor by commit SHA, never `main` or `latest`
 - Pin to a tagged release where one exists
 - Refresh the snapshot quarterly or on demand for a critical fix
-- Document the vendoring in `queries/MANIFEST.md`
+- Document the vendoring in `data/alz-queries/MANIFEST.md`
 - Never inline customer or MS-internal policy IDs
 
 ## Boundaries
