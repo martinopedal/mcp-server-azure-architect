@@ -1,0 +1,144 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+  id-token: write
+
+jobs:
+  verify-version:
+    name: Verify tag matches pyproject.toml version
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.get-version.outputs.version }}
+      tag: ${{ steps.get-tag.outputs.tag }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Extract tag
+        id: get-tag
+        run: echo "tag=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+
+      - name: Extract version from pyproject.toml
+        id: get-version
+        run: |
+          VERSION=$(grep '^version = ' pyproject.toml | sed 's/version = "\(.*\)"/\1/')
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Verify tag matches version
+        run: |
+          if [ "${{ steps.get-tag.outputs.tag }}" != "${{ steps.get-version.outputs.version }}" ]; then
+            echo "ERROR: Tag v${{ steps.get-tag.outputs.tag }} does not match pyproject.toml version ${{ steps.get-version.outputs.version }}"
+            exit 1
+          fi
+          echo "Tag and version match: ${{ steps.get-version.outputs.version }}"
+
+  test:
+    name: Run test suite
+    needs: verify-version
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest]
+        python-version: ["3.11", "3.12"]
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+      
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      
+      - name: Install uv
+        run: pip install uv
+      
+      - name: Install dependencies
+        run: uv pip install --system -e ".[dev]"
+      
+      - name: Run ruff check
+        run: ruff check .
+      
+      - name: Run mypy
+        run: mypy src
+      
+      - name: Run pytest
+        run: pytest -v
+
+  build:
+    name: Build distribution packages
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install build dependencies
+        run: pip install build
+
+      - name: Build sdist and wheel
+        run: python -m build
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/*
+          if-no-files-found: error
+
+  publish-pypi:
+    name: Publish to PyPI
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: pypi
+      url: https://pypi.org/p/mcp-server-azure-architect
+    permissions:
+      id-token: write
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist
+
+      - name: Publish to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+
+  create-release:
+    name: Create GitHub Release
+    needs: [verify-version, publish-pypi]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Extract changelog for this version
+        id: changelog
+        run: |
+          VERSION="v${{ needs.verify-version.outputs.version }}"
+          # Extract changelog section for this version
+          awk "/^## \[$VERSION\]/,/^## \[/{if(/^## \[/ && !/^## \[$VERSION\]/)exit;if(!/^## \[$VERSION\]/)print}" CHANGELOG.md > release-notes.md
+          # Remove trailing newlines
+          sed -i -e :a -e '/^\s*$/d;N;ba' release-notes.md
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          body_path: release-notes.md
+          draft: false
+          prerelease: false
+          generate_release_notes: false
