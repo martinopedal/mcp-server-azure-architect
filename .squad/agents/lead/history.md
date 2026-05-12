@@ -35,6 +35,15 @@ Approved the Python + FastMCP runtime scaffold. Read-only boundary intact (no mu
 
 See `.squad/decisions/inbox/lead-pr22-adr001-ratified.md` for the full ADR-001 ratification decision record.
 
+## Wave 1 Cross-Agent Context
+
+**From Sentinel:** Confused-deputy threat on subscription_id flagged as top risk. Validate all user-supplied subscriptions against authenticated context in tool implementations. ADR-003 recommended Option E (AST+convention+review).
+
+**From Atlas:** PR #27 vendoring pattern approved. Manifest structure ready for pattern codification in ADR-002. Atlas flagged that vendored queries should not accept user-supplied subscription_id without validation.
+
+**From Sage:** v0.1 documentation has 22 gaps. Top-3 blockers: skills catalog, ADR docs, install guides. PR #22 is critical blocker for README "Stack" section update. Wave 2 issue batch recommended (40–50 hours total work).
+
 ## Sessions
 
 - **2026-05-12:** PR #22 rebase, gitleaks fix, ADR triage. Foundation landed.
+- **2026-05-12 (Wave 1 Scribe):** Orchestration logs created, decisions merged to `.squad/decisions.md`, agent cross-context noted.
