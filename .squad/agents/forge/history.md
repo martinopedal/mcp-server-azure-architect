@@ -153,3 +153,7 @@ Python + FastMCP server runtime fully scaffolded per ADR-001. Key choices:
 - `docs/adr/0001-runtime-choice.md` (ADR update)
 - `.squad/decisions/inbox/lead-pr22-adr001-ratified.md` (PR #22 context)
 - `.squad/decisions/inbox/sentinel-threat-model-outline.md` (supply chain audit)
+
+## Team Update (2026-05-12)
+
+Wave 2 complete: foundation (#22, #23, #26, #27, #33, #34) all on main. Decisions ledger consolidated. ADR-001 ratified. Next: ADR-002/003/004, branch protection (#20), threat model (#18), and v0.1 docs per Sage's gap audit.

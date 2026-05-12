@@ -47,3 +47,7 @@ See `.squad/decisions/inbox/lead-pr22-adr001-ratified.md` for the full ADR-001 r
 
 - **2026-05-12:** PR #22 rebase, gitleaks fix, ADR triage. Foundation landed.
 - **2026-05-12 (Wave 1 Scribe):** Orchestration logs created, decisions merged to `.squad/decisions.md`, agent cross-context noted.
+
+## Team Update (2026-05-12)
+
+Wave 2 complete: foundation (#22, #23, #26, #27, #33, #34) all on main. Decisions ledger consolidated. ADR-001 ratified. Next: ADR-002/003/004, branch protection (#20), threat model (#18), and v0.1 docs per Sage's gap audit.

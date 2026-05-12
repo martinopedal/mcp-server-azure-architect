@@ -284,6 +284,107 @@ Also:
 ✓ Require approvals: 1 (non-author)
 ✓ Require status checks to pass before merging
 ✓ Require branches to be up to date before merging
+
+---
+
+## Wave 2 — Foundation Merge Complete (2026-05-12)
+
+### PR #23 mcp-config Audit (v0)
+
+**Status:** MERGED to main (commit cf5d5d5)
+
+**Date:** 2026-04-22 | **Owner:** Burke
+
+mcp-config.json audited and hardened. Companion versions pinned to stable releases. Four per-client install guides created for Copilot CLI, Claude Desktop, Cursor, and VS Code Copilot. Compatibility matrix documents version rationale and testing roadmap.
+
+**Key Findings:**
+- All companion versions pinned (azure-mcp 2.0.1, mcp-mermaid 0.4.1, drawio 2.0.4, kubernetes 0.0.53, terraform v0.5.1)
+- No hardcoded credentials; GitHub PAT is templated env var
+- Install docs provide step-by-step merge instructions for v0
+- Compatibility matrix shows 2 tested, 5 pending, 1 blocked (runtime TBD)
+
+**Closes:** #15
+
+---
+
+### PR #23 Rebase Outcome
+
+**Status:** MERGED to main (commit cf5d5d5)
+
+**Date:** 2026-04-23 | **Agent:** Burke
+
+Clean rebase of PR #23 against new main (post PR #22 + #33). Zero conflicts. All CI gates passed (ruff, mypy, pytest, gitleaks, CodeQL, dependency-review).
+
+**Key Points:**
+- 28 files changed; no manual conflict resolution needed
+- Config + install docs integrated cleanly with runtime scaffold
+- Squad history appended
+- All 5 critical workflows passed; 1 non-blocking label-sync failure (workflow issue)
+
+---
+
+### PR #26 Rebase Outcome
+
+**Status:** MERGED to main (commit 91e24a5)
+
+**Date:** 2026-04-23 | **Agent:** Forge
+
+Clean rebase with manual resolution of scaffold duplication and ADR-001 conflict. PR #26's cold-start investigation and calibrated test thresholds (1000ms soft, 2000ms hard) retained. Measured cold-start on rebased branch: 1116ms (Windows, Python 3.14).
+
+**Key Resolutions:**
+- Scaffold duplication: kept main's canonical src/ layout, removed root-level duplicate
+- ADR-001 conflict: kept main's comprehensive analysis, appended PR #26's empirical addendum
+- Test calibration: used PR #26's refined thresholds aligned with investigation findings
+
+**Closes:** #21 (cold-start investigation)
+
+---
+
+### Iris Skill Catalog v0 (draft)
+
+**Status:** Proposed skeleton
+
+**Date:** 2025-04-22 | **Owner:** Iris
+
+First Copilot CLI extension (alz-gap-check) composition pattern outlined. Extension orchestrates alz_query_by_id tool with optional microsoft-learn-mcp remediation. Skill catalog v0 documents trigger phrases, dependencies, and testing scenarios.
+
+**Key Decisions:**
+- Use Copilot CLI extension format (.github/extensions/*/extension.mjs), not markdown skills
+- alz-gap-check chosen as first skill (clean input/output contract, minimal dependencies)
+- v0 inlines curated query list; dynamic sourcing via alz_scorecard_composition deferred
+- Read-only enforcement: skill surfaces gaps, never proposes mutations
+
+**Trade-offs:**
+- Curated query list requires code edits for updates (mitigated post-scorecard ship)
+- Simulated failures for demo (replaced with real tool calls once server lands)
+
+**Next:** Integration test after server runtime lands; dynamic lookup post-scorecard ADR.
+
+---
+
+### Sage Cold-Start Investigation Notes
+
+**Status:** Proposed
+
+**Date:** 2026-04-22 | **Owner:** Sage
+
+Cold-start profiling on Python 3.11/3.12 investigated. Measured cache-warm time: 943ms (3.12), 1381-4347ms variance (3.11). Top contributor: mcp package (1385ms cumulative, 98.8% of total). Azure SDKs lazy-loaded, zero import-time cost.
+
+**Finding:** Hard gate of 5000ms is too permissive; 2000ms recommended to catch 2x regressions. Soft warning at 1000ms for awareness.
+
+**Recommendation:** Accept 2000ms hard gate; calibrate test to measure cache-warm time (skip first run). Update ADR-001 if cold-start expectation changes based on this investigation.
+
+**Related:** PR #26 cold-start calibration and addendum.
+
+---
+
+### User Directives Log
+
+**Date:** 2026-04-22
+
+**Directive:** Allow @copilot to self-merge its own PRs once CI is green and required reviews satisfied.
+
+**Purpose:** Captured for team memory. Reduces martinopedal manual merge load while offline. Implementation at coordinator discretion per branch protection policy.
 ```
 
 **Open Questions:**

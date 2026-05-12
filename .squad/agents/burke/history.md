@@ -18,3 +18,7 @@ Across the four major MCP clients (Copilot CLI, Claude Desktop, Cursor, VS Code 
 
 ### Companion Server Pinning Rationale
 Pin versions when: (1) upstream has stable releases with semver, (2) schema stability matters more than bleeding-edge features, (3) users need reproducible installs. Avoid pinning when: upstream moves fast and schema is experimental, or when latest is the only tested version. Document pinning rationale in compatibility matrix so future maintainers know why each version was chosen.
+
+## Team Update (2026-05-12)
+
+Wave 2 complete: foundation (#22, #23, #26, #27, #33, #34) all on main. Decisions ledger consolidated. ADR-001 ratified. Next: ADR-002/003/004, branch protection (#20), threat model (#18), and v0.1 docs per Sage's gap audit.
