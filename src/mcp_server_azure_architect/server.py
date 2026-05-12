@@ -56,6 +56,11 @@ def alz_query_by_id(checklist_id: str) -> dict[str, str]:
 
     Raises:
         LookupError: if the checklist ID is not in the vendored snapshot.
+
+    Note: Results may contain sensitive data (resource tags with secrets, connection
+        strings in configurations, private IPs). Treat results as sensitive. Do not log,
+        share, or persist results without review per your organization's data handling
+        policy.
     """
     record = get_query(checklist_id)
     return {key: str(value) for key, value in record.items()}
@@ -130,6 +135,11 @@ def alz_query_list(
         of dicts with checklist_id, pillar, source_repo, title, citation),
         `manifest_commit` (str, composite of source commits), `truncated` (bool),
         and `filters_applied` (dict with pillar and source_repo).
+
+    Note: Results may contain sensitive data (resource tags with secrets, connection
+        strings in configurations, private IPs). Treat results as sensitive. Do not log,
+        share, or persist results without review per your organization's data handling
+        policy.
     """
     result = list_queries(pillar=pillar, source_repo=source_repo, limit=limit)
     return result
@@ -179,6 +189,11 @@ async def alz_scorecard(
     Raises:
         ValueError: if explicit checklist_ids exceeds 25 or page_size is out of bounds.
         PermissionError: if subscription_id is not in caller's scope.
+
+    Note: Results may contain sensitive data (resource tags with secrets, connection
+        strings in configurations, private IPs). Treat results as sensitive. Do not log,
+        share, or persist results without review per your organization's data handling
+        policy.
     """
     result = await run_scorecard(
         subscription_id=subscription_id,
