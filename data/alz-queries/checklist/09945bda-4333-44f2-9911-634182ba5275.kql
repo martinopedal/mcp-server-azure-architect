@@ -1,0 +1,4 @@
+// Vendored from https://github.com/martinopedal/alz-checklist-queries/blob/e7641beeda0126cc78825f8b77764c379552f3e1/queries/alz_all_queries.json
+// Source checklist ID: 09945bda-4333-44f2-9911-634182ba5275
+// Vendored at: 2026-05-13T09:27:15+00:00
+securityresources | where type == 'microsoft.security/pricings' | where name == 'CloudPosture' | extend tier = tostring(properties.pricingTier) | extend compliant = iff(tier == 'Standard', 1, 0) | project name, id, compliant

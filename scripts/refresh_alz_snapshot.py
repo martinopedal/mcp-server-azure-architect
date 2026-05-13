@@ -311,6 +311,10 @@ def refresh_snapshot(dry_run: bool = False) -> bool:
     manifest = load_manifest(manifest_path)
 
     # Source repo definitions
+    # NOTE: Temporarily vendoring from checklist repo ONLY to avoid guid collision
+    # per Decision 10/11 (issue #96). The checklist repo is marked as merged=true
+    # and contains 173 queryable items. The graph repo causes guid collision for
+    # 667313b4-f566-44b5-b984-a859c773e7d2.
     repos: list[RepoConfig] = [
         {
             "repo": "martinopedal/alz-checklist-queries",
@@ -318,12 +322,13 @@ def refresh_snapshot(dry_run: bool = False) -> bool:
             "source_file": "queries/alz_all_queries.json",
             "extractor": extract_queries_from_checklist_repo,
         },
-        {
-            "repo": "martinopedal/alz-graph-queries",
-            "dest_subdir": "graph",
-            "source_file": "queries/alz_additional_queries.json",
-            "extractor": extract_queries_from_graph_repo,
-        },
+        # Temporarily commented out due to guid collision:
+        # {
+        #     "repo": "martinopedal/alz-graph-queries",
+        #     "dest_subdir": "graph",
+        #     "source_file": "queries/alz_additional_queries.json",
+        #     "extractor": extract_queries_from_graph_repo,
+        # },
     ]
 
     changes_detected = False

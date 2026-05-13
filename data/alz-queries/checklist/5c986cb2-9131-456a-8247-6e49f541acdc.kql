@@ -1,0 +1,4 @@
+// Vendored from https://github.com/martinopedal/alz-checklist-queries/blob/e7641beeda0126cc78825f8b77764c379552f3e1/queries/alz_all_queries.json
+// Source checklist ID: 5c986cb2-9131-456a-8247-6e49f541acdc
+// Vendored at: 2026-05-13T09:27:15+00:00
+policyresources | summarize initiatives = countif(type == 'microsoft.authorization/policysetdefinitions'), initiativeAssignments = countif(type == 'microsoft.authorization/policyassignments' and tolower(tostring(properties.policyDefinitionId)) has 'policysetdefinitions') | extend compliant = iff(initiatives > 0 and initiativeAssignments > 0, 1, 0) | project initiatives, initiativeAssignments, compliant

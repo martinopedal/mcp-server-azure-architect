@@ -45,7 +45,11 @@ def _mock_arg_response(rows: list[dict[str, Any]], skip_token: str | None = None
 
 @pytest.mark.asyncio
 async def test_scorecard_all_pass_no_violations() -> None:
-    """All queries return zero violations; scorecard shows all pass."""
+    """All queries return zero violations; scorecard shows all pass.
+    
+    NOTE: As of PR #96, we have 173 queryable items. Scorecard is capped at 25,
+    so we filter to a known subset to test the pass-all logic without truncation.
+    """
     with patch(
         "mcp_server_azure_architect.scorecard._get_resource_graph_client"
     ) as mock_client_factory:
@@ -53,12 +57,19 @@ async def test_scorecard_all_pass_no_violations() -> None:
         mock_client.resources = Mock(return_value=_mock_arg_response([]))
         mock_client_factory.return_value = mock_client
 
-        result = await run_scorecard(subscription_id="sub-123")
+        # Filter to 2 known queries to stay under the 25-query cap
+        result = await run_scorecard(
+            subscription_id="sub-123",
+            checklist_ids=[
+                "54f0d8b1-22a3-4c0d-8ce2-58b9e086c93a",
+                "348ef254-c27d-442e-abba-c7571559ab91",
+            ],
+        )
 
         assert result["subscription_id"] == "sub-123"
         assert result["truncated"] is False
-        assert result["aggregate"]["total"] > 0
-        assert result["aggregate"]["pass_count"] == result["aggregate"]["total"]
+        assert result["aggregate"]["total"] == 2
+        assert result["aggregate"]["pass_count"] == 2
         assert result["aggregate"]["fail"] == 0
         assert result["aggregate"]["unknown"] == 0
 
@@ -242,16 +253,15 @@ async def test_scorecard_by_source_breakdown() -> None:
             subscription_id="sub-123",
             checklist_ids=[
                 "54f0d8b1-22a3-4c0d-8ce2-58b9e086c93a",  # vendored-checklist source
-                "667313b4-f566-44b5-b984-a859c773e7d2",  # vendored-graph source
+                "667313b4-f566-44b5-b984-a859c773e7d2",  # also vendored-checklist (was graph, see PR #96)
             ],
         )
 
         by_source = result["aggregate"]["by_source"]
         # Manifest v2: source values are now "vendored-*"
+        # NOTE: As of PR #96, both guids are from vendored-checklist (Decision 10/11)
         assert "vendored-checklist" in by_source
-        assert "vendored-graph" in by_source
-        assert by_source["vendored-checklist"]["pass"] == 1
-        assert by_source["vendored-graph"]["pass"] == 1
+        assert by_source["vendored-checklist"]["pass"] == 2
 
 
 @pytest.mark.asyncio

@@ -1,0 +1,4 @@
+// Vendored from https://github.com/martinopedal/alz-checklist-queries/blob/e7641beeda0126cc78825f8b77764c379552f3e1/queries/alz_all_queries.json
+// Source checklist ID: 43334f24-9116-4341-a2ba-527526944008
+// Vendored at: 2026-05-13T09:27:15+00:00
+policyresources | where type == 'microsoft.authorization/policyassignments' | extend displayName = tolower(tostring(properties.displayName)), definitionId = tolower(tostring(properties.policyDefinitionId)) | extend compliant = iff(displayName has 'allowed resource types' or displayName has 'not allowed resource types' or definitionId has 'allowedresourcetypes' or definitionId has 'notallowedresourcetypes', 1, 0) | project name, id, compliant

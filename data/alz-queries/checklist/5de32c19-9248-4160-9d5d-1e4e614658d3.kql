@@ -1,0 +1,4 @@
+// Vendored from https://github.com/martinopedal/alz-checklist-queries/blob/e7641beeda0126cc78825f8b77764c379552f3e1/queries/alz_all_queries.json
+// Source checklist ID: 5de32c19-9248-4160-9d5d-1e4e614658d3
+// Vendored at: 2026-05-13T09:27:15+00:00
+resources | extend hasTag=isnotempty(tags) | summarize total=count(), tagged=countif(hasTag) | project checkItem='Resource Tagging', currentValue=strcat(tostring(tagged), '/', tostring(total), ' resources tagged (', tostring(round(todouble(tagged)/todouble(total)*100, 1)), '%)'), expectedValue='All resources tagged', compliant=iff(tagged == total, true, false)

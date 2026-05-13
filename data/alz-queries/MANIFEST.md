@@ -2,51 +2,7 @@
 
 Refreshed automatically; see .github/workflows/refresh-alz-snapshot.yml
 
-Vendored at: 2026-05-12T21:52:10Z
-
 This snapshot is pinned to commit SHAs. No `main` or `latest` references are used for source content.
-
-## Manifest Schema
-
-**Schema version:** 2 (as of issue #125, ADR-006)
-
-Manifest v2 adds rich per-query metadata under `sources[].subset.queries[<guid>]`:
-
-**Mandatory fields per query:**
-- `id`: checklist guid
-- `text`: checklist item text (may be empty if unavailable upstream)
-- `category`: WAF category
-- `subcategory`: WAF subcategory
-- `severity`: High, Medium, or Low
-- `source`: one of `vendored-checklist`, `vendored-graph`, `custom`
-- `source_repo`: GitHub repository slug
-- `source_ref`: ref (tag or commit) vendored from
-- `source_file`: upstream file path within the repo
-- `vendored_at`: ISO 8601 timestamp
-- `vendored_path`: relative path within this repo's vendored snapshot
-- `citation`: human-readable provenance
-- `queryable`: bool, whether the query is executable via ARG
-
-**Optional fields (where upstream provides data):**
-- `scope_hint`: `subscription`, `management-group`, or `tenant` (ARG scope)
-- `tags`: array of strings, free-form categorization
-- `waf`: Well-Architected Framework pillar
-- `upstream_reason`: the upstream `reason` field (preserved as-is, often noisy)
-
-See ADR-006 for design rationale and custom-query provenance pattern.
-
-## Refresh cadence
-
-Vendored snapshots are refreshed automatically on a **weekly cadence** (Monday 06:00 UTC) via `.github/workflows/refresh-alz-snapshot.yml`. The workflow:
-
-1. Fetches each upstream `commit_sha` listed in `manifest.json`.
-2. Runs `scripts/refresh_alz_snapshot.py` to extract queryable items.
-3. Recomputes SHA-256 integrity hashes per file.
-4. Opens a PR if any content changed.
-
-**Pinning to a snapshot:** Consumers who need reproducible builds should pin to a specific release tag (`pip install mcp-server-azure-architect==X.Y.Z`) rather than tracking `main`. Each release embeds the manifest snapshot active at release time.
-
-**Manual refresh:** Maintainers can trigger an out-of-band refresh by running `python scripts/refresh_alz_snapshot.py` locally and committing the result.
 
 ## Sources
 
@@ -54,31 +10,7 @@ Vendored snapshots are refreshed automatically on a **weekly cadence** (Monday 0
 
 - commit_sha: `e7641beeda0126cc78825f8b77764c379552f3e1`
 - ref: `commit:e7641beeda0126cc78825f8b77764c379552f3e1`
-- vendored_at: `2026-04-22T12:35:39Z`
+- vendored_at: `2026-05-13T09:27:15+00:00`
 - source_file: `queries/alz_all_queries.json`
-- checklist_ids: `54f0d8b1-22a3-4c0d-8ce2-58b9e086c93a, 348ef254-c27d-442e-abba-c7571559ab91`
-- file_count: `2`
-
-### martinopedal/alz-graph-queries
-
-- commit_sha: `448998d01000e7f863d3c1f8876787fd2234a77b`
-- ref: `commit:448998d01000e7f863d3c1f8876787fd2234a77b`
-- vendored_at: `2026-05-12T21:52:10Z`
-- source_file: `queries/alz_additional_queries.json`
-- checklist_ids: `667313b4-f566-44b5-b984-a859c773e7d2`
-- file_count: `1`
-
-## Breaking-change detection
-
-Refresh PRs are automatically checked for breaking changes via `.github/workflows/breaking-change-detector.yml`. The workflow detects when the first table reference token in a `.kql` file changes, which signals a schema surface change (e.g., `resources` to `securityresources`).
-
-**Breaking changes** (fail the check):
-- First table reference token changed (schema surface altered)
-- Query file removed
-
-**Non-breaking changes** (pass):
-- Header-only changes (updated commit SHA, timestamp)
-- Body changes with same first token (query logic refined)
-- New query files added
-
-**Override:** If a breaking change is intentional (e.g., upstream schema update), apply the `breaking-change-approved` label to the PR to bypass the check.
+- checklist_ids: `54f0d8b1-22a3-4c0d-8ce2-58b9e086c93a, 5cf9f485-2784-49b3-9824-75d9b8bdb57b, ae757485-92a4-482a-8bc9-eefe6f5b5ec3, 348ef254-c27d-442e-abba-c7571559ab91, 4348bf81-7573-4512-8f46-9061cc198fea, 4b69bad3-3aad-45e8-a68e-1d76667313b4, d98d954d-7d1c-4a07-92a7-cf3afe8dcbd2, 1559ab91-53e8-4908-ae28-c84c33b6b780, f5664b5e-984a-4859-a773-e7d261623a76, 0dd4e625-9c4b-4a56-b54a-4357bac12761, 1cf0b8da-70bd-44d0-94af-8d99cfc89ae1, 35037e68-9349-4c15-b371-228514f4cdff, 9cf5418b-1520-4b7b-add7-88eb28f833e8, d4d1ad54-1abc-4919-b267-3f342d3b49e4, 0ce74f19-9abb-47e4-ae95-6b057a1d2be9, 1770a2ac-c194-4e5c-ade4-82939d38a510, cacf55bc-e4e4-46be-96bc-57a5f23a269a, 2df27ee4-12e7-4f98-9f63-04722dd69c5b, 667313b4-f566-44b5-b984-a859c773e7d2, 61623a76-5a91-47e1-b348-ef254c27d42e, 8bbac757-1559-4ab9-853e-8908ae28c84c, 33b6b780-8b9f-4e5c-9104-9d403a923c34, 74d00018-ac6a-49e0-8e6a-83de5de32c19, 92481607-d5d1-4e4e-9146-58d3558fd772, 49b82111-2df2-47ee-912e-7f983f630472, 2dd69c5b-5c26-422f-94b6-9bad33aad5e8, c68e1d76-6673-413b-9f56-64b5e984a859, c773e7d2-6162-43a7-95a9-17e1f348ef25, 3a923c34-74d0-4001-aac6-a9e01e6a83de, 5de32c19-9248-4160-9d5d-1e4e614658d3, 4c27d42e-8bba-4c75-9155-9ab9153e8908, 914b8cb7-c2f6-40fa-ae18-81c049e0cb5a, a89153d8-18b2-4caf-bc19-850fc8fba00f, 373f482f-3e39-4d39-8aa4-7e566f6082b6, e8bbac75-7155-49ab-a153-e8908ae28c84, 7bc1c396-2461-4698-b57f-30ca69525252, 7dd61623-a364-4a90-9eca-e48ebd54cd7d, ce463dbb-bc8a-4c2a-aebc-92a43da1dae2, 91b9d7d5-91e1-4dcb-8f1f-fa7e465646cc, cc881471-607c-41cc-a0e6-14658dd558f9, 4722d929-c1b1-4cd6-81f5-4b29bade39ad, 0e7c28ec-9366-4572-83b0-f4664b1d944a, 3d457936-e9b7-41eb-bdff-314b26450b12, c76cb5a2-abe2-11ed-afa1-0242ac120002, 9dcd6250-9c4a-4382-aa9b-5b84c64fc1fe, 48682fb1-1e86-4458-a686-518ebd47393d, 3f630472-2dd6-49c5-a5c2-622f54b69bad, 33aad5e8-c68e-41d7-9667-313b4f5664b5, f348ef25-4c27-4d42-b8bb-ac7571559ab9, 0c47f486-656d-4699-8c30-edef5b8a93c4, 153e8908-ae28-4c84-a33b-6b7808b9fe5c, 41049d40-3a92-43c3-974d-00018ac6a9e0, 614658d3-558f-4d77-849b-821112df27ee, ee1ac551-c4d5-46cf-b035-d0a3c50d87ad, 6eab9eb6-762b-485e-8ea8-15aa5dba0bd0, 1d7aa9b6-4704-4489-a804-2d88e79d17b7, 088137f5-e6c4-4cfd-9e50-4547c2447ec6, b1c82a3f-2320-4dfa-8972-7ae4823c8930, 3c5a808d-c695-4c14-a63c-c7ab7a510e41, 359c373e-7dd6-4162-9a36-4a907ecae48e, d4cd21b0-8813-47f5-b6c4-cfd3e504547c, 7025b442-f6e9-4af6-b11f-c9574916016f, f4e7926a-ec35-476e-a412-5dd17136bd62, 2447ec66-138a-4720-8f1c-e16ed301d6e8, c2299c4d-7b57-4d0c-9555-62f2b3e4563a, 4d873974-8b66-42d6-b15f-512a65498f6d, 718cb437-b060-2589-8856-2e93a5c6633b, b30e38c3-f298-412b-8363-cefe179b599d, 5bf68dc9-325e-4873-bf88-f8214ef2e5d2, e0d5973c-d4cd-421b-8881-37f5e6c4cfd3, cf3fe65c-fec0-495a-8edc-9675200f2add, 72105cc8-aaea-4ee1-8c7a-ad25977afcaf, 669b215a-ce43-4371-8f6f-11047f6490f1, 3f79ed00-203b-4c95-9efd-691505f5a1f9, 8b517d94-c9d0-42c4-9803-d93ed0a46bc0, e6c4cfd3-e504-4547-a244-7ec66138a720, 5a4b1511-e43a-458a-ac22-99c4d7b57d0c, 14d99880-2f88-47e8-a134-62a7d85c94af, c10d51ef-f999-455d-bba0-5c90ece07447, e9c8f584-6d5e-473b-8dc5-acc9fbaab4e3, b9d0dff5-bdd4-4cd8-88ed-5811610b2b2c, a3784907-9836-4271-aafc-93535f8ec08b, 715d833d-4708-4527-90ac-1b142c7045ba, e960fc6b-4ab2-4db6-9609-3745135f9ffa, 22d6419e-b627-4d95-9e7d-019fa759387f, 828cec2e-af6c-40c2-8fa2-1b681ee63eb7, 0da83bb1-2f39-49af-b5c9-835fc455e3d1, c44c6f0e-1642-4a61-a17b-0922f835c93a, 7371dc21-251a-47a3-af14-6e01b9da4757, 346840b8-1064-496e-8396-4b1340172d52, 39990a13-915c-45f9-a2d3-562d7d6c4b7c, 94f3eede-9aa3-4088-92a3-bb9a56509fad, d38ad60c-bc9e-4d49-b699-97e5d4dcf707, e8143efa-0301-4d62-be54-ca7b5ce566dc, e43a58a9-c229-49c4-b7b5-7d0c655562f2, b3e4563a-4d87-4397-98b6-62d6d15f512a, 4704489a-8042-4d88-b79d-17b73b22a5a6, 7e7a8ed4-b30e-438c-9f29-812b2363cefe, f2aad7e3-bb03-4adc-8606-4123d342a917, 11deb39d-8299-4e47-bbe0-0fb5a36318a8, 872e52e3-611c-4c58-a5a4-b1511e43a58a, a4d87397-48b6-462d-9d15-f512a65498f6, dfe237de-143b-416c-91d7-aa9b64704489, 0390417d-53dc-44d9-b3f4-c8832f359b41, 54b69bad-33aa-4d5e-ac68-e1d76667313b, 7d5d1e4e-6146-458d-9558-fd77249b8211, 261623a7-65a9-417e-8f34-8ef254c27d42, 727c77e1-b9aa-4a37-a024-129d042422c1, d49ac006-6670-4bc9-9948-d3e0a3a94f4d, 2586b854-237e-47f1-84a1-d45d4cd2310d, 9c75dfef-573c-461c-a698-68598595581a, 5c986cb2-9131-456a-8247-6e49f541acdc, d8a2adb1-17d6-4326-af62-5ca44e5695f2, 223ace8c-b123-408c-a501-7f154e3ab369, 3829e7e3-1618-4368-9a04-77a209945bda, 43334f24-9116-4341-a2ba-527526944008, be7d7e48-4327-46d8-adc0-55bcf619e8a1, 3f988795-25d6-4268-a6d7-0ba6c97be995, 19048384-5c98-46cb-8913-156a12476e49, 29fd366b-a180-452b-9bd7-954b7700c667, 78b22132-b41c-460b-a4d3-df8f73a67dc2, caeea0e9-1024-41df-a52e-d99c3f22a6f4, 67e7a8ed-4b30-4e38-a3f2-9812b2363cef, 7418ada9-4199-4c28-8286-d15e9433e8f3, 5e6c4cfd-3e50-4454-9c24-47ec66138a72, e7d7e484-3276-4d8b-bc05-5bcf619e8a13, f9887952-5d62-4688-9d70-ba6c97be9951, c806c048-26b7-4ddf-b4c2-b4f0c476925d, 90483845-c986-4cb2-a131-56a12476e49f, 541acdce-9793-477b-adb3-751ab2ab13ad, a6e55d7d-8a2a-4db1-87d6-326af625ca44, e5695f22-23ac-4e8c-a123-08ca5017f154, d5f345bf-97ab-41a7-819c-6104baa7d48c, e3ab3693-829e-47e3-8618-3687a0477a20, 6944008b-e7d7-4e48-9327-6d8bdc055bcf, 619e8a13-f988-4795-85d6-26886d70ba6c, 97be9951-9048-4384-9c98-6cb2913156a1, 859c3900-4514-41eb-b010-475d695abd74, aa45be6a-8f2d-4896-b0e3-775e6e94e610, 0d83fd81-952c-4d47-a6cb-3a930925ef2e, 7ea02e1c-7166-45a3-bdf5-098891367fcb, eba8cf22-45c6-4dc1-9b57-2cceb3b97ce5, f541acdc-e979-4377-acdb-3751ab2ab13a, da6e55d7-d8a2-4adb-817d-6326af625ca4, f625ca44-e569-45f2-823a-ce8cb12308ca, 89cc5e11-aa4d-4c3b-893d-feb99215266a, 7f408960-c626-44cb-a018-347c8d790cdf, 5017f154-e3ab-4369-9829-e7e316183687, a0477a20-9945-4bda-9333-4f2491163418, 2ba52752-6944-4008-ae7d-7e4843276d8b, 6d70ba6c-97be-4995-8904-83845c986cb2, 913156a1-2476-4e49-b541-acdce979377b, cdb3751a-b2ab-413a-ba6e-55d7d8a2adb1, 17d6326a-f625-4ca4-9e56-95f2223ace8c, b12308ca-5017-4f15-9e3a-b3693829e7e3, 16183687-a047-47a2-8994-5bda43334f24, 4ac6b67c-b3a4-4ff9-8e87-b07a7ce7bbdb, 4e3ab369-3829-4e7e-9161-83687a0477a2, 09945bda-4333-44f2-9911-634182ba5275, 36a72a48-fffe-4c40-9747-0ab5064355ba, 77425f48-ecba-43a0-aeac-a3ac733ccc6a, 24d96b30-61ee-4436-a1cc-d6ef08bc574b, 15833ee7-ad6c-46d3-9331-65c7acbe44ab, e5f8d79f-2e87-4768-924c-516775c6ea95, a56888b2-7e83-4404-bd31-b886528502d1, 874a748b-662d-46d1-9051-2a66498f6dfe, b03ed428-4617-4067-a787-85468b9ccf3f, 159aac9f-863f-4f48-82cf-00c28fa97a0e, 31e77d70-f001-455b-93aa-6d05eea10968, 6f704104-85c1-441f-96d3-c9819911645e, a9e65070-c59e-4112-8bf6-c11364d4a2a5, 108d5099-a11d-4445-bd8b-e12a5e95412e, a52e0c98-76b9-4a09-a1c9-6b2babf22ac4`
+- file_count: `173`

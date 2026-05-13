@@ -1,0 +1,4 @@
+// Vendored from https://github.com/martinopedal/alz-checklist-queries/blob/e7641beeda0126cc78825f8b77764c379552f3e1/queries/alz_all_queries.json
+// Source checklist ID: 7bc1c396-2461-4698-b57f-30ca69525252
+// Vendored at: 2026-05-13T09:27:15+00:00
+resources | where type in~ ('microsoft.network/virtualwans','microsoft.network/virtualhubs','microsoft.network/virtualnetworkgateways','microsoft.network/azurefirewalls','microsoft.network/expressroutecircuits') | summarize regionCount = dcount(location), regions = make_set(location) | extend compliant = iff(regionCount > 1, 1, 0) | project regionCount, regions, compliant

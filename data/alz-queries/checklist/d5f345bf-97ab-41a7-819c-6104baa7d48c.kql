@@ -1,0 +1,4 @@
+// Vendored from https://github.com/martinopedal/alz-checklist-queries/blob/e7641beeda0126cc78825f8b77764c379552f3e1/queries/alz_all_queries.json
+// Source checklist ID: d5f345bf-97ab-41a7-819c-6104baa7d48c
+// Vendored at: 2026-05-13T09:27:15+00:00
+resources | where type == 'microsoft.insights/activitylogalerts' | extend conditionText = tolower(tostring(properties.condition)), actionGroups = properties.actions.actionGroups | where conditionText has 'servicehealth' | extend compliant = iff(toint(coalesce(array_length(actionGroups), 0)) > 0, 1, 0) | project name, id, compliant

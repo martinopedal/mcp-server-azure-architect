@@ -1,0 +1,4 @@
+// Vendored from https://github.com/martinopedal/alz-checklist-queries/blob/e7641beeda0126cc78825f8b77764c379552f3e1/queries/alz_all_queries.json
+// Source checklist ID: 36a72a48-fffe-4c40-9747-0ab5064355ba
+// Vendored at: 2026-05-13T09:27:15+00:00
+securityresources | where type == 'microsoft.security/pricings' | where name == 'VirtualMachines' | extend tier = tostring(properties.pricingTier) | extend compliant = iff(tier == 'Standard', 1, 0) | project name, id, compliant

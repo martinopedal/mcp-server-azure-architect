@@ -1,0 +1,4 @@
+// Vendored from https://github.com/martinopedal/alz-checklist-queries/blob/e7641beeda0126cc78825f8b77764c379552f3e1/queries/alz_all_queries.json
+// Source checklist ID: 5bf68dc9-325e-4873-bf88-f8214ef2e5d2
+// Vendored at: 2026-05-13T09:27:15+00:00
+resources | where type in~ ('microsoft.network/networkwatchers/connectionmonitors','microsoft.network/connectionmonitors') | extend compliant = 1 | project name, id, type, compliant

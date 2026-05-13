@@ -1,0 +1,4 @@
+// Vendored from https://github.com/martinopedal/alz-checklist-queries/blob/e7641beeda0126cc78825f8b77764c379552f3e1/queries/alz_all_queries.json
+// Source checklist ID: 92481607-d5d1-4e4e-9146-58d3558fd772
+// Vendored at: 2026-05-13T09:27:15+00:00
+resourcecontainers | where type =~ 'microsoft.management/managementgroups' | extend displayName = tostring(properties.displayName) | extend parentId = tostring(properties.details.parent.id) | project id, name=displayName, checkItem='Management Group Structure', currentValue=strcat(displayName, ' (parent: ', tostring(split(parentId, '/')[-1]), ')'), expectedValue='Structured MG hierarchy', compliant=true

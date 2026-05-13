@@ -1,0 +1,4 @@
+// Vendored from https://github.com/martinopedal/alz-checklist-queries/blob/e7641beeda0126cc78825f8b77764c379552f3e1/queries/alz_all_queries.json
+// Source checklist ID: 4348bf81-7573-4512-8f46-9061cc198fea
+// Vendored at: 2026-05-13T09:27:15+00:00
+resources | where isnotempty(identity) | extend identityType=tostring(identity.type) | project id, name, type, resourceGroup, subscriptionId, checkItem='Managed Identity', currentValue=identityType, expectedValue='SystemAssigned/UserAssigned', compliant=iff(identityType has 'SystemAssigned' or identityType has 'UserAssigned', true, false)

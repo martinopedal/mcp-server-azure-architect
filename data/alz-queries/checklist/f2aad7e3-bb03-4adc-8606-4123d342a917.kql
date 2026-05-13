@@ -1,0 +1,4 @@
+// Vendored from https://github.com/martinopedal/alz-checklist-queries/blob/e7641beeda0126cc78825f8b77764c379552f3e1/queries/alz_all_queries.json
+// Source checklist ID: f2aad7e3-bb03-4adc-8606-4123d342a917
+// Vendored at: 2026-05-13T09:27:15+00:00
+resources | where type =~ 'microsoft.network/virtualnetworks' | mv-expand subnets=properties.subnets | where subnets.name =~ 'GatewaySubnet' | extend prefix=tostring(subnets.properties.addressPrefix) | extend prefixLen=toint(split(prefix, '/')[1]) | extend compliant = iff(prefixLen <= 27, true, false) | project id, name, resourceGroup, subscriptionId, checkItem='Gateway Subnet', currentValue=prefix, expectedValue='/27 or larger', compliant

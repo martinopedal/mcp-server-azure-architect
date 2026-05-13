@@ -1,0 +1,4 @@
+// Vendored from https://github.com/martinopedal/alz-checklist-queries/blob/e7641beeda0126cc78825f8b77764c379552f3e1/queries/alz_all_queries.json
+// Source checklist ID: 33aad5e8-c68e-41d7-9667-313b4f5664b5
+// Vendored at: 2026-05-13T09:27:15+00:00
+resources | where type =~ 'microsoft.network/virtualnetworks' | mv-expand addr=properties.addressSpace.addressPrefixes | extend prefix=tostring(addr) | extend prefixLen=toint(split(prefix, '/')[1]) | project id, name, resourceGroup, subscriptionId, checkItem='VNet Size', currentValue=prefix, expectedValue='Appropriately sized', compliant=iff(prefixLen >= 16, true, false)

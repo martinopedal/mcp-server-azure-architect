@@ -1,0 +1,4 @@
+// Vendored from https://github.com/martinopedal/alz-checklist-queries/blob/e7641beeda0126cc78825f8b77764c379552f3e1/queries/alz_all_queries.json
+// Source checklist ID: 4b69bad3-3aad-45e8-a68e-1d76667313b4
+// Vendored at: 2026-05-13T09:27:15+00:00
+authorizationresources | where type =~ 'microsoft.authorization/roleassignments' | extend principalType=tostring(properties.principalType) | summarize count() by principalType | project checkItem='RBAC Principal Types', principalType, currentValue=strcat(principalType, ': ', tostring(count_)), expectedValue='Group-based preferred', compliant=iff(principalType =~ 'Group', true, false)

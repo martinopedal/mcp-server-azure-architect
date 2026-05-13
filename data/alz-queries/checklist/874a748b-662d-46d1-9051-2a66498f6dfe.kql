@@ -1,0 +1,4 @@
+// Vendored from https://github.com/martinopedal/alz-checklist-queries/blob/e7641beeda0126cc78825f8b77764c379552f3e1/queries/alz_all_queries.json
+// Source checklist ID: 874a748b-662d-46d1-9051-2a66498f6dfe
+// Vendored at: 2026-05-13T09:27:15+00:00
+resources | where type has 'microsoft.eventgrid' and type has 'eventsubscriptions' | extend compliant = 1 | project name, id, type, compliant

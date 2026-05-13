@@ -1,0 +1,4 @@
+// Vendored from https://github.com/martinopedal/alz-checklist-queries/blob/e7641beeda0126cc78825f8b77764c379552f3e1/queries/alz_all_queries.json
+// Source checklist ID: 3c5a808d-c695-4c14-a63c-c7ab7a510e41
+// Vendored at: 2026-05-13T09:27:15+00:00
+policyresources | where type == 'microsoft.authorization/policyassignments' | extend displayName = tolower(tostring(properties.displayName)), definitionId = tolower(tostring(properties.policyDefinitionId)) | extend compliant = iff(displayName has 'public ip' or definitionId has 'publicip', 1, 0) | project name, id, compliant

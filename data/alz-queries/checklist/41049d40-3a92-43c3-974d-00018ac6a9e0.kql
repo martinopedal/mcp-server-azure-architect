@@ -1,0 +1,4 @@
+// Vendored from https://github.com/martinopedal/alz-checklist-queries/blob/e7641beeda0126cc78825f8b77764c379552f3e1/queries/alz_all_queries.json
+// Source checklist ID: 41049d40-3a92-43c3-974d-00018ac6a9e0
+// Vendored at: 2026-05-13T09:27:15+00:00
+resources | where type == 'microsoft.network/dnsresolvers' | extend compliant = 1 | project name, id, location, compliant

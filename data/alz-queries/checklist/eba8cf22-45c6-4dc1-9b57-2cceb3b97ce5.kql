@@ -1,0 +1,4 @@
+// Vendored from https://github.com/martinopedal/alz-checklist-queries/blob/e7641beeda0126cc78825f8b77764c379552f3e1/queries/alz_all_queries.json
+// Source checklist ID: eba8cf22-45c6-4dc1-9b57-2cceb3b97ce5
+// Vendored at: 2026-05-13T09:27:15+00:00
+resources | where type == 'microsoft.recoveryservices/vaults' | extend redundancy = coalesce(tostring(properties.redundancySettings.standardTierStorageRedundancy), tostring(properties.backupStorageConfig.storageModelType), tostring(properties.storageModelType)) | extend compliant = iff(redundancy in~ ('GeoRedundant','ZoneRedundant','LocallyRedundant','GRS','ZRS','LRS'), 1, 0) | project name, id, redundancy, compliant
