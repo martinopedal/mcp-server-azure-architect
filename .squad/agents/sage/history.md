@@ -339,6 +339,22 @@ Performed a comprehensive documentation gap audit for the v0.1 release. Cross-re
 
 Wave 2 complete: foundation (#22, #23, #26, #27, #33, #34) all on main. Decisions ledger consolidated. ADR-001 ratified. Next: ADR-002/003/004, branch protection (#20), threat model (#18), and v0.1 docs per Sage's gap audit.
 
+## 2026-05-13 - Audit Cleanup: Squad Label Scrub from User-Facing Docs
+
+**Task:** Remove internal `squad:*` label references from user-facing perf documentation (PR #119).
+
+**Scope:** `docs/perf/coldstart-investigation.md` had three instances of squad routing labels leaking into user-facing doc:
+1. Line 184: "assigned to Forge (squad:forge)" in text → removed squad reference
+2. Line 209: `**Labels:** `squad:forge`, `perf`, `cold-start`` → scrubbed to `**Labels:** `perf`, `cold-start``
+3. Line 232: `**Labels:** `squad:forge`, `perf`, `cold-start`` → scrubbed to `**Labels:** `perf`, `cold-start``
+
+**Deliverable:** PR #119 - Single-commit change with trailer per convention. Verified no other squad refs remain in file.
+
+**Rationale:** Martin's directive to audit internal workflow labels from public docs. ADRs remain historical (not touched per design decision). README.md and release.md handled separately by Burke.
+
+**Citation:** Martin Opedal directive via custom instructions.
+
+
 ---
 
 ## Learnings

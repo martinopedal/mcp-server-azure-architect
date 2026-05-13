@@ -98,3 +98,15 @@ Closed issue #101 by documenting the AKS-MCP mutation hazard as a worked example
 5. ✅ Validated markdown links (relative paths verified).
 
 PR created on branch `burke/101-aks-mcp-hazard`.
+
+## Session 6: Public-Surface Cleanup - Remove Squad Workflow Leakage (2026-05-13)
+
+Executed audit-driven cleanup of user-facing docs to remove Squad internal workflow references. Martin Opedal flagged that squad-specific language was leaking onto PyPI / MCP Registry public surfaces. Completed four targeted edits per audit findings:
+
+1. **README.md line 48 (Status section):** Dropped `squad` label mention and added link to [v0.2 roadmap](docs/planning/v0.2.md).
+2. **README.md lines 61-63:** Removed entire "## Squad" section (Squad is internal workflow documented in AGENTS.md for maintainers only, not user-facing).
+3. **README.md line 21 (What's in scope):** Fixed tool count from six to seven, adding `pricing_estimate_workload` (added in PR #87, Wave 8). Confirmed PR #87 commit history.
+4. **docs/release.md line 165 (Contact section):** Removed `squad:burke` label reference from release runbook.
+
+Validation: ruff lint passed (no Python touched, doc-only changes). Git workflow: created branch `chore/readme-public-surface`, committed with trailer, pushed, and opened PR #120. No AGENTS.md changes needed (already comprehensive for maintainers). All cleanup validated against audit findings. Decision: keep AGENTS.md Squad section as-is; it's authoritative for team internal workflow. User-facing surface now scrubbed.
+

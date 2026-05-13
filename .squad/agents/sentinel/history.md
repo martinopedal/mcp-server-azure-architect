@@ -372,3 +372,21 @@ Transitive deps are always Medium-High risk (not directly controlled). Mitigatio
 **Cross-agent alignment verified.** Atlas's ADR-002 vendoring policy aligns with threat model T1 (compromised vendored query). Burke's ADR-004 companion selection bar (criterion 6: read-only design) aligns with E1 threat (mutation method exposure). Forge's dependency tightening (PR #38) addresses T threat (compromised transitive deps). All enforcement layers (CI + convention + runtime) documented in ADR-003; layer 1 (CI gate) now assigned to Forge (issue #7, blocker for v0.1).
 
 **Supply chain risk discipline established.** Threat model supply chain section + Burke's companion pinning policy + Forge's dependency constraints create unified supply chain posture. Future companion candidates (issue #39: pricing tools) will be evaluated against both ADR-004 (companion bar) and threat model (supply chain risk level). Quarterly threat model reviews now standard (recommended 2026-08-12).
+
+## Audit Consolidation: Third-Party Notices (2026-05-13)
+
+**Completion:** Consolidated duplicate THIRD-PARTY-NOTICES files (PR #118).
+
+**Issue:** Two committed third-party-notices files with confusing duplicate naming:
+- `THIRD-PARTY-NOTICES.md` (hyphen) — vendored ALZ data licenses, ships in wheel.
+- `THIRD_PARTY_NOTICES.md` (underscore) — companion server attributions + MCP spec, does not ship.
+
+**Resolution:** Merged into the hyphen file with two clearly-scoped sections:
+- **Vendored content (bundled in wheel):** Full LICENSE text reproduced as required by licenses.
+- **Companion MCP servers (recommended via mcp-config.json, not bundled):** Summary attributions; full licenses live with upstream projects.
+
+Removed duplicate ALZ entries (they appeared in both files). Deleted underscore file to eliminate naming-convention duplication. pyproject.toml line 82 and README.md line 134 references verified — no changes needed.
+
+**Learning:** Naming consistency for multi-source attribution files prevents audit confusion. When vendored and companion content coexist, one consolidated file with clearly labeled sections is preferable to separate files by deployment scope (ships vs. recommended only).
+
+**Related:** PR #114 (vendored ALZ data), ADR-004 (companion server bar), threat model T1 (compromised vendored query).
