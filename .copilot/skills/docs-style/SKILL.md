@@ -81,9 +81,9 @@ Replace or remove (case-insensitive match):
 ```markdown
 # Getting started with the server
 
-The server exposes six native tools for Azure architects: alz_query_by_id, 
-alz_query_list, pricing_lookup_sku, pricing_compare_skus, alz_scorecard, 
-and health_check. Use it for named checklist queries and scorecard 
+The server exposes seven native tools for Azure architects: alz_query_by_id, 
+alz_query_list, pricing_lookup_sku, pricing_compare_skus, pricing_estimate_workload, 
+alz_scorecard, and health_check. Use it for named checklist queries and scorecard 
 composition. For raw Azure APIs (Resource Graph, Advisor, Monitor), use 
 azure-mcp directly.
 
