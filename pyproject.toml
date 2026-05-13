@@ -79,3 +79,4 @@ python_functions = ["test_*"]
 
 [tool.hatch.build.targets.wheel.force-include]
 "data/alz-queries" = "mcp_server_azure_architect/_data/alz-queries"
+"THIRD-PARTY-NOTICES.md" = "mcp_server_azure_architect/_THIRD-PARTY-NOTICES.md"
