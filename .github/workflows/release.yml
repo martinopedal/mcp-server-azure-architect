@@ -129,11 +129,22 @@ jobs:
       - name: Extract changelog for this version
         id: changelog
         run: |
-          VERSION="v${{ needs.verify-version.outputs.version }}"
-          # Extract changelog section for this version
-          awk "/^## \[$VERSION\]/,/^## \[/{if(/^## \[/ && !/^## \[$VERSION\]/)exit;if(!/^## \[$VERSION\]/)print}" CHANGELOG.md > release-notes.md
-          # Remove trailing newlines
+          VERSION="${{ needs.verify-version.outputs.version }}"
+          # Extract changelog body for this version (Keep a Changelog format: ## [X.Y.Z] - YYYY-MM-DD)
+          # Uses an explicit state machine instead of an awk range expression so the start/end heading
+          # match on the same line does not collapse the range to zero output.
+          awk -v version="$VERSION" '
+            !in_section && index($0, "## [" version "] - ") == 1 { in_section=1; next }
+            in_section && /^## \[/ { exit }
+            in_section { print }
+          ' CHANGELOG.md > release-notes.md
+          # Trim trailing blank lines
           sed -i -e :a -e '/^\s*$/d;N;ba' release-notes.md
+          # Fail loudly if extraction produced empty notes
+          if [ ! -s release-notes.md ]; then
+            echo "ERROR: No changelog content extracted for version $VERSION. Check CHANGELOG.md heading format." >&2
+            exit 1
+          fi
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@3bb12739c298aeb8a4eeaf626c5b8d85266b0e65  # v2
@@ -142,3 +153,34 @@ jobs:
           draft: false
           prerelease: false
           generate_release_notes: false
+
+  publish-mcp-registry:
+    name: Publish to MCP Registry
+    needs: [verify-version, publish-pypi]
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6
+
+      - name: Sync server.json version with git tag
+        run: |
+          VERSION="${{ needs.verify-version.outputs.version }}"
+          # Defensive: rewrite server.json so a stale repo entry cannot mismatch the tag.
+          jq --arg v "$VERSION" '.version = $v | .packages[0].version = $v' server.json > server.tmp
+          mv server.tmp server.json
+          cat server.json
+
+      - name: Install mcp-publisher CLI
+        run: |
+          curl -L "https://github.com/modelcontextprotocol/registry/releases/latest/download/mcp-publisher_$(uname -s | tr '[:upper:]' '[:lower:]')_$(uname -m | sed 's/x86_64/amd64/;s/aarch64/arm64/').tar.gz" \
+            | tar xz mcp-publisher
+          ./mcp-publisher --version || true
+
+      - name: Authenticate to MCP Registry via GitHub OIDC
+        run: ./mcp-publisher login github-oidc
+
+      - name: Publish to MCP Registry
+        run: ./mcp-publisher publish
