@@ -129,6 +129,10 @@ All tools are read-only by design. No Azure write operations are exposed.
 
 For more details on the runtime choice, see [docs/adr/0001-runtime-choice.md](docs/adr/0001-runtime-choice.md).
 
+## Third-party content
+
+Vendored content licenses are reproduced in [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md).
+
 ## License
 
 MIT.

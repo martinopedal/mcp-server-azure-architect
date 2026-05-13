@@ -6,6 +6,19 @@ Vendored at: 2026-05-12T21:52:10Z
 
 This snapshot is pinned to commit SHAs. No `main` or `latest` references are used for source content.
 
+## Refresh cadence
+
+Vendored snapshots are refreshed automatically on a **weekly cadence** (Monday 06:00 UTC) via `.github/workflows/refresh-alz-snapshot.yml`. The workflow:
+
+1. Fetches each upstream `commit_sha` listed in `manifest.json`.
+2. Runs `scripts/refresh_alz_snapshot.py` to extract queryable items.
+3. Recomputes SHA-256 integrity hashes per file.
+4. Opens a PR if any content changed.
+
+**Pinning to a snapshot:** Consumers who need reproducible builds should pin to a specific release tag (`pip install mcp-server-azure-architect==X.Y.Z`) rather than tracking `main`. Each release embeds the manifest snapshot active at release time.
+
+**Manual refresh:** Maintainers can trigger an out-of-band refresh by running `python scripts/refresh_alz_snapshot.py` locally and committing the result.
+
 ## Sources
 
 ### martinopedal/alz-checklist-queries
