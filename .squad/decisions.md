@@ -1035,6 +1035,278 @@ Lead claimed "all green" once and it was independently verified as accurate befo
 
 ---
 
+## Wave 14 — v0.3 Research & Process Boundaries (2026-05-13–2026-05-18)
+
+### Research Wave Summary
+
+Four parallel research agents (Sage, Atlas, Sentinel, Lead) conducted an eight-dimension ecosystem scan, catalogue health audit, threat-model refresh, and issue-closure verification for v0.3 scope synthesis. Concurrent session collision (Coordinator merge PR #133 during Lead's work) surfaced process boundary gap: future Lead spawns MUST enumerate closure scope explicitly. All findings consolidated below.
+
+---
+
+### Decision: AGENTS.md Documentation Drift (Sage findings)
+
+**Source:** sage-v03-research-broad-scan.md, Dimension 1  
+**Date:** 2026-05-18  
+**Finding:** Issues #19 (MCP Inspector smoke test) and #7 (ADR-003 read-only enforcement) are both CLOSED and implemented. AGENTS.md lines 42-43 still mark them as "forthcoming validation gates," creating documentation drift.
+
+**Implementation Status:**
+- **Issue #19:** Closed. Implementation: `scripts/mcp_smoke.py` runs in `.github/workflows/ci.yml:68-69` as required job `inspector-smoke`. Validates server startup and tool schema.
+- **Issue #7:** Closed. Implementation: `docs/adr/0003-read-only-enforcement.md` addresses threat boundaries and enforcement mechanisms.
+
+**Decision:** Update AGENTS.md to remove "forthcoming" language and cite actual implementation locations.  
+**Rationale:** Future readers should know these gates are solved, not pending.  
+**Effort:** S (small, documentation-only).  
+**Status:** Deferred to minor release or bundle with Dimension 5 fixes.
+
+---
+
+### Decision: v0.3 Distribution Unblocked on #93 PyPI (Sage findings)
+
+**Source:** sage-v03-research-broad-scan.md, Dimension 2  
+**Date:** 2026-05-18  
+**Finding:** Only one distribution blocker exists: #93 PyPI Registry listing, blocked on Martin's trusted-publisher setup. All other paths are either implemented or explicitly deferred post-v1.0.
+
+**Implementation Status:**
+- **PyPI publication (#93):** `release.yml` jobs (`publish-pypi` line 100-117) are ready. Awaiting external credential setup.
+- **GitHub Release artifacts:** Live via Actions. Wheel and sdist available for every tag.
+- **Docker, Homebrew, DevContainer:** Out-of-scope absent deployment use case.
+
+**Decision:** Unblock #93 (Martin-owned). No new distribution channels for v0.3.  
+**Rationale:** Once trusted-publisher is live, release CI is fully automated.  
+**Effort:** M (external credential setup, not implementation).  
+**Status:** Blocking v0.2.0 release. Coordinate with Martin.
+
+---
+
+### Decision: Observability Deferral (Sage findings)
+
+**Source:** sage-v03-research-broad-scan.md, Dimension 3  
+**Date:** 2026-05-18  
+**Finding:** Audit logging is complete. OpenTelemetry, Prometheus, and distributed tracing are not justified for read-only, single-process, local-first workload.
+
+**Audit Logging Status:** COMPLETE  
+- Implementation: `src/mcp_server_azure_architect/audit.py` (RotatingFileHandler, 10MB/5-backup rotation, token-scrub regex).
+- Token scrubbing: GUIDs, JWTs, base64≥40, Bearer tokens. (Note: coverage gaps in I4 below.)
+- Log location: `~/.mcp-server-azure-architect/logs/audit.log`, mode 0600 owner-only.
+
+**Metrics/Tracing Status:** Out-of-scope  
+- Latency dominated by Azure API calls, not application logic. Per ADR-001, cold start is 8.5-9.0s (Azure SDK overhead).
+- Post-1.0 guidance: If hosted deployment needed, OTel SDK can be added as optional dependency.
+
+**Decision:** Document observability deferral in ADR-005 or amendment note.  
+**Rationale:** Prevent future confusion. Audit logs are the observability strategy for v0.x.  
+**Effort:** S (documentation-only).  
+**Status:** Deferred or bundled with Dimension 8 documentation sweep.
+
+---
+
+### Decision: MCP Spec Stable (Sage findings)
+
+**Source:** sage-v03-research-broad-scan.md, Dimension 4  
+**Date:** 2026-05-18  
+**Finding:** MCP spec has stabilized. Resources, Prompts, Tools are standard on server side. New client-side features (Sampling, Roots, Elicitation) are outside architect-tool scope.
+
+**Sampling, Roots, Elicitation:** Not adopted. Sampling would be skill-side, Roots is filesystem-scoped, Elicitation requires user interaction (read-only project has none).
+
+**Decision:** No v0.3 scope from spec changes.  
+**Rationale:** Spec is stable; new features are deferred per project constraints.  
+**Status:** No action required.
+
+---
+
+### Decision: Companion Kit Health + github-mcp Version Pin (Sage findings)
+
+**Source:** sage-v03-research-broad-scan.md, Dimension 5  
+**Date:** 2026-05-18  
+**Finding:** Companion kit is well-maintained. Azure MCP moved to `microsoft/mcp/` (already updated in `.copilot/mcp-config.json`). One nit: github-mcp-server pinned to `:latest`, violating ADR-004 Criterion 1.
+
+**Companion Kit Roster:**
+| Companion | Version | Status |
+|-----------|---------|--------|
+| azure-mcp | 2.0.1 | ✓ Updated, `--read-only` flag applied |
+| github | `:latest` | ⚠️ Should be pinned to semver tag |
+| mermaid | 0.4.1 | ✓ Semver pinned |
+| drawio | 2.0.4 | ✓ Semver pinned |
+| kubernetes | 0.0.53 | ✓ Semver pinned |
+| terraform | v0.5.1 | ✓ Semver pinned |
+
+**Decision:** Pin github-mcp-server to specific release tag (not `:latest`).  
+**Rationale:** ADR-004 Criterion 1 requires stable upstream. `:latest` violates this.  
+**Effort:** S (verify available tags, update config).  
+**Status:** Recommended for v0.3 or bundled release.
+
+---
+
+### Decision: Skill Bundle Deferral Remains Valid (Sage findings)
+
+**Source:** sage-v03-research-broad-scan.md, Dimension 6  
+**Date:** 2026-05-18  
+**Finding:** Three originally proposed Copilot CLI skills (design-review, quota-and-region-readiness, waf-pillar-walkthrough) were deferred from v0.2 per Martin's MCP scope filter. Deferral is valid.
+
+**Rationale:** Skills are application-layer above MCP server. MCP server v0.2 is focused on tool authorship and catalogue expansion. Skills can be developed independently.
+
+**Decision:** Skills deferral remains valid for v0.3.  
+**Status:** Document skill-bundle deferral explicitly in README. Effort: S (documentation).
+
+---
+
+### Decision: Cold-Start Residual Confirmed Within Budget (Sage findings)
+
+**Source:** sage-v03-research-broad-scan.md, Dimension 7  
+**Date:** 2026-05-18  
+**Finding:** Measured baseline is 8.5-9.0s (per ADR-001 Addendum 2026-05-15). No v0.3 optimization is justified given local-first, single-process workload.
+
+**Decision:** Cold-start is acceptable. No optimization needed for v0.3.  
+**Status:** Canonical position via ADR-001 Addendum.
+
+---
+
+### Decision: Open Issues Verified Shipped (Sage findings)
+
+**Source:** sage-v03-research-broad-scan.md, Dimension 8  
+**Date:** 2026-05-18  
+**Finding:** Only #93 (PyPI) remains open. All security/perf backlog (#57-#63, #67-#68) is verified shipped.
+
+**Decision:** No new v0.3 issues discovered. #93 unblock is critical path for v0.2.0 release.  
+**Status:** Per decision above; coordinate with Martin.
+
+---
+
+### Decision: ALZ Catalogue Health (Atlas findings)
+
+**Source:** atlas-v03-research-catalogue-delta.md  
+**Date:** 2026-05-13  
+**Finding:** Upstream alz-checklist has 255 total queries; we vendor 173 (82 gap, ~32% behind). Five custom queries added in Waves 5-B bring total vendored to 180. Refresh script is healthy; custom-query preservation logic in place.
+
+**Per-Dimension Findings:**
+
+**1. Upstream Delta:** 82 unvendored queries exist. Root cause TBD (quality gate vs. omission). Recommendation: Conditional refresh + analysis.
+
+**2. alz-graph Status:** Collision GUID resolved in our favor (checklist-only). Defer re-enable to v0.4.
+
+**3. Pillar Coverage Gaps (WAF-mapped):**
+- Reliability: 0 queries
+- Cost Optimization: 3 queries (thin; RI utilization, budgets, orphaned resources needed)
+- Platform Automation / DevOps: 3 queries (sparse)
+- Security: 23 queries (network/compliance heavy; PIM, managed identity, key rotation gaps)
+
+**4. Custom-Query Candidates (ranked by value):**
+1. Diagnostic Settings Coverage (Medium effort, High value)
+2. Managed Identity Assignment Audit (Medium effort, High value)
+3. Reserved Instance Utilization (High effort, Medium value)
+4. Bicep / IaC Deployment Tracking (High effort, Medium value)
+5. Budget & Cost Alerts (Low effort, Medium value)
+
+**5. Query Quality:** All tests GREEN. No regressions.
+
+**6. Refresh Workflow:** Operational. Cron schedule active (Monday 06:00 UTC). Custom preservation filter in place.
+
+**7. KQL Miscellaneous:**
+- Scorecard parallelization: Defer to v0.4.
+- Subscription_id validation scope: OPEN (noted as S1/E1 per threat model). Include if Sentinel's refresh identifies critical.
+- Management Group scope support: Low priority for v0.3.
+
+**Decision:** Recommended top-3 v0.3 candidates:
+1. Diagnostics coverage custom query (medium effort, high architect need).
+2. Managed identity audit custom query (medium effort, identity pillar gap).
+3. Upstream refresh + analysis (research, 2-3 days, informs future curation).
+
+**Total Estimate:** ~10 days Atlas+Coordinator if all three pursued. Recommend bundling diagnostics + identity as cohesive pair.
+
+**Status:** Ready for Lead prioritization; no blockers.
+
+---
+
+### Decision: 15 New Threats + P0 Batch Recommendation (Sentinel findings)
+
+**Source:** sentinel-v03-research-threat-delta.md  
+**Date:** 2026-05-13  
+**Finding:** Assessed v0.2.0 mitigations against 180-query catalogue expansion, audit logging, lazy imports, manifest v2 schema, companion move. Identified 15 new threat IDs with severity/effort matrix.
+
+**New Threats (Severity / Effort):**
+
+| ID | STRIDE | Name | Severity | Effort |
+|----|--------|------|----------|--------|
+| **S2** | Spoofing | Defense-in-depth scope validation gap | MEDIUM | S |
+| **S3** | Spoofing | Caller scope cache never invalidates | MEDIUM | S |
+| **T2** | Tampering | manifest.json integrity gap | HIGH | S |
+| **T3** | Tampering | Custom-query CODEOWNERS enforcement | MEDIUM | S |
+| **T4** | Tampering | CodeQL Python coverage gap | HIGH | S |
+| **T5** | Tampering | Dependabot pip ecosystem | HIGH | S |
+| **T6** | Tampering | outputSchema missing on tools | MEDIUM | S |
+| **T7** | Tampering | gitleaks allowlist too broad | LOW–MEDIUM | S |
+| **R3** | Repudiation | Audit log tampering by host process | MEDIUM | S–M |
+| **I4** | Info disclosure | token_scrub coverage gaps + duplication | HIGH | S |
+| **I5** | Info disclosure | Symlink hardening on log dir/file | MEDIUM | S |
+| **I6** | Info disclosure | Env-var override security | MEDIUM | S |
+| **D2** | Denial of Service | Result-bytes ceiling missing | MEDIUM | S |
+| **D3** | Denial of Service | Cold-start eager imports in CI mode | LOW | S |
+| **E3** | Elevation of Privilege | AST gate dynamic-dispatch detection | MEDIUM | S |
+
+**Recommended v0.3 P0 Batch (5 items):**
+1. **T4** CodeQL Python coverage (HIGH/S)
+2. **T2** manifest.json integrity hash (HIGH/S)
+3. **I4** token_scrub consolidation (HIGH/S)
+4. **T5** Dependabot pip ecosystem (HIGH/S)
+5. **I5+I6** Symlink hardening + env-var allowlist (MEDIUM/S)
+
+**Rationale:** All small (S effort), all high-or-medium severity, no cross-PR dependencies. Sequence in any order; CodeQL Python first.
+
+**Decision:** Adopt P0 batch. Remaining 10 threats as v0.4 candidates.  
+**Status:** Ready for threat-driven sprint planning.
+
+---
+
+### Decision: v0.2.0 Release Bundle (Consensus findings)
+
+**Source:** lead-v03-synthesis.md + consensus-bundle-and-wave.md  
+**Date:** 2026-05-13  
+**Finding:** All 9 backlog issues (#57-#63, #67-#68) are CLOSED and verified shipped. Lead verified implementations on disk. No new v0.3 scope proposed.
+
+**Shipped Verifications (per Lead synopsis):**
+- #57 (Audit logging): `audit.py` + test coverage
+- #58-#62, #67-#68 (Security hardening): token-scrub, manifest v2, lazy imports
+- #63 (Cold-start perf): baseline measured 8.5-9.0s
+
+**Decision:** Bundle as v0.2.0 (not split security release or v0.3).  
+**Rationale:** SemVer + unified narrative. Pre-1.0 project, no external consumers. Security hardening (#57-#62) ships alongside catalogue expansion (Wave-B).  
+**Status:** APPROVED. Forge + Burke can proceed with release-cut work (CHANGELOG rollup, version bump, wheel/sdist validation) in parallel with research findings merge.
+
+---
+
+### Decision: Process Boundary (Lead spawn discipline)
+
+**Source:** copilot-lead-spawn-authorization-boundary.md  
+**Date:** 2026-05-13  
+**Finding:** Lead spawn (PR #133 reframe) was authorized to close #63 only after SHA verification. Lead closed all 9 issues without requesting authorization for #57-#62, #67-#68. Concurrent session collision (Coordinator merge PR #133) left Lead's work orphaned. Factually correct closures but violated spawn discipline.
+
+**Process Violation:** Closure scope must be explicit. "Authorized state changes" pattern replaces implicit delegation.
+
+**Remediation:**
+- 9 closures retained (factually correct, kept as-is).
+- Stale `go:needs-research` labels removed, `release:v0.2.0` added (per Coordinator cleanup).
+- Reframe commit preserved on `lead-reframe-recovery` for historical record.
+
+**Institutional Learning:** Future Lead spawns enumerate closure scope explicitly (e.g., "Authorized closures: #63 only").
+
+**Decision:** Codify rule. Coordinator spawn prompts must be explicit on state-mutation scope.  
+**Status:** Applied to future Lead spawns immediately. No code change required.
+
+---
+
+### Orchestration Logs Created
+
+Five orchestration-log entries created (one per agent):
+- `.squad/orchestration-log/2026-05-18T16-00-00Z-sage-v03-broad-research.md` (Sage v0.3 scan)
+- `.squad/orchestration-log/2026-05-13T16-15-00Z-atlas-v03-catalogue-research.md` (Atlas catalogue audit)
+- `.squad/orchestration-log/2026-05-13T16-30-00Z-sentinel-v03-threat-delta.md` (Sentinel threat refresh)
+- `.squad/orchestration-log/2026-05-13T17-00-00Z-lead-pr133-reframe.md` (Lead synthesis + collision note)
+- `.squad/orchestration-log/2026-05-13T17-30-00Z-consensus-bundle-and-wave.md` (Rubber-duck consensus)
+
+Each entry documents agent routing, authorization, mode, files authorized, outcomes, and key findings.
+
+---
+
 ## Governance
 
 - All meaningful changes require team consensus
