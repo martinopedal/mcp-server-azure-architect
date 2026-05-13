@@ -7,12 +7,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Documentation
-
-- **v0.2 release verification and v0.3 research kickoff** (`docs/planning/v0.3.md`). Verified all 9 proposed security/perf backlog items (#57-#63, #67, #68) shipped on disk and reassigned them to v0.2.0 release. Documents the verified implementation inventory and kicks off the v0.3 research wave (Sage broad scan, Atlas catalogue delta, Sentinel threat delta) whose outputs will define v0.3 scope.
-
-- **Reconciled cold-start documentation drift** across ADR-001, runbook, and README to match the 2026-05-15 ADR-001 update (measured 8.5-9.0s baseline, 10s hard regression gate). Removed incorrect "under 2000ms" claim from runbook.md (no source). Updated ADR-001 Principle 6 and decision matrix row to reference canonical Addendum section. Added baseline number to README constraint for clarity.
-
 ### Added
 
 - **Custom governance queries for diagnostics coverage and tag audit** (Closes #100). Two custom queries authored for Management and Resource Organization pillars: (1) `diagnostics_coverage` (8003d59b-f2fc-46c9-b387-d9a889ec491a) reports diagnostic settings coverage by resource type to identify monitoring gaps (category: Management, severity: Medium, tags: diagnostics/monitoring/coverage). (2) `tag_audit` (b8bb32c6-18b1-4563-9435-6cf9b8b24b54) audits required tags (Environment, Owner, CostCenter) to identify tagging compliance gaps (category: Resource Organization, severity: Medium, tags: governance/tagging/compliance). Both queries follow ADR-006 custom-query provenance pattern. Custom query count: 7 (5 IAM from #99 + 2 governance from #100).
@@ -21,13 +15,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Manifest v2 schema with rich per-query metadata** (Closes #125, ADR-006). Each query now includes `text`, `category`, `subcategory`, `severity`, `queryable`, optional `scope_hint`, `tags`, `waf`, `upstream_reason`. Enables filterable catalogue navigation at scale (Wave B prerequisite for #96, #99, #100 bulk vendor). Manifest v2 loader is metadata-only at index-build time (lazy-loads KQL bodies on first `get_query()` call), reducing cold-start overhead for 132+ query catalogue.
 - **`list_queries()` filter parameters:** `category`, `severity`, `queryable_only`. Enables discovery workflows ("show me High-severity Security items"). Returns rich metadata per query.
 - **Reserved `data/alz-queries/custom/` slot** for non-upstream Atlas-authored queries (populated by #99 and #100). ADR-006 defines custom-query provenance pattern (empty-string `source_commit`, citation to issue and ADR).
+- Native MCP tool `pricing_estimate_workload` for structured workload cost estimation. Composes `pricing_lookup_sku` results into a multi-line estimate with VM count, region, hours per month, and storage. Returns total monthly cost (Decimal), currency, line items, assumptions, and warnings. Designed for sizing trade-off analysis and to feed `alz_scorecard` cost guardrail. Retail prices only (no EA/CSP). (#44)
+- **Tool docstring style guide** (`docs/dev/tool-docstring-style.md`). Pattern extracted from 5 working MCP tools. Covers required structure (summary, description, Args, Returns, Raises, Examples), parameter conventions (optionality, defaults, Literal types), common pitfalls, and test patterns. Google-style docstrings normalized across the project.
+- Native MCP tool `alz_query_list` for enumerating vendored ALZ checklist queries with optional filters (pillar, source_repo). Returns metadata (checklist_id, pillar, source_repo, citation) for up to 200 queries per call. Pairs with `alz_query_by_id` for discovery-then-fetch workflow. (#51)
+- Cold-start canary test for azure.identity lazy import (regression guard for #67).
+- Cold-start canary test documenting httpx as FastMCP-owned dependency (addresses #68).
 
 ### Changed
 
 - **BREAKING (pre-1.0 minor bump per ADR-005):** `QueryRecord` shape extended with manifest v2 fields (`text`, `category`, `subcategory`, `severity`, `queryable`, optional `scope_hint`, `tags`, `waf`, `upstream_reason`). `alz_query_by_id` and `alz_query_list` response shapes grew additive metadata. Existing field names and types preserved. Consumers not expecting new fields ignore them.
 - **BREAKING (pre-1.0 minor bump per ADR-005):** `source` field values changed from `checklist` / `graph` to `vendored-checklist` / `vendored-graph` / `custom`. Backward compatibility: loader accepts legacy values and maps to new enum. Callers filtering by source must update filter strings.
+- **BREAKING (pre-1.0): `pillar` field renamed to `source` across MCP tool surface.** Affects `alz_query_list` (param + response items + filters_applied), `alz_scorecard` (param + per-result + aggregate `by_source` replacing `by_pillar`), and `alz_query_by_id` (response `source` field). The semantic was always "source dataset" (vendored from `data/alz-queries/checklist/` or `data/alz-queries/graph/`), not a WAF pillar. Consumers calling `alz_query_list(pillar="checklist")` must update to `source="checklist"`. No alias. Pre-1.0 we cut clean. (Closes #94)
 - **Manifest schema version:** `manifest.json` now includes `schema_version: 2` at top level. Loader validates schema version ≥2 and raises clear error with remediation hint if v1 manifest detected.
 - **`list_queries()` title field:** Populated from `text` (or `subcategory` if `text` empty). Was empty string in manifest v1.
+- **Documentation style**: second-pass cleanup of banned punctuation, wrong glyph status indicators (replaced with the project-approved set, plus a text fallback for "pending"), AI-slop language in ADRs, and voice profile consistency. Scope: README, CHANGELOG, docs/ and ADRs. Exempt: .squad/, .copilot/skills/, vendored data, code. See `.copilot/skills/docs-style/SKILL.md` for the full ruleset.
+- **Performance**: Lazy-imported `azure.identity` in `azure_client.get_credential()` to reduce cold-start overhead by 157ms (7.7% faster). See `docs/perf/lazy-import-results.md` for measurements. (Closes #67)
+- ADR-001 revised baseline expectations: measured cold start is 8.5-9.0 seconds on Python 3.12-3.14 (dominated by irreducible FastMCP framework overhead). See `docs/perf/coldstart-investigation.md` for detailed analysis.
 
 ### Fixed
 
@@ -37,11 +40,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Merged-catalogue detection** (Closes #125). If upstream `metadata.merged: true`, refresh script treats two repos as one merged catalogue and vendors from checklist source only (per ADR-002 primacy). Prevents double-vendor and guid collisions.
 - **Non-queryable query filtering** (Closes #125). Refresh script skips queries where `queryable: false`. Logs count of skipped items. Vendored snapshot contains only executable queries per ADR-002.
 - **Removed non-queryable query** `e8aa1e41-870d-4968-94c6-77be14f510ac` (should not have been vendored per ADR-002). Manifest v2 conversion corrected this oversight.
-
-### Repository Infrastructure
-
-- **ADR-006: ALZ Query Metadata Schema and Custom Provenance** (Accepted 2026-05-16, Atlas). Documents manifest v2 design decisions, custom-query provenance pattern, lazy-loading rationale, and supersedes ADR-002 for metadata schema (vendoring storage policy still authoritative).
-- **Reserved `data/alz-queries/custom/.gitkeep`** slot for #99 and #100 custom query authoring. Empty in this release.
+- **Readonly-check workflow now runs on all PRs.** Removed `paths:` filter from `.github/workflows/readonly-check.yml` to fix doc-only PR blocking issue. The workflow always runs on every PR + push; it is a fast check (~30s) and correctly reports "no violations" for doc-only changes. This unblocks doc-only PRs while preserving the read-only enforcement gate as a required status check.
 
 ### Security
 
@@ -50,35 +49,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Pagination and timeouts on query tools** (#62, D1). `alz_scorecard` accepts `page_size` (default 1000, max 5000) and `page_token`; results expose `next_page_token`. All Azure Resource Graph queries time out after 60 seconds with actionable error. Pricing httpx timeout aligned to 60s. Defends against denial-of-service via large query results.
 - **Audit logging for all MCP tool invocations** with rotating file handler (10MB max, 5 backups). Logs timestamp, tool name, redacted parameters, and result summaries. Sensitive values (subscription IDs, tenant IDs, API keys, tokens) are automatically redacted. Default location: `~/.mcp-server-azure-architect/logs/audit.log`. Overrideable via `MCP_AZURE_ARCHITECT_LOG_DIR` environment variable. (Closes #58)
 - **Secure log file permissions** (0600 owner read/write only) and log directory permissions (0700 owner only) to prevent information disclosure. Cross-platform implementation with POSIX `chmod` and Windows `icacls` ACL enforcement. (Closes #61)
-
-### Added
-
-- Native MCP tool `pricing_estimate_workload` for structured workload cost estimation. Composes `pricing_lookup_sku` results into a multi-line estimate with VM count, region, hours per month, and storage. Returns total monthly cost (Decimal), currency, line items, assumptions, and warnings. Designed for sizing trade-off analysis and to feed `alz_scorecard` cost guardrail. Retail prices only (no EA/CSP). (#44)
-- **Tool docstring style guide** (`docs/dev/tool-docstring-style.md`). Pattern extracted from 5 working MCP tools. Covers required structure (summary, description, Args, Returns, Raises, Examples), parameter conventions (optionality, defaults, Literal types), common pitfalls, and test patterns. Google-style docstrings normalized across the project.
-- Native MCP tool `alz_query_list` for enumerating vendored ALZ checklist queries with optional filters (pillar, source_repo). Returns metadata (checklist_id, pillar, source_repo, citation) for up to 200 queries per call. Pairs with `alz_query_by_id` for discovery-then-fetch workflow. (#51)
-- Cold-start canary test for azure.identity lazy import (regression guard for #67).
-- Cold-start canary test documenting httpx as FastMCP-owned dependency (addresses #68).
-
-### Changed
-
-- **BREAKING (pre-1.0): `pillar` field renamed to `source` across MCP tool surface.** Affects `alz_query_list` (param + response items + filters_applied), `alz_scorecard` (param + per-result + aggregate `by_source` replacing `by_pillar`), and `alz_query_by_id` (response `source` field). The semantic was always "source dataset" (vendored from `data/alz-queries/checklist/` or `data/alz-queries/graph/`), not a WAF pillar. Consumers calling `alz_query_list(pillar="checklist")` must update to `source="checklist"`. No alias. Pre-1.0 we cut clean. (Closes #94)
-- **Documentation style**: second-pass cleanup of banned punctuation, wrong glyph status indicators (replaced with the project-approved set, plus a text fallback for "pending"), AI-slop language in ADRs, and voice profile consistency. Scope: README, CHANGELOG, docs/ and ADRs. Exempt: .squad/, .copilot/skills/, vendored data, code. See `.copilot/skills/docs-style/SKILL.md` for the full ruleset.
-- **Performance**: Lazy-imported `azure.identity` in `azure_client.get_credential()` to reduce cold-start overhead by 157ms (7.7% faster). See `docs/perf/lazy-import-results.md` for measurements. (Closes #67)
-- ADR-001 revised baseline expectations: measured cold start is 8.5-9.0 seconds on Python 3.12-3.14 (dominated by irreducible FastMCP framework overhead). See `docs/perf/coldstart-investigation.md` for detailed analysis.
-
-### Fixed
-
-- **Readonly-check workflow now runs on all PRs.** Removed `paths:` filter from `.github/workflows/readonly-check.yml` to fix doc-only PR blocking issue. The workflow always runs on every PR + push; it is a fast check (~30s) and correctly reports "no violations" for doc-only changes. This unblocks doc-only PRs while preserving the read-only enforcement gate as a required status check.
-
-### Automation
-
-- **CI now enforces ruff format consistency.** New required check `ruff format --check .` runs on every PR after the lint step. Prevents format drift. Ruff version pinned to `0.15.12` in `pyproject.toml` to ensure reproducible formatting across local and CI environments. (Closes #117)
-- Added breaking-change detector for ALZ refresh PRs (closes #102). Use `breaking-change-approved` label to override.
+- Sensitive-data warnings added to `alz_scorecard`, `alz_query_by_id`, and `alz_query_list` tool docstrings warning users that results may contain sensitive data and should not be logged, shared, or persisted without review per organizational data handling policy. (#60)
+- **Gitleaks allowlist tightened.** Added `tests/.*` and `data/alz-queries/manifest.json` to the global path allowlist. Test fixtures legitimately contain mock JWT and API key strings to exercise the `token_scrub()` redaction logic, and the ALZ query manifest contains 64-character hex SHA-256 hashes that the default `azure-tenant-or-subscription-id-in-non-doc` rule misclassified as Azure GUIDs. Both paths are non-shipping artifacts and are correctly excluded from secret scanning.
 
 ### Documentation
 
+- **v0.2 release verification and v0.3 research kickoff** (`docs/planning/v0.3.md`). Verified all 9 proposed security/perf backlog items (#57-#63, #67, #68) shipped on disk and reassigned them to v0.2.0 release. Documents the verified implementation inventory and kicks off the v0.3 research wave (Sage broad scan, Atlas catalogue delta, Sentinel threat delta) whose outputs will define v0.3 scope.
+- **Reconciled cold-start documentation drift** across ADR-001, runbook, and README to match the 2026-05-15 ADR-001 update (measured 8.5-9.0s baseline, 10s hard regression gate). Removed incorrect "under 2000ms" claim from runbook.md (no source). Updated ADR-001 Principle 6 and decision matrix row to reference canonical Addendum section. Added baseline number to README constraint for clarity.
 - `docs/install/deployment-guide.md` - Audit logging configuration guide with log rotation settings, sensitive data redaction policies, immutable log storage upgrade paths (syslog, Azure Monitor), and cross-platform permission enforcement details
-
 - `docs/companions/` - Supply chain audit notes for all 7 companion MCP servers in the curated kit
 - `docs/perf/coldstart-investigation.md` - Cold-start profiling report with import graph analysis and lazy-import recommendations
 - `docs/perf/lazy-import-results.md` - Before/after measurements and analysis for lazy-import refactors
@@ -90,26 +68,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - README.md: Removed inaccurate cold-start claim. Replaced with link to `docs/perf/coldstart-investigation.md` for measured baseline (8.5-9.0s on Python 3.12-3.14, dominated by FastMCP framework overhead). Fixes discrepancy between README claim and ADR-001 planning estimate.
 - `.copilot/skills/docs-style/SKILL.md`: Fixed tool count drift. Updated from "six native tools" to "seven native tools" and added `pricing_estimate_workload` to the list (added in PR #87).
 
-### Security
-
-- Sensitive-data warnings added to `alz_scorecard`, `alz_query_by_id`, and `alz_query_list` tool docstrings warning users that results may contain sensitive data and should not be logged, shared, or persisted without review per organizational data handling policy. (#60)
-
-### Automation
-
-- **ALZ snapshot refresh automation:** Weekly scheduled GitHub Actions workflow to detect upstream drift in `martinopedal/alz-checklist-queries` and `martinopedal/alz-graph-queries`, automatically opening PRs with updated manifests when changes detected. See `.github/workflows/refresh-alz-snapshot.yml` and `scripts/refresh_alz_snapshot.py`.
-
-### Security
-
-- **Gitleaks allowlist tightened.** Added `tests/.*` and `data/alz-queries/manifest.json` to the global path allowlist. Test fixtures legitimately contain mock JWT and API key strings to exercise the `token_scrub()` redaction logic, and the ALZ query manifest contains 64-character hex SHA-256 hashes that the default `azure-tenant-or-subscription-id-in-non-doc` rule misclassified as Azure GUIDs. Both paths are non-shipping artifacts and are correctly excluded from secret scanning.
-
 ### Repository Infrastructure
 
+- **ADR-006: ALZ Query Metadata Schema and Custom Provenance** (Accepted 2026-05-16, Atlas). Documents manifest v2 design decisions, custom-query provenance pattern, lazy-loading rationale, and supersedes ADR-002 for metadata schema (vendoring storage policy still authoritative).
+- **Reserved `data/alz-queries/custom/.gitkeep`** slot for #99 and #100 custom query authoring. Empty in this release.
 - GitHub issue and PR templates with squad routing:
   - `.github/ISSUE_TEMPLATE/bug-report.md` - Bug report template with environment, pre-checks, credential scrubbing reminder
   - `.github/ISSUE_TEMPLATE/feature-request.md` - Feature request template with proposed surface, ADR-004 justification, acceptance criteria
   - `.github/ISSUE_TEMPLATE/security-finding.md` - Security finding template with threat, impact, evidence, mitigation, and disclosure policy reminder
   - `.github/ISSUE_TEMPLATE/config.yml` - GitHub issue template configuration: disables blank issues, adds security and squad routing contact links
   - `.github/pull_request_template.md` - PR template with validation gates (pytest, ruff, mypy, check_readonly.py, mcp_smoke.py, CHANGELOG.md)
+
+### Automation
+
+- **CI now enforces ruff format consistency.** New required check `ruff format --check .` runs on every PR after the lint step. Prevents format drift. Ruff version pinned to `0.15.12` in `pyproject.toml` to ensure reproducible formatting across local and CI environments. (Closes #117)
+- Added breaking-change detector for ALZ refresh PRs (closes #102). Use `breaking-change-approved` label to override.
+- **ALZ snapshot refresh automation:** Weekly scheduled GitHub Actions workflow to detect upstream drift in `martinopedal/alz-checklist-queries` and `martinopedal/alz-graph-queries`, automatically opening PRs with updated manifests when changes detected. See `.github/workflows/refresh-alz-snapshot.yml` and `scripts/refresh_alz_snapshot.py`.
 
 ## [0.1.0] - 2026-05-15
 
