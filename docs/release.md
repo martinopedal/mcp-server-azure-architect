@@ -162,4 +162,4 @@ Do **not** delete the Git tag or force-push. Tags are immutable once published t
 
 ## Contact
 
-For release process questions, ping @martinopedal or open an issue with the `squad:burke` label.
+For release process questions, ping @martinopedal or open an issue.

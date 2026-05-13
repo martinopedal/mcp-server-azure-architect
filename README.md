@@ -18,7 +18,7 @@ This server is **not a router or aggregator**. MCP clients already aggregate. We
 
 ## What's in scope
 
-- A small MCP server exposing six native tools: `health_check`, `alz_query_by_id`, `alz_query_list`, `pricing_lookup_sku`, `pricing_compare_skus`, and `alz_scorecard`.
+- A small MCP server exposing seven native tools: `health_check`, `alz_query_by_id`, `alz_query_list`, `pricing_lookup_sku`, `pricing_compare_skus`, `pricing_estimate_workload`, and `alz_scorecard`.
 - Copilot CLI skills: `design-review`, `alz-gap-check`, `ingress-migration-plan`, `policy-as-code-suggest`.
 - A curated `mcp-config.json` for Copilot CLI, Claude Desktop, Cursor, and VS Code Copilot.
 - Read-only by default, end to end.
@@ -45,7 +45,7 @@ The default `mcp-config.json` shipped with this repo wires these up. Edit before
 
 ## Status
 
-Pre-alpha. Backlog tracked as GitHub issues with the `squad` label. Runtime ratified per ADR-001 (Python + FastMCP).
+Pre-alpha. Backlog tracked as GitHub issues. See the [v0.2 roadmap](docs/planning/v0.2.md) for upcoming work. Runtime ratified per ADR-001 (Python + FastMCP).
 
 ## Stack
 
@@ -57,10 +57,6 @@ Constraints:
 - Read-only Azure SDK calls only. DefaultAzureCredential exclusively.
 - Zero credentials at rest. Token-scrub on any logging.
 - ALZ checklist queries source from the public `martinopedal/alz-checklist-queries` and `martinopedal/alz-graph-queries` repos (vendored snapshot, pinned by upstream commit SHA).
-
-## Squad
-
-Multi-agent dev via [Squad by Brady Gaster](https://github.com/bradygaster/squad). Team in `.squad/team.md`. Routing in `.squad/routing.md`. Open `squad`-labeled issues are the live backlog.
 
 ## Quickstart
 
