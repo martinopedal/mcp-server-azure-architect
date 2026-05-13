@@ -963,6 +963,13 @@ Queries (both read-only ARG, categories Cost Optimization / Governance):
 
 **Related:** ADR-006, Issues #96 / #100 / #125 / #127, PR #128 (prerequisite), PR #129
 
+**Post-merge review (Atlas, sync, 2026-05-13):** APPROVE WITH NITS. No critical or major findings. Three optional nits flagged:
+1. `data/alz-queries/custom/b8bb32c6-18b1-4563-9435-6cf9b8b24b54.kql` line 12 - comment "Default required tags" implies more authority than intended; suggest "Example required tags" or "Common ALZ tags".
+2. `data/alz-queries/manifest.json` line 3341 - subcategory `"Naming and tagging"` (lowercase 't') should be verified against upstream ALZ checklist for capitalization consistency.
+3. `data/alz-queries/MANIFEST.md` line 26 - `checklist_ids` line wraps poorly with all 7 GUIDs comma-separated; consider line breaks or note that auto-generated formatting is intentional.
+
+KQL queries are production-ready (standard ARG patterns), ADR-006 compliance is full, refresh-script preservation logic is verified by regression test. Nits are documentation-only future improvements, not regressions. Nine of nine CI checks were green pre-merge. Atlas confidence: high.
+
 ---
 
 ## Governance
