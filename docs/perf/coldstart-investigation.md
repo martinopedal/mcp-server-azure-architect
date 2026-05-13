@@ -181,7 +181,7 @@ The ADR-001 baseline expectations should be revised as follows:
 
 ## Follow-up Issues
 
-The following GitHub issues should be created and assigned to Forge (squad:forge) for implementation:
+The following GitHub issues should be created for implementation:
 
 ### Issue 1: Lazy-import azure.identity in azure_client.py
 
@@ -206,7 +206,7 @@ See docs/perf/coldstart-investigation.md for detailed measurements.
 - [ ] All existing tests still pass
 - [ ] First `alz_scorecard` invocation still works correctly (credential is lazily constructed on first call)
 
-**Labels:** `squad:forge`, `perf`, `cold-start`
+**Labels:** `perf`, `cold-start`
 
 ### Issue 2: Lazy-import httpx in pricing.py
 
@@ -229,7 +229,7 @@ See docs/perf/coldstart-investigation.md for detailed measurements.
 - [ ] All existing tests still pass
 - [ ] Pricing tools work correctly on first invocation (httpx is lazily imported on first call)
 
-**Labels:** `squad:forge`, `perf`, `cold-start`
+**Labels:** `perf`, `cold-start`
 
 ## References
 
