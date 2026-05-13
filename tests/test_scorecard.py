@@ -26,11 +26,10 @@ def mock_scope_validation() -> Any:
     # Ensure the module is imported (handles case where test_scorecard_no_azure_sdk_at_module_import popped it)
     import mcp_server_azure_architect.scorecard  # noqa: F401
 
-    with patch(
-        "mcp_server_azure_architect.scorecard.validate_caller_scope"
-    ) as mock_validate, patch(
-        "mcp_server_azure_architect.scorecard.get_credential"
-    ) as mock_cred:
+    with (
+        patch("mcp_server_azure_architect.scorecard.validate_caller_scope") as mock_validate,
+        patch("mcp_server_azure_architect.scorecard.get_credential") as mock_cred,
+    ):
         mock_validate.return_value = True
         mock_cred.return_value = Mock()  # Return a mock credential object
         yield mock_validate
@@ -136,9 +135,7 @@ async def test_scorecard_count_column_aggregation() -> None:
     ) as mock_client_factory:
         mock_client = Mock()
         # Return a single row with Count=42
-        mock_client.resources = Mock(
-            return_value=_mock_arg_response([{"Count": 42}])
-        )
+        mock_client.resources = Mock(return_value=_mock_arg_response([{"Count": 42}]))
         mock_client_factory.return_value = mock_client
 
         result = await run_scorecard(
@@ -172,8 +169,8 @@ async def test_scorecard_sample_truncates_to_three() -> None:
 
 
 @pytest.mark.asyncio
-async def test_scorecard_pillar_filter() -> None:
-    """Pillar filter limits queries to one pillar."""
+async def test_scorecard_source_filter() -> None:
+    """Source filter limits queries to one source."""
     with patch(
         "mcp_server_azure_architect.scorecard._get_resource_graph_client"
     ) as mock_client_factory:
@@ -183,12 +180,12 @@ async def test_scorecard_pillar_filter() -> None:
 
         result = await run_scorecard(
             subscription_id="sub-123",
-            pillar="checklist",
+            source="checklist",
         )
 
-        # All results should be from checklist pillar
+        # All results should be from checklist source
         for r in result["results"]:
-            assert r["pillar"] == "checklist"
+            assert r["source"] == "checklist"
 
 
 @pytest.mark.asyncio
@@ -208,17 +205,13 @@ async def test_scorecard_truncates_full_sweep_over_25() -> None:
     """Full sweep over 25 queries slices to first 25 alphabetical and sets truncated=True."""
     # This test relies on the vendored snapshot having fewer than 25 queries;
     # if that changes, mock list_query_ids to return 30 fake IDs.
-    with patch(
-        "mcp_server_azure_architect.scorecard.list_query_ids"
-    ) as mock_list:
+    with patch("mcp_server_azure_architect.scorecard.list_query_ids") as mock_list:
         mock_list.return_value = [f"id-{i:03d}" for i in range(30)]
 
-        with patch(
-            "mcp_server_azure_architect.scorecard.get_query"
-        ) as mock_get:
+        with patch("mcp_server_azure_architect.scorecard.get_query") as mock_get:
             mock_get.return_value = {
                 "kql": "resources | project id",
-                "pillar": "checklist",
+                "source": "checklist",
                 "citation": "test",
             }
 
@@ -236,8 +229,8 @@ async def test_scorecard_truncates_full_sweep_over_25() -> None:
 
 
 @pytest.mark.asyncio
-async def test_scorecard_by_pillar_breakdown() -> None:
-    """Aggregate includes by_pillar breakdown."""
+async def test_scorecard_by_source_breakdown() -> None:
+    """Aggregate includes by_source breakdown."""
     with patch(
         "mcp_server_azure_architect.scorecard._get_resource_graph_client"
     ) as mock_client_factory:
@@ -248,16 +241,16 @@ async def test_scorecard_by_pillar_breakdown() -> None:
         result = await run_scorecard(
             subscription_id="sub-123",
             checklist_ids=[
-                "54f0d8b1-22a3-4c0d-8ce2-58b9e086c93a",  # checklist pillar
-                "e8aa1e41-870d-4968-94c6-77be14f510ac",  # graph pillar
+                "54f0d8b1-22a3-4c0d-8ce2-58b9e086c93a",  # checklist source
+                "e8aa1e41-870d-4968-94c6-77be14f510ac",  # graph source
             ],
         )
 
-        by_pillar = result["aggregate"]["by_pillar"]
-        assert "checklist" in by_pillar
-        assert "graph" in by_pillar
-        assert by_pillar["checklist"]["pass"] == 1
-        assert by_pillar["graph"]["pass"] == 1
+        by_source = result["aggregate"]["by_source"]
+        assert "checklist" in by_source
+        assert "graph" in by_source
+        assert by_source["checklist"]["pass"] == 1
+        assert by_source["graph"]["pass"] == 1
 
 
 @pytest.mark.asyncio
@@ -321,9 +314,7 @@ def test_scorecard_no_azure_sdk_at_module_import() -> None:
 
     import mcp_server_azure_architect.scorecard  # noqa: F401
 
-    leaked = [
-        name for name in sys.modules if name.startswith("azure.mgmt.resourcegraph")
-    ]
+    leaked = [name for name in sys.modules if name.startswith("azure.mgmt.resourcegraph")]
     assert leaked == [], f"scorecard module leaked Azure SDK imports: {leaked}"
 
     # Restore original module to avoid breaking subsequent tests
@@ -516,10 +507,7 @@ async def test_scorecard_timeout_after_60s() -> None:
             error_msg = result["results"][0]["error"]
             assert error_msg is not None
             assert "timed out after 60s" in error_msg.lower()
-            assert (
-                "narrow the scope" in error_msg.lower()
-                or "pagination" in error_msg.lower()
-            )
+            assert "narrow the scope" in error_msg.lower() or "pagination" in error_msg.lower()
 
 
 def test_get_resource_graph_client_default_cloud(
@@ -530,11 +518,10 @@ def test_get_resource_graph_client_default_cloud(
 
     monkeypatch.delenv("AZURE_CLOUD_NAME", raising=False)
 
-    with patch(
-        "mcp_server_azure_architect.scorecard.get_credential"
-    ) as mock_cred, patch(
-        "azure.mgmt.resourcegraph.ResourceGraphClient"
-    ) as mock_client_class:
+    with (
+        patch("mcp_server_azure_architect.scorecard.get_credential") as mock_cred,
+        patch("azure.mgmt.resourcegraph.ResourceGraphClient") as mock_client_class,
+    ):
         mock_cred.return_value = Mock()
 
         _get_resource_graph_client()
@@ -542,9 +529,7 @@ def test_get_resource_graph_client_default_cloud(
         mock_client_class.assert_called_once()
         call_kwargs = mock_client_class.call_args.kwargs
         assert call_kwargs["base_url"] == "https://management.azure.com"
-        assert call_kwargs["credential_scopes"] == [
-            "https://management.azure.com/.default"
-        ]
+        assert call_kwargs["credential_scopes"] == ["https://management.azure.com/.default"]
 
 
 def test_get_resource_graph_client_us_government(
@@ -555,20 +540,17 @@ def test_get_resource_graph_client_us_government(
 
     monkeypatch.setenv("AZURE_CLOUD_NAME", "AzureUSGovernment")
 
-    with patch(
-        "mcp_server_azure_architect.scorecard.get_credential"
-    ) as mock_cred, patch(
-        "azure.mgmt.resourcegraph.ResourceGraphClient"
-    ) as mock_client_class:
+    with (
+        patch("mcp_server_azure_architect.scorecard.get_credential") as mock_cred,
+        patch("azure.mgmt.resourcegraph.ResourceGraphClient") as mock_client_class,
+    ):
         mock_cred.return_value = Mock()
 
         _get_resource_graph_client()
 
         call_kwargs = mock_client_class.call_args.kwargs
         assert call_kwargs["base_url"] == "https://management.usgovcloudapi.net"
-        assert call_kwargs["credential_scopes"] == [
-            "https://management.usgovcloudapi.net/.default"
-        ]
+        assert call_kwargs["credential_scopes"] == ["https://management.usgovcloudapi.net/.default"]
 
 
 def test_get_resource_graph_client_china_cloud(
@@ -579,20 +561,17 @@ def test_get_resource_graph_client_china_cloud(
 
     monkeypatch.setenv("AZURE_CLOUD_NAME", "AzureChinaCloud")
 
-    with patch(
-        "mcp_server_azure_architect.scorecard.get_credential"
-    ) as mock_cred, patch(
-        "azure.mgmt.resourcegraph.ResourceGraphClient"
-    ) as mock_client_class:
+    with (
+        patch("mcp_server_azure_architect.scorecard.get_credential") as mock_cred,
+        patch("azure.mgmt.resourcegraph.ResourceGraphClient") as mock_client_class,
+    ):
         mock_cred.return_value = Mock()
 
         _get_resource_graph_client()
 
         call_kwargs = mock_client_class.call_args.kwargs
         assert call_kwargs["base_url"] == "https://management.chinacloudapi.cn"
-        assert call_kwargs["credential_scopes"] == [
-            "https://management.chinacloudapi.cn/.default"
-        ]
+        assert call_kwargs["credential_scopes"] == ["https://management.chinacloudapi.cn/.default"]
 
 
 def test_get_resource_graph_client_unknown_cloud_raises(
@@ -605,4 +584,3 @@ def test_get_resource_graph_client_unknown_cloud_raises(
 
     with pytest.raises(ValueError, match="Unknown AZURE_CLOUD_NAME 'InvalidCloud'"):
         _get_resource_graph_client()
-

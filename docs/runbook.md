@@ -9,7 +9,7 @@ An architect's typical workflow:
 1. **Pre-design checklist.** Before a design review:
    ```bash
    # List ALZ gaps for a subscription
-   mcp-exec alz_query_list --pillar checklist | jq '.items[] | .checklist_id'
+   mcp-exec alz_query_list --source checklist | jq '.items[] | .checklist_id'
    
    # Run a quick scorecard to surface compliance posture
    mcp-exec alz_scorecard --subscription-id <sub-id>

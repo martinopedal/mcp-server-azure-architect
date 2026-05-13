@@ -1,5 +1,28 @@
 # Forge . Implementation Lead . History
 
+## 2026-05-13 . Issue #94 Closed: pillar → source rename (Pre-1.0 breaking change)
+
+Systematic rename of `pillar` field to `source` across MCP tool surface. Atlas's Wave 9 research identified that `pillar` stores the source dataset identifier (`checklist` | `graph`), not a WAF pillar. Pre-1.0 window allows clean break.
+
+**Scope executed:**
+- **Source code** (3 files): `alz_queries.py`, `scorecard.py`, `server.py` - all `pillar` → `source` in dataclasses, params, vars, docstrings, aggregate field (`by_pillar` → `by_source`)
+- **Tests** (2 files): `test_alz_queries.py`, `test_scorecard.py` - 8 test functions renamed, all assertions updated
+- **Docs** (4 files): CHANGELOG (BREAKING entry first in Changed section), tool-docstring-style.md, runbook.md, deployment-guide.md
+
+**Validation gates:**
+- ✅ ruff check clean
+- ✅ ruff format applied (23 files reformatted)
+- ⚠️ mypy: 33 pre-existing errors (dict[str, object] indexing), not introduced by this PR
+- ✅ pytest: 178 passed, 6 skipped
+
+**Files touched:** 9 (7 src/tests, 4 docs)
+
+**Landmines avoided:** Did NOT touch `data/alz-queries/**` (vendored, Atlas domain), `.squad/**` (historical context), or WAF pillar references in planning docs (correct usage).
+
+**PR #116:** https://github.com/martinopedal/mcp-server-azure-architect/pull/116
+
+**Migration:** No backward-compat alias. Pre-1.0 consumers must update: `alz_query_list(pillar=...)` → `alz_query_list(source=...)`, `result["aggregate"]["by_pillar"]` → `result["aggregate"]["by_source"]`.
+
 ## 2026-05-12T22:00:00Z . Issue #98 Closed: Sovereign Cloud Endpoint Support
 
 Implemented sovereign cloud endpoint support for `ResourceGraphClient` per issue #98. Customers in Azure Government, Azure China, or Azure Stack can now set `AZURE_CLOUD_NAME` to target the correct ARM endpoint.

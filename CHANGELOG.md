@@ -25,6 +25,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **BREAKING (pre-1.0): `pillar` field renamed to `source` across MCP tool surface.** Affects `alz_query_list` (param + response items + filters_applied), `alz_scorecard` (param + per-result + aggregate `by_source` replacing `by_pillar`), and `alz_query_by_id` (response `source` field). The semantic was always "source dataset" (vendored from `data/alz-queries/checklist/` or `data/alz-queries/graph/`), not a WAF pillar. Consumers calling `alz_query_list(pillar="checklist")` must update to `source="checklist"`. No alias. Pre-1.0 we cut clean. (Closes #94)
 - **Documentation style**: second-pass cleanup of banned punctuation, wrong glyph status indicators (replaced with the project-approved set, plus a text fallback for "pending"), AI-slop language in ADRs, and voice profile consistency. Scope: README, CHANGELOG, docs/ and ADRs. Exempt: .squad/, .copilot/skills/, vendored data, code. See `.copilot/skills/docs-style/SKILL.md` for the full ruleset.
 - **Performance**: Lazy-imported `azure.identity` in `azure_client.get_credential()` to reduce cold-start overhead by 157ms (7.7% faster). See `docs/perf/lazy-import-results.md` for measurements. (Closes #67)
 - ADR-001 revised baseline expectations: measured cold start is 8.5-9.0 seconds on Python 3.12-3.14 (dominated by irreducible FastMCP framework overhead). See `docs/perf/coldstart-investigation.md` for detailed analysis.

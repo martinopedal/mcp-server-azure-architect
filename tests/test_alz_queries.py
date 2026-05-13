@@ -40,7 +40,7 @@ def test_get_query_known_id() -> None:
     assert record["source_commit"], "source_commit must be populated"
     assert record["citation"].startswith(record["source_repo"])
     assert checklist_id in record["citation"]
-    assert record["pillar"] in {"checklist", "graph"}
+    assert record["source"] in {"checklist", "graph"}
 
 
 def test_get_query_unknown_id_raises_lookup_error() -> None:
@@ -69,11 +69,7 @@ def test_loader_does_not_import_azure_sdk() -> None:
 
     import mcp_server_azure_architect.alz_queries  # noqa: F401
 
-    leaked = [
-        name
-        for name in sys.modules
-        if name.startswith(("azure.identity", "azure.mgmt"))
-    ]
+    leaked = [name for name in sys.modules if name.startswith(("azure.identity", "azure.mgmt"))]
     assert leaked == [], f"loader leaked Azure SDK imports: {leaked}"
 
 
@@ -107,9 +103,7 @@ def test_alz_query_by_id_function_returns_record() -> None:
 async def test_alz_query_by_id_invocation_via_mcp() -> None:
     """End-to-end roundtrip through FastMCP's tool dispatcher."""
     checklist_id = _known_checklist_id()
-    result = await mcp._tool_manager.call_tool(
-        "alz_query_by_id", {"checklist_id": checklist_id}
-    )
+    result = await mcp._tool_manager.call_tool("alz_query_by_id", {"checklist_id": checklist_id})
 
     assert isinstance(result, dict)
     assert result["checklist_id"] == checklist_id
@@ -156,7 +150,7 @@ def test_list_queries_no_filters() -> None:
     # Each item has all 5 keys
     for item in items:
         assert "checklist_id" in item
-        assert "pillar" in item
+        assert "source" in item
         assert "source_repo" in item
         assert "title" in item
         assert "citation" in item
@@ -166,24 +160,24 @@ def test_list_queries_no_filters() -> None:
     assert "@" in result["manifest_commit"], "manifest_commit should have repo@commit format"
 
     # filters_applied reflects defaults
-    assert result["filters_applied"]["pillar"] is None
+    assert result["filters_applied"]["source"] is None
     assert result["filters_applied"]["source_repo"] is None
 
 
-def test_list_queries_pillar_filter() -> None:
-    """Pillar filter returns only matching items."""
-    # Get all queries first to find a pillar
+def test_list_queries_source_filter() -> None:
+    """Source filter returns only matching items."""
+    # Get all queries first to find a source
     all_queries = alz_queries.list_queries()
     if all_queries["count"] == 0:
         pytest.skip("No queries in snapshot")
 
-    pillar = all_queries["items"][0]["pillar"]
+    source = all_queries["items"][0]["source"]
 
-    result = alz_queries.list_queries(pillar=pillar)
+    result = alz_queries.list_queries(source=source)
 
     assert result["count"] > 0
-    assert all(item["pillar"] == pillar for item in result["items"])
-    assert result["filters_applied"]["pillar"] == pillar
+    assert all(item["source"] == source for item in result["items"])
+    assert result["filters_applied"]["source"] == source
     assert result["filters_applied"]["source_repo"] is None
 
 
@@ -199,39 +193,37 @@ def test_list_queries_source_repo_filter() -> None:
 
     assert result["count"] > 0
     assert all(item["source_repo"] == source_repo for item in result["items"])
-    assert result["filters_applied"]["pillar"] is None
+    assert result["filters_applied"]["source"] is None
     assert result["filters_applied"]["source_repo"] == source_repo
 
 
-def test_list_queries_both_filters() -> None:
-    """Both filters applied with AND semantics."""
+def test_list_queries_combined_filters() -> None:
+    """Combining source and source_repo filters works correctly."""
     all_queries = alz_queries.list_queries()
-    if all_queries["count"] == 0:
-        pytest.skip("No queries in snapshot")
+    assert len(all_queries["items"]) > 0
 
     first = all_queries["items"][0]
-    pillar = first["pillar"]
+    source = first["source"]
     source_repo = first["source_repo"]
 
-    result = alz_queries.list_queries(pillar=pillar, source_repo=source_repo)
+    result = alz_queries.list_queries(source=source, source_repo=source_repo)
 
-    assert result["count"] > 0
+    # All items should match both filters
     assert all(
-        item["pillar"] == pillar and item["source_repo"] == source_repo
-        for item in result["items"]
+        item["source"] == source and item["source_repo"] == source_repo for item in result["items"]
     )
-    assert result["filters_applied"]["pillar"] == pillar
+    assert result["filters_applied"]["source"] == source
     assert result["filters_applied"]["source_repo"] == source_repo
 
 
-def test_list_queries_nonexistent_pillar() -> None:
-    """Non-existent pillar returns empty items, count=0, no exception."""
-    result = alz_queries.list_queries(pillar="nonexistent-pillar-xyz")
+def test_list_queries_nonexistent_source() -> None:
+    """Non-existent source returns empty items, count=0, no exception."""
+    result = alz_queries.list_queries(source="nonexistent-source-xyz")
 
     assert result["count"] == 0
     assert result["items"] == []
     assert result["truncated"] is False
-    assert result["filters_applied"]["pillar"] == "nonexistent-pillar-xyz"
+    assert result["filters_applied"]["source"] == "nonexistent-source-xyz"
 
 
 def test_list_queries_limit_applied() -> None:
@@ -270,12 +262,12 @@ def test_list_queries_item_schema() -> None:
 
     for item in result["items"]:
         assert isinstance(item["checklist_id"], str)
-        assert isinstance(item["pillar"], str)
+        assert isinstance(item["source"], str)
         assert isinstance(item["source_repo"], str)
         assert isinstance(item["title"], str)  # may be empty
         assert isinstance(item["citation"], str)
         assert item["checklist_id"], "checklist_id must not be empty"
-        assert item["pillar"], "pillar must not be empty"
+        assert item["source"], "source must not be empty"
         assert item["source_repo"], "source_repo must not be empty"
         assert item["citation"], "citation must not be empty"
 
@@ -291,7 +283,7 @@ def test_alz_query_list_tool_registered() -> None:
 
     schema = tool.parameters
     assert schema["type"] == "object"
-    assert "pillar" in schema["properties"]
+    assert "source" in schema["properties"]
     assert "source_repo" in schema["properties"]
     assert "limit" in schema["properties"]
 

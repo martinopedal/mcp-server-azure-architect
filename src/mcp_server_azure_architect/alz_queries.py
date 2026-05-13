@@ -41,7 +41,7 @@ class QueryRecord(TypedDict):
 
     checklist_id: str
     kql: str
-    pillar: str
+    source: str
     source_repo: str
     source_commit: str
     source_ref: str
@@ -68,8 +68,7 @@ def _resolve_data_root() -> Path:
         return repo_path
 
     raise FileNotFoundError(
-        "ALZ query manifest not found. Looked in "
-        f"{wheel_path} and {repo_path}."
+        f"ALZ query manifest not found. Looked in {wheel_path} and {repo_path}."
     )
 
 
@@ -97,16 +96,14 @@ def _build_index(data_root: Path) -> dict[str, QueryRecord]:
             kql_path = data_root / inside
 
             checklist_id = kql_path.stem
-            pillar = kql_path.parent.name
+            source = kql_path.parent.name
             kql_text = kql_path.read_text(encoding="utf-8").strip()
-            citation = (
-                f"{repo}@{commit} ({source_file}) checklist_id={checklist_id}"
-            )
+            citation = f"{repo}@{commit} ({source_file}) checklist_id={checklist_id}"
 
             index[checklist_id] = QueryRecord(
                 checklist_id=checklist_id,
                 kql=kql_text,
-                pillar=pillar,
+                source=source,
                 source_repo=repo,
                 source_commit=commit,
                 source_ref=ref,
@@ -164,15 +161,15 @@ def get_query(checklist_id: str) -> QueryRecord:
 
 
 def list_queries(
-    pillar: str | None = None,
+    source: str | None = None,
     source_repo: str | None = None,
     limit: int = 200,
 ) -> dict[str, object]:
     """Enumerate vendored ALZ checklist queries with optional filters.
 
     Args:
-        pillar: Optional pillar filter (e.g., "checklist", "graph"). If provided,
-            only queries from that pillar are returned.
+        source: Optional source dataset filter (e.g., "checklist", "graph"). If provided,
+            only queries from that source are returned.
         source_repo: Optional source repo filter (e.g.,
             "martinopedal/alz-checklist-queries"). If provided, only queries
             from that repo are returned.
@@ -183,18 +180,19 @@ def list_queries(
     Returns:
         A dictionary with:
         - count: int, number of matching queries (before limit applied)
-        - items: list of dicts, each with checklist_id, pillar, source_repo,
+        - items: list of dicts, each with checklist_id, source, source_repo,
           title (empty string if not available), and citation
         - manifest_commit: str, composite of source commit SHAs from manifest
         - truncated: bool, True if limit was applied
-        - filters_applied: dict with pillar and source_repo filters
+        - filters_applied: dict with source and source_repo filters
     """
     index = _get_index()
 
     # Apply filters
     filtered = [
-        record for record in index.values()
-        if (pillar is None or record["pillar"] == pillar)
+        record
+        for record in index.values()
+        if (source is None or record["source"] == source)
         and (source_repo is None or record["source_repo"] == source_repo)
     ]
 
@@ -210,7 +208,7 @@ def list_queries(
     items = [
         {
             "checklist_id": r["checklist_id"],
-            "pillar": r["pillar"],
+            "source": r["source"],
             "source_repo": r["source_repo"],
             "title": "",  # not available in current metadata
             "citation": r["citation"],
@@ -227,7 +225,7 @@ def list_queries(
         "manifest_commit": manifest_commit,
         "truncated": truncated,
         "filters_applied": {
-            "pillar": pillar,
+            "source": source,
             "source_repo": source_repo,
         },
     }
