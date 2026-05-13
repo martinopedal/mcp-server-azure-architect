@@ -589,9 +589,7 @@ def test_custom_source_preservation_during_refresh(
                             "source_ref": "custom",
                         }
                     },
-                    "sha256": {
-                        "data/alz-queries/custom/custom-guid-1.kql": "fakehash123"
-                    },
+                    "sha256": {"data/alz-queries/custom/custom-guid-1.kql": "fakehash123"},
                 },
                 "file_count": 1,
             },

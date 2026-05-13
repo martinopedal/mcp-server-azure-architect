@@ -503,7 +503,8 @@ def refresh_snapshot(dry_run: bool = False) -> bool:
     if changes_detected and not dry_run:
         # Preserve custom sources before overwriting
         custom_sources = [
-            s for s in manifest.get("sources", [])
+            s
+            for s in manifest.get("sources", [])
             if s.get("ref") == "custom" or s.get("source_ref") == "custom"
         ]
 
