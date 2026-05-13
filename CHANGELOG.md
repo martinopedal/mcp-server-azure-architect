@@ -37,6 +37,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Automation
 
 - **CI now enforces ruff format consistency.** New required check `ruff format --check .` runs on every PR after the lint step. Prevents format drift. Ruff version pinned to `0.15.12` in `pyproject.toml` to ensure reproducible formatting across local and CI environments. (Closes #117)
+- Added breaking-change detector for ALZ refresh PRs (closes #102). Use `breaking-change-approved` label to override.
 
 ### Documentation
 

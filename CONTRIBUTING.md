@@ -58,6 +58,8 @@ Any hard-coded Azure identifier (policy ID, initiative ID, role definition ID, r
 
 The vendored ALZ checklist snapshot lives in `data/alz-queries/` with a `MANIFEST.md` that records the source repo and pinned commit SHA.
 
+**Breaking-change detection:** Automated refresh PRs (from `.github/workflows/refresh-alz-snapshot.yml`) trigger a breaking-change detector (`.github/workflows/breaking-change-detector.yml`) that flags when the first table reference token in a `.kql` file changes. If breaking changes are intentional (e.g., upstream schema updates), apply the `breaking-change-approved` label to the PR.
+
 ## Companion MCP servers
 
 The shipped `mcp-config.json` lists recommended companion servers. Adding a companion requires:
