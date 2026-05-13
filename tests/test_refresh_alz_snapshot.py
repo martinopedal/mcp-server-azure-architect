@@ -420,22 +420,45 @@ def test_refresh_snapshot_dry_run_with_drift(
     mock_manifest: dict,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """Test refresh_snapshot in dry-run mode with drift detected."""
+    """Test refresh_snapshot in dry-run mode with drift detected.
+
+    NOTE: As of PR #96, graph repo is temporarily disabled due to guid collision
+    (Decision 10/11). Test updated to check checklist-only vendoring.
+    """
     # Setup
     data_dir = tmp_path / "data" / "alz-queries"
     data_dir.mkdir(parents=True)
     (data_dir / "checklist").mkdir()
-    (data_dir / "graph").mkdir()
     manifest_path = data_dir / "manifest.json"
-    with open(manifest_path, "w") as f:
-        json.dump(mock_manifest, f)
 
-    # Mock: upstream SHA differs from pinned SHA for one repo
+    # Use a manifest with only checklist source (graph commented out in script)
+    checklist_only_manifest = {
+        "schema_version": 2,
+        "sources": [
+            {
+                "repo": "martinopedal/alz-checklist-queries",
+                "commit_sha": "old1234567890123456789012345678901234567",
+                "ref": "commit:old1234567890123456789012345678901234567",
+                "vendored_at": "2024-01-01T00:00:00Z",
+                "license": {"spdx": "MIT", "upstream_license_url": "https://example.com/LICENSE"},
+                "subset": {
+                    "source_file": "queries/alz_all_queries.json",
+                    "checklist_ids": [],
+                    "files": [],
+                    "sha256": {},
+                    "queries": {},
+                },
+                "file_count": 0,
+            }
+        ],
+    }
+    with open(manifest_path, "w") as f:
+        json.dump(checklist_only_manifest, f)
+
+    # Mock: upstream SHA differs from pinned SHA for checklist repo
     def mock_get_commit(repo: str) -> str:
         if repo == "martinopedal/alz-checklist-queries":
-            return "e7641beeda0126cc78825f8b77764c379552f3e1"  # no drift
-        elif repo == "martinopedal/alz-graph-queries":
-            return "0000000000000000000000000000000000000000"  # drift
+            return "e7641beeda0126cc78825f8b77764c379552f3e1"  # drift detected
         return "unknown"
 
     mock_get_upstream.side_effect = mock_get_commit
@@ -447,7 +470,7 @@ def test_refresh_snapshot_dry_run_with_drift(
     assert changes
     # In dry-run, manifest should not be updated
     loaded = ras.load_manifest(manifest_path)
-    assert loaded["sources"][1]["commit_sha"] == "8a3fddabcbf272a19a627770a0d33de5f4ace8ee"
+    assert loaded["sources"][0]["commit_sha"] == "old1234567890123456789012345678901234567"
 
 
 def test_extract_queries_merged_catalogue_detection(tmp_path: Path) -> None:

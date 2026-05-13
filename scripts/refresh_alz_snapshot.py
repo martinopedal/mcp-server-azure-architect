@@ -311,6 +311,10 @@ def refresh_snapshot(dry_run: bool = False) -> bool:
     manifest = load_manifest(manifest_path)
 
     # Source repo definitions
+    # NOTE: Temporarily vendoring from checklist repo ONLY to avoid guid collision
+    # per Decision 10/11 (issue #96). The checklist repo is marked as merged=true
+    # and contains 173 queryable items. The graph repo causes guid collision for
+    # one item (see PR #127 body for the specific guid).
     repos: list[RepoConfig] = [
         {
             "repo": "martinopedal/alz-checklist-queries",
@@ -318,12 +322,13 @@ def refresh_snapshot(dry_run: bool = False) -> bool:
             "source_file": "queries/alz_all_queries.json",
             "extractor": extract_queries_from_checklist_repo,
         },
-        {
-            "repo": "martinopedal/alz-graph-queries",
-            "dest_subdir": "graph",
-            "source_file": "queries/alz_additional_queries.json",
-            "extractor": extract_queries_from_graph_repo,
-        },
+        # Temporarily commented out due to guid collision:
+        # {
+        #     "repo": "martinopedal/alz-graph-queries",
+        #     "dest_subdir": "graph",
+        #     "source_file": "queries/alz_additional_queries.json",
+        #     "extractor": extract_queries_from_graph_repo,
+        # },
     ]
 
     changes_detected = False
@@ -442,7 +447,7 @@ def refresh_snapshot(dry_run: bool = False) -> bool:
                 target.write_bytes(kql_file.read_bytes())
 
             # Build manifest v2 source entry with queries metadata
-            files = [str(p.relative_to(repo_root)) for p in sorted(dest_dir.glob("*.kql"))]
+            files = [p.relative_to(repo_root).as_posix() for p in sorted(dest_dir.glob("*.kql"))]
             queries_metadata = {}
             for guid in checklist_ids:
                 meta = metadata_dict[guid]

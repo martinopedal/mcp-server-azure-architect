@@ -1,0 +1,4 @@
+// Vendored from https://github.com/martinopedal/alz-checklist-queries/blob/e7641beeda0126cc78825f8b77764c379552f3e1/queries/alz_all_queries.json
+// Source checklist ID: 6eab9eb6-762b-485e-8ea8-15aa5dba0bd0
+// Vendored at: 2026-05-13T09:27:15+00:00
+resources | where type =~ 'microsoft.network/virtualnetworks' | mv-expand subnets=properties.subnets | where subnets.name =~ 'AzureBastionSubnet' | extend prefix=tostring(subnets.properties.addressPrefix) | extend prefixLen=toint(split(prefix, '/')[1]) | extend compliant = iff(prefixLen <= 26, true, false) | project id, name, resourceGroup, subscriptionId, checkItem='Bastion Subnet', currentValue=prefix, expectedValue='/26 or larger', compliant

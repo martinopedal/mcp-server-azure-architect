@@ -1,0 +1,4 @@
+// Vendored from https://github.com/martinopedal/alz-checklist-queries/blob/e7641beeda0126cc78825f8b77764c379552f3e1/queries/alz_all_queries.json
+// Source checklist ID: 39990a13-915c-45f9-a2d3-562d7d6c4b7c
+// Vendored at: 2026-05-13T09:27:15+00:00
+resources | where type == 'microsoft.network/firewallpolicies/rulecollectiongroups' | mv-expand ruleCollection = properties.ruleCollections | mv-expand rule = ruleCollection.rules | extend webCategories = tostring(rule.webCategories) | where isnotempty(webCategories) and webCategories != '[]' | extend compliant = 1 | project name, id, compliant

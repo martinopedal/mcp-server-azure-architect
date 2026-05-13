@@ -1,0 +1,4 @@
+// Vendored from https://github.com/martinopedal/alz-checklist-queries/blob/e7641beeda0126cc78825f8b77764c379552f3e1/queries/alz_all_queries.json
+// Source checklist ID: 35037e68-9349-4c15-b371-228514f4cdff
+// Vendored at: 2026-05-13T09:27:15+00:00
+authorizationresources | where type =~ 'microsoft.authorization/roleassignments' | extend principalType = tostring(properties.principalType) | where principalType =~ 'User' | summarize userAssignments=count() | project checkItem='Direct User Assignments', currentValue=strcat(tostring(userAssignments), ' direct user role assignments'), expectedValue='Use groups instead of direct user assignments', compliant=iff(userAssignments <= 5, true, false)

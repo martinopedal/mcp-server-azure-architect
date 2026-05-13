@@ -1,0 +1,4 @@
+// Vendored from https://github.com/martinopedal/alz-checklist-queries/blob/e7641beeda0126cc78825f8b77764c379552f3e1/queries/alz_all_queries.json
+// Source checklist ID: 0390417d-53dc-44d9-b3f4-c8832f359b41
+// Vendored at: 2026-05-13T09:27:15+00:00
+resources | where type =~ 'microsoft.network/networksecuritygroups' | extend ruleCount=array_length(properties.securityRules) | extend compliant = iff(ruleCount <= 900, true, false) | project id, name, resourceGroup, subscriptionId, checkItem='NSG Rule Count', currentValue=strcat(tostring(ruleCount), ' rules'), expectedValue='Max 900', compliant

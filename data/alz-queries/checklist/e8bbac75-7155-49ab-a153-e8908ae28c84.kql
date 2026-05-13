@@ -1,0 +1,4 @@
+// Vendored from https://github.com/martinopedal/alz-checklist-queries/blob/e7641beeda0126cc78825f8b77764c379552f3e1/queries/alz_all_queries.json
+// Source checklist ID: e8bbac75-7155-49ab-a153-e8908ae28c84
+// Vendored at: 2026-05-13T09:27:15+00:00
+resources | where type == 'microsoft.network/virtualnetworks/virtualnetworkpeerings' | extend remoteVnetId = tostring(properties.remoteVirtualNetwork.id), peeringName = name | extend compliant = iff(tolower(peeringName) has 'hub' or tolower(remoteVnetId) has 'hub', 1, 0) | project name, id, remoteVnetId, compliant

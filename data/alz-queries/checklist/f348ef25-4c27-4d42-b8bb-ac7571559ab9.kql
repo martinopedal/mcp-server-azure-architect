@@ -1,0 +1,4 @@
+// Vendored from https://github.com/martinopedal/alz-checklist-queries/blob/e7641beeda0126cc78825f8b77764c379552f3e1/queries/alz_all_queries.json
+// Source checklist ID: f348ef25-4c27-4d42-b8bb-ac7571559ab9
+// Vendored at: 2026-05-13T09:27:15+00:00
+resources | where type =~ 'microsoft.network/virtualnetworks' | mv-expand addr = properties.addressSpace.addressPrefixes | extend prefix = tostring(addr) | project id, name, resourceGroup, subscriptionId, location, checkItem='VNet Address Space', currentValue=prefix, expectedValue='No overlapping ranges', compliant=true

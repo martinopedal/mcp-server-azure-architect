@@ -1,0 +1,4 @@
+// Vendored from https://github.com/martinopedal/alz-checklist-queries/blob/e7641beeda0126cc78825f8b77764c379552f3e1/queries/alz_all_queries.json
+// Source checklist ID: ae757485-92a4-482a-8bc9-eefe6f5b5ec3
+// Vendored at: 2026-05-13T09:27:15+00:00
+authorizationresources | where type =~ 'microsoft.authorization/roleassignments' | extend principalType = tostring(properties.principalType) | extend createdOn = tostring(properties.createdOn) | summarize total=count(), userDirect=countif(principalType =~ 'User'), groupBased=countif(principalType =~ 'Group'), spBased=countif(principalType =~ 'ServicePrincipal') | project checkItem='RBAC Audit Summary', currentValue=strcat('Total: ', tostring(total), ', Users: ', tostring(userDirect), ', Groups: ', tostring(groupBased), ', SPs: ', tostring(spBased)), expectedValue='Periodic audit performed', compliant=true

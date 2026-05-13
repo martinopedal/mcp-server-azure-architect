@@ -1,0 +1,4 @@
+// Vendored from https://github.com/martinopedal/alz-checklist-queries/blob/e7641beeda0126cc78825f8b77764c379552f3e1/queries/alz_all_queries.json
+// Source checklist ID: 7418ada9-4199-4c28-8286-d15e9433e8f3
+// Vendored at: 2026-05-13T09:27:15+00:00
+resources | where type =~ 'microsoft.operationalinsights/workspaces' | project id, name, resourceGroup, subscriptionId, location, checkItem='Log Analytics Workspaces', currentValue=strcat(name, ' in ', location), expectedValue='Workspace strategy documented', compliant=true

@@ -1,0 +1,4 @@
+// Vendored from https://github.com/martinopedal/alz-checklist-queries/blob/e7641beeda0126cc78825f8b77764c379552f3e1/queries/alz_all_queries.json
+// Source checklist ID: 4e3ab369-3829-4e7e-9161-83687a0477a2
+// Vendored at: 2026-05-13T09:27:15+00:00
+resources | where type == 'microsoft.insights/diagnosticsettings' | extend lowerId = tolower(id), workspaceId = tostring(properties.workspaceId), storageAccountId = tostring(properties.storageAccountId) | where lowerId startswith '/subscriptions/' and lowerId !has '/resourcegroups/' and lowerId has '/providers/microsoft.insights/diagnosticsettings/' | extend compliant = iff(isnotempty(workspaceId) or isnotempty(storageAccountId), 1, 0) | project name, id, workspaceId, storageAccountId, compliant

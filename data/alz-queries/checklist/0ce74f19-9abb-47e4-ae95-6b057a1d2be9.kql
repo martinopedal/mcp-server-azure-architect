@@ -1,0 +1,4 @@
+// Vendored from https://github.com/martinopedal/alz-checklist-queries/blob/e7641beeda0126cc78825f8b77764c379552f3e1/queries/alz_all_queries.json
+// Source checklist ID: 0ce74f19-9abb-47e4-ae95-6b057a1d2be9
+// Vendored at: 2026-05-13T09:27:15+00:00
+authorizationresources | where type =~ 'microsoft.authorization/roleassignments' | extend roleId=tostring(properties.roleDefinitionId) | where roleId endswith '8e3af657-a8ff-443c-a75c-2fe8c4bcb635' | summarize ownerCount=count() | project checkItem='Owner Assignments', currentValue=strcat(tostring(ownerCount), ' Owner role assignments'), expectedValue='Minimize owners', compliant=iff(ownerCount <= 5, true, false)

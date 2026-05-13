@@ -1,0 +1,4 @@
+// Vendored from https://github.com/martinopedal/alz-checklist-queries/blob/e7641beeda0126cc78825f8b77764c379552f3e1/queries/alz_all_queries.json
+// Source checklist ID: f541acdc-e979-4377-acdb-3751ab2ab13a
+// Vendored at: 2026-05-13T09:27:15+00:00
+policyresources | where type == 'microsoft.authorization/policyassignments' | extend displayName = tolower(tostring(properties.displayName)), definitionId = tolower(tostring(properties.policyDefinitionId)) | extend compliant = iff(displayName has 'guest configuration' or definitionId has 'guestconfiguration', 1, 0) | project name, id, compliant

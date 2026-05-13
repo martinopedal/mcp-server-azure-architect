@@ -1,0 +1,4 @@
+// Vendored from https://github.com/martinopedal/alz-checklist-queries/blob/e7641beeda0126cc78825f8b77764c379552f3e1/queries/alz_all_queries.json
+// Source checklist ID: 7e7a8ed4-b30e-438c-9f29-812b2363cefe
+// Vendored at: 2026-05-13T09:27:15+00:00
+resources | where type == 'microsoft.network/firewallpolicies/rulecollectiongroups' | mv-expand ruleCollection = properties.ruleCollections | mv-expand rule = ruleCollection.rules | where tolower(tostring(rule.ruleType)) == 'applicationrule' | extend targetFqdns = tostring(rule.targetFqdns), fqdnTags = tostring(rule.fqdnTags) | extend compliant = iff((isnotempty(targetFqdns) and targetFqdns != '[]') or (isnotempty(fqdnTags) and fqdnTags != '[]'), 1, 0) | project name, id, compliant

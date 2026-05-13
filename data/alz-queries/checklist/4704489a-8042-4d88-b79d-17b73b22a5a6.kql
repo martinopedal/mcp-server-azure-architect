@@ -1,0 +1,4 @@
+// Vendored from https://github.com/martinopedal/alz-checklist-queries/blob/e7641beeda0126cc78825f8b77764c379552f3e1/queries/alz_all_queries.json
+// Source checklist ID: 4704489a-8042-4d88-b79d-17b73b22a5a6
+// Vendored at: 2026-05-13T09:27:15+00:00
+resources | where type =~ 'microsoft.network/virtualnetworks' | mv-expand subnet=properties.subnets | where array_length(subnet.properties.serviceEndpoints) > 0 | extend epCount=array_length(subnet.properties.serviceEndpoints) | project id, name, resourceGroup, subscriptionId, subnetName=tostring(subnet.name), checkItem='Service Endpoints', currentValue=strcat(tostring(epCount), ' endpoint(s)'), expectedValue='Only where needed', compliant=true

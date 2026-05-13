@@ -1,0 +1,4 @@
+// Vendored from https://github.com/martinopedal/alz-checklist-queries/blob/e7641beeda0126cc78825f8b77764c379552f3e1/queries/alz_all_queries.json
+// Source checklist ID: 346840b8-1064-496e-8396-4b1340172d52
+// Vendored at: 2026-05-13T09:27:15+00:00
+resources | where type == 'microsoft.network/firewallpolicies' | extend tier = tostring(coalesce(properties.sku.tier, sku.tier)), caName = tostring(properties.transportSecurity.certificateAuthority.name) | where tier == 'Premium' | extend compliant = iff(isnotempty(caName), 1, 0) | project name, id, compliant

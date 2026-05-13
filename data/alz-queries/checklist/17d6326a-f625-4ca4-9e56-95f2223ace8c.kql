@@ -1,0 +1,4 @@
+// Vendored from https://github.com/martinopedal/alz-checklist-queries/blob/e7641beeda0126cc78825f8b77764c379552f3e1/queries/alz_all_queries.json
+// Source checklist ID: 17d6326a-f625-4ca4-9e56-95f2223ace8c
+// Vendored at: 2026-05-13T09:27:15+00:00
+resources | where type == 'microsoft.insights/diagnosticsettings' | extend lowerId = tolower(id), workspaceId = tostring(properties.workspaceId) | where lowerId has '/microsoft.keyvault/vaults/' | extend compliant = iff(isnotempty(workspaceId), 1, 0) | project name, id, workspaceId, compliant

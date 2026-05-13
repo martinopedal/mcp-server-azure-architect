@@ -1,0 +1,4 @@
+// Vendored from https://github.com/martinopedal/alz-checklist-queries/blob/e7641beeda0126cc78825f8b77764c379552f3e1/queries/alz_all_queries.json
+// Source checklist ID: 7371dc21-251a-47a3-af14-6e01b9da4757
+// Vendored at: 2026-05-13T09:27:15+00:00
+resources | where type =~ 'microsoft.network/natgateways' | extend idleTimeout = tostring(properties.idleTimeoutInMinutes) | extend pipCount = array_length(properties.publicIpAddresses) | extend compliant = iff(pipCount >= 1, true, false) | project id, name, resourceGroup, subscriptionId, checkItem='NAT Gateway', currentValue=strcat('Public IPs: ', tostring(pipCount), ', IdleTimeout: ', idleTimeout, 'min'), expectedValue='NAT Gateway with public IPs', compliant

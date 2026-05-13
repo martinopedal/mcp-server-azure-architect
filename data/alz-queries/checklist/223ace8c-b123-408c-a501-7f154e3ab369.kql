@@ -1,0 +1,4 @@
+// Vendored from https://github.com/martinopedal/alz-checklist-queries/blob/e7641beeda0126cc78825f8b77764c379552f3e1/queries/alz_all_queries.json
+// Source checklist ID: 223ace8c-b123-408c-a501-7f154e3ab369
+// Vendored at: 2026-05-13T09:27:15+00:00
+policyresources | where type == 'microsoft.authorization/policydefinitions' | extend lowerId = tolower(id) | extend compliant = iff(lowerId has '/providers/microsoft.management/managementgroups/', 1, 0) | project name, id, compliant
