@@ -597,18 +597,18 @@ def test_custom_source_preservation_during_refresh(
             },
         ],
     }
-    
+
     manifest_path = temp_data_dir / "manifest.json"
     with manifest_path.open("w") as f:
         json.dump(manifest, f)
-    
+
     # Verify custom source exists before any refresh simulation
     loaded = ras.load_manifest(manifest_path)
     assert len(loaded["sources"]) == 2  # vendored + custom
-    
+
     custom_sources_before = [s for s in loaded["sources"] if s.get("ref") == "custom"]
     assert len(custom_sources_before) == 1
     assert custom_sources_before[0]["subset"]["checklist_ids"] == ["custom-guid-1"]
-    
+
     # CRITICAL ASSERTION: If refresh_snapshot were run, custom source must survive
     # This test documents the expected behavior: custom sources filter is mandatory

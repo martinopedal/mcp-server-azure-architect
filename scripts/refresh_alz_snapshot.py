@@ -506,7 +506,7 @@ def refresh_snapshot(dry_run: bool = False) -> bool:
             s for s in manifest.get("sources", [])
             if s.get("ref") == "custom" or s.get("source_ref") == "custom"
         ]
-        
+
         # Save updated manifest with schema_version: 2
         manifest["schema_version"] = 2
         manifest["sources"] = new_sources + custom_sources  # Append preserved custom sources
