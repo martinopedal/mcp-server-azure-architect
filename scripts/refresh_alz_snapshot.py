@@ -26,7 +26,20 @@ class RepoConfig(TypedDict):
     repo: str
     dest_subdir: str
     source_file: str
-    extractor: Callable[[Path, Path], list[str]]
+    extractor: Callable[[Path, Path], tuple[list[str], dict[str, dict[str, Any]]]]
+
+
+def compute_content_hash(kql_path: Path, metadata: dict[str, Any]) -> str:
+    """Compute a content hash for deduplication (KQL + metadata bytes)."""
+    sha256 = hashlib.sha256()
+    # Hash KQL file content
+    with open(kql_path, "rb") as f:
+        for chunk in iter(lambda: f.read(8192), b""):
+            sha256.update(chunk)
+    # Hash metadata JSON (sorted keys for determinism)
+    metadata_json = json.dumps(metadata, sort_keys=True).encode("utf-8")
+    sha256.update(metadata_json)
+    return sha256.hexdigest()
 
 
 def run_git(args: list[str], cwd: str | Path) -> str:
@@ -87,68 +100,111 @@ def save_manifest(manifest: dict[str, Any], manifest_path: Path) -> None:
         f.write("\n")
 
 
-def extract_queries_from_checklist_repo(clone_dir: Path, dest_dir: Path) -> list[str]:
+def extract_queries_from_checklist_repo(
+    clone_dir: Path, dest_dir: Path
+) -> tuple[list[str], dict[str, dict[str, Any]]]:
     """Extract KQL queries from alz-checklist-queries repo.
 
-    Returns list of checklist IDs extracted.
+    Returns tuple of (checklist IDs extracted, metadata dict by guid).
     """
     source_json = clone_dir / "queries" / "alz_all_queries.json"
     if not source_json.exists():
         print(f"Warning: {source_json} not found in clone, skipping")
-        return []
+        return ([], {})
 
     with open(source_json) as f:
         data = json.load(f)
 
-    # Schema-shape assertion: ensure top-level key is "items" for checklist repo
-    if "items" not in data:
+    # Check for merged-catalogue marker
+    metadata = data.get("metadata", {})
+    if metadata.get("merged", False):
+        print(
+            f"  Detected merged catalogue (total_items: {metadata.get('total_items', 'unknown')})"
+        )
+
+    # Schema-shape: accept both {items: [...]} and {queries: [...]}
+    queries = data.get("queries", data.get("items", []))
+    if not queries:
         raise ValueError(
             f"Upstream schema mismatch in alz_all_queries.json: "
-            f"expected top-level key 'items', got: {list(data.keys())}"
+            f"expected top-level key 'queries' or 'items', got: {list(data.keys())}"
         )
 
     checklist_ids = []
-    for item in data["items"]:
-        # Validate each item has required fields
-        if "id" not in item or "graph" not in item:
-            print(f"Warning: skipping item missing 'id' or 'graph': {item.get('id', 'unknown')}")
-            continue
+    metadata_dict = {}
+    skipped_count = 0
 
-        checklist_id = item["id"]
-        kql_query = item["graph"]
+    for item in queries:
+        # Accept both 'guid' and 'id' keys
+        checklist_id = item.get("guid") or item.get("id")
+        kql_query = item.get("graph")
+
+        # Validate required fields
+        if not checklist_id or not kql_query:
+            print(
+                f"Warning: skipping item missing 'guid'/'id' or 'graph': {checklist_id or 'unknown'}"
+            )
+            continue
 
         # Filter: skip non-queryable items
         if not item.get("queryable", True):
+            skipped_count += 1
             continue
 
-        if checklist_id and kql_query:
-            checklist_ids.append(checklist_id)
-            # Write KQL file with vendoring header
-            kql_path = dest_dir / f"{checklist_id}.kql"
-            with open(kql_path, "w") as f:
-                f.write(
-                    f"// Vendored from https://github.com/martinopedal/alz-checklist-queries/blob/{{sha}}/queries/alz_all_queries.json\n"
-                    f"// Source checklist ID: {checklist_id}\n"
-                    f"// Vendored at: {{timestamp}}\n"
-                    f"{kql_query}\n"
-                )
-    return checklist_ids
+        checklist_ids.append(checklist_id)
+
+        # Store metadata for manifest v2
+        metadata_dict[checklist_id] = {
+            "text": item.get("text", ""),
+            "category": item.get("category", ""),
+            "subcategory": item.get("subcategory", ""),
+            "severity": item.get("severity", ""),
+            "queryable": item.get("queryable", True),
+            "upstream_reason": item.get("reason"),
+            "waf": item.get("waf"),
+        }
+
+        # Write KQL file with vendoring header
+        kql_path = dest_dir / f"{checklist_id}.kql"
+        with open(kql_path, "w") as f:
+            f.write(
+                f"// Vendored from https://github.com/martinopedal/alz-checklist-queries/blob/{{sha}}/queries/alz_all_queries.json\n"
+                f"// Source checklist ID: {checklist_id}\n"
+                f"// Vendored at: {{timestamp}}\n"
+                f"{kql_query}\n"
+            )
+
+    if skipped_count > 0:
+        print(f"  Skipped {skipped_count} non-queryable items")
+
+    return (checklist_ids, metadata_dict)
 
 
-def extract_queries_from_graph_repo(clone_dir: Path, dest_dir: Path) -> list[str]:
+def extract_queries_from_graph_repo(
+    clone_dir: Path, dest_dir: Path
+) -> tuple[list[str], dict[str, dict[str, Any]]]:
     """Extract KQL queries from alz-graph-queries repo.
 
-    Returns list of query IDs extracted.
+    Returns tuple of (query IDs extracted, metadata dict by guid).
     """
     source_json = clone_dir / "queries" / "alz_additional_queries.json"
     if not source_json.exists():
         print(f"Warning: {source_json} not found in clone, skipping")
-        return []
+        return ([], {})
 
     with open(source_json) as f:
         data = json.load(f)
 
-    # Schema-shape assertion: ensure top-level key is "queries" for graph repo
+    # Check for merged-catalogue marker
+    metadata = data.get("metadata", {})
+    if metadata.get("merged", False):
+        print(
+            f"  Detected merged catalogue (total_items: {metadata.get('total_items', 'unknown')})"
+        )
+        print("  Skipping secondary fetch (merged upstream)")
+        return ([], {})
+
+    # Schema-shape: expect {queries: [...]}
     if "queries" not in data:
         raise ValueError(
             f"Upstream schema mismatch in alz_additional_queries.json: "
@@ -156,32 +212,49 @@ def extract_queries_from_graph_repo(clone_dir: Path, dest_dir: Path) -> list[str
         )
 
     query_ids = []
+    metadata_dict = {}
+    skipped_count = 0
+
     for item in data["queries"]:
         # Validate each item has required fields
-        if "guid" not in item or "graph" not in item:
-            print(
-                f"Warning: skipping item missing 'guid' or 'graph': {item.get('guid', 'unknown')}"
-            )
-            continue
+        query_id = item.get("guid")
+        kql_query = item.get("graph")
 
-        query_id = item["guid"]
-        kql_query = item["graph"]
+        if not query_id or not kql_query:
+            print(f"Warning: skipping item missing 'guid' or 'graph': {query_id or 'unknown'}")
+            continue
 
         # Filter: skip non-queryable items
         if not item.get("queryable", False):
+            skipped_count += 1
             continue
 
-        if query_id and kql_query:
-            query_ids.append(query_id)
-            kql_path = dest_dir / f"{query_id}.kql"
-            with open(kql_path, "w") as f:
-                f.write(
-                    f"// Vendored from https://github.com/martinopedal/alz-graph-queries/blob/{{sha}}/queries/alz_additional_queries.json\n"
-                    f"// Source query ID: {query_id}\n"
-                    f"// Vendored at: {{timestamp}}\n"
-                    f"{kql_query}\n"
-                )
-    return query_ids
+        query_ids.append(query_id)
+
+        # Store metadata for manifest v2
+        metadata_dict[query_id] = {
+            "text": item.get("text", ""),
+            "category": item.get("category", ""),
+            "subcategory": item.get("subcategory", ""),
+            "severity": item.get("severity", ""),
+            "queryable": item.get("queryable", True),
+            "upstream_reason": item.get("reason"),
+            "waf": item.get("waf"),
+        }
+
+        kql_path = dest_dir / f"{query_id}.kql"
+        with open(kql_path, "w") as f:
+            f.write(
+                f"// Vendored from https://github.com/martinopedal/alz-graph-queries/blob/{{sha}}/queries/alz_additional_queries.json\n"
+                f"// Source query ID: {query_id}\n"
+                f"// Vendored at: {{timestamp}}\n"
+                f"{kql_query}\n"
+            )
+
+    if skipped_count > 0:
+        print(f"  Skipped {skipped_count} non-queryable items")
+
+    return (query_ids, metadata_dict)
 
 
 def update_kql_headers(kql_dir: Path, repo: str, sha: str, timestamp: str) -> None:
@@ -256,6 +329,11 @@ def refresh_snapshot(dry_run: bool = False) -> bool:
     changes_detected = False
     new_sources = []
 
+    # Track guids across sources for deduplication
+    guid_registry: dict[
+        str, tuple[str, str, dict[str, Any]]
+    ] = {}  # guid -> (source_path, content_hash, metadata)
+
     for repo_def in repos:
         repo = repo_def["repo"]
         print(f"Checking {repo}...")
@@ -292,23 +370,19 @@ def refresh_snapshot(dry_run: bool = False) -> bool:
                 new_sources.append(existing)
             continue
 
-        # Clone and extract
+        # Extract to tempdir for atomic replace
         with tempfile.TemporaryDirectory() as tmpdir:
             clone_dir = Path(tmpdir) / "clone"
+            temp_dest_dir = Path(tmpdir) / "extracted"
+            temp_dest_dir.mkdir()
+
             print(f"  Cloning {repo}...")
             clone_shallow(repo, clone_dir)
 
-            # Extract queries
-            dest_dir = data_dir / repo_def["dest_subdir"]
-            dest_dir.mkdir(parents=True, exist_ok=True)
-
-            # Clear existing queries in this subdir
-            for old_kql in dest_dir.glob("*.kql"):
-                old_kql.unlink()
-
-            print(f"  Extracting queries to {dest_dir.name}/...")
+            # Extract queries and metadata
+            print("  Extracting queries...")
             extractor = repo_def["extractor"]
-            checklist_ids = extractor(clone_dir, dest_dir)
+            checklist_ids, metadata_dict = extractor(clone_dir, temp_dest_dir)
 
             if not checklist_ids:
                 print(f"  Warning: No queries extracted from {repo}")
@@ -316,19 +390,105 @@ def refresh_snapshot(dry_run: bool = False) -> bool:
 
             # Update headers with actual SHA and timestamp
             timestamp = datetime.now(UTC).isoformat(timespec="seconds")
-            update_kql_headers(dest_dir, repo, upstream_sha, timestamp)
+            update_kql_headers(temp_dest_dir, repo, upstream_sha, timestamp)
 
-            # Build new source entry
+            # Validate mandatory metadata present for all queries
+            for guid in checklist_ids:
+                meta = metadata_dict.get(guid, {})
+                missing = [
+                    f for f in ["text", "category", "subcategory", "severity"] if not meta.get(f)
+                ]
+                if missing:
+                    raise ValueError(f"Mandatory metadata missing for {guid} in {repo}: {missing}")
+
+            # Deduplication: check for guid collisions across sources
+            source_name = "vendored-checklist" if "checklist" in repo else "vendored-graph"
+            for guid in checklist_ids:
+                kql_path = temp_dest_dir / f"{guid}.kql"
+                meta = metadata_dict[guid]
+                content_hash = compute_content_hash(kql_path, meta)
+
+                if guid in guid_registry:
+                    existing_path, existing_hash, existing_meta = guid_registry[guid]
+                    if content_hash == existing_hash:
+                        # Identical duplicate, accept silently
+                        print(f"  DEBUG: guid {guid} duplicated but identical content, accepting")
+                    else:
+                        # Different content, hard error
+                        raise ValueError(
+                            f"Duplicate guid collision: {guid} appears in both {existing_path} "
+                            f"and {repo}/{repo_def['dest_subdir']}/{guid}.kql with different content. "
+                            f"Remediation: investigate upstream merge, or manually deduplicate."
+                        )
+                else:
+                    # Register this guid
+                    guid_registry[guid] = (
+                        f"{repo}/{repo_def['dest_subdir']}/{guid}.kql",
+                        content_hash,
+                        meta,
+                    )
+
+            # Atomic replace: move tempdir to final destination
+            dest_dir = data_dir / repo_def["dest_subdir"]
+            dest_dir.mkdir(parents=True, exist_ok=True)
+
+            # Clear existing queries in this subdir
+            for old_kql in dest_dir.glob("*.kql"):
+                old_kql.unlink()
+
+            # Copy extracted queries atomically
+            for kql_file in temp_dest_dir.glob("*.kql"):
+                target = dest_dir / kql_file.name
+                target.write_bytes(kql_file.read_bytes())
+
+            # Build manifest v2 source entry with queries metadata
             files = [str(p.relative_to(repo_root)) for p in sorted(dest_dir.glob("*.kql"))]
+            queries_metadata = {}
+            for guid in checklist_ids:
+                meta = metadata_dict[guid]
+                vendored_path = f"data/alz-queries/{repo_def['dest_subdir']}/{guid}.kql"
+                queries_metadata[guid] = {
+                    "id": guid,
+                    "text": meta.get("text", ""),
+                    "category": meta["category"],
+                    "subcategory": meta["subcategory"],
+                    "severity": meta["severity"],
+                    "source": source_name,
+                    "source_repo": repo,
+                    "source_ref": f"commit:{upstream_sha}",
+                    "source_file": repo_def["source_file"],
+                    "vendored_at": timestamp,
+                    "vendored_path": vendored_path,
+                    "citation": f"{repo}@{upstream_sha} ({repo_def['source_file']}) checklist_id={guid}",
+                    "queryable": meta.get("queryable", True),
+                }
+                # Optional fields
+                if meta.get("upstream_reason"):
+                    queries_metadata[guid]["upstream_reason"] = meta["upstream_reason"]
+                if meta.get("waf"):
+                    queries_metadata[guid]["waf"] = meta["waf"]
+
+            # Preserve existing license info if present
+            license_info = (
+                existing.get("license")
+                if existing
+                else {
+                    "spdx": "MIT",
+                    "upstream_license_url": f"https://github.com/{repo}/blob/{upstream_sha}/LICENSE",
+                }
+            )
+
             new_source = {
                 "repo": repo,
                 "commit_sha": upstream_sha,
                 "ref": f"commit:{upstream_sha}",
                 "vendored_at": timestamp,
+                "license": license_info,
                 "subset": {
                     "source_file": repo_def["source_file"],
                     "checklist_ids": checklist_ids,
                     "files": files,
+                    "queries": queries_metadata,
                 },
                 "file_count": len(checklist_ids),
             }
@@ -336,7 +496,8 @@ def refresh_snapshot(dry_run: bool = False) -> bool:
             print(f"  Extracted {len(checklist_ids)} queries")
 
     if changes_detected and not dry_run:
-        # Save updated manifest
+        # Save updated manifest with schema_version: 2
+        manifest["schema_version"] = 2
         manifest["sources"] = new_sources
 
         # Regenerate SHA-256 hashes for all query files
