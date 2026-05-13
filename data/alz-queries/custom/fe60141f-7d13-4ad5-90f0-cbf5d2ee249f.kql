@@ -1,0 +1,29 @@
+// Custom query authored in martinopedal/mcp-server-azure-architect
+// Issue #99: Identity / RBAC drift queries
+// Query ID: fe60141f-7d13-4ad5-90f0-cbf5d2ee249f
+// Description: Audit highly privileged role assignments (Owner, Contributor, User Access Administrator)
+authorizationresources
+| where type =~ 'microsoft.authorization/roleassignments'
+| extend roleId = tostring(properties.roleDefinitionId)
+| extend principalType = tostring(properties.principalType)
+| extend principalId = tostring(properties.principalId)
+| extend scope = tostring(properties.scope)
+| where roleId endswith '8e3af657-a8ff-443c-a75c-2fe8c4bcb635'  // Owner
+    or roleId endswith 'b24988ac-6180-42a0-ab88-20f7382dd24c'  // Contributor  
+    or roleId endswith '18d7d88d-d35e-4fb5-a5c3-7773c20a72d9'  // User Access Administrator
+| extend roleName = case(
+    roleId endswith '8e3af657-a8ff-443c-a75c-2fe8c4bcb635', 'Owner',
+    roleId endswith 'b24988ac-6180-42a0-ab88-20f7382dd24c', 'Contributor',
+    roleId endswith '18d7d88d-d35e-4fb5-a5c3-7773c20a72d9', 'User Access Administrator',
+    'Unknown'
+)
+| project id,
+          name=strcat(roleName, ' @ ', scope),
+          checkItem='Privileged Role Assignments',
+          currentValue=strcat(roleName, ' assigned to ', principalType, ' at ', scope),
+          expectedValue='Minimize highly privileged assignments',
+          compliant=false,
+          roleName,
+          principalType,
+          principalId,
+          scope

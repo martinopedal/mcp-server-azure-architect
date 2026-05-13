@@ -1,0 +1,16 @@
+// Custom query authored in martinopedal/mcp-server-azure-architect
+// Issue #99: Identity / RBAC drift queries
+// Query ID: 464f1e97-148f-4250-a716-d22b289bac41
+// Description: Detect classic subscription administrators (deprecated)
+authorizationresources
+| where type =~ 'microsoft.authorization/classicadministrators'
+| extend emailAddress = tostring(properties.emailAddress)
+| extend role = tostring(properties.role)
+| project id,
+          name=emailAddress,
+          checkItem='Classic Administrators',
+          currentValue=strcat(role, ': ', emailAddress),
+          expectedValue='Migrate to Azure RBAC',
+          compliant=false,
+          role,
+          emailAddress

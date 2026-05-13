@@ -1,0 +1,27 @@
+// Custom query authored in martinopedal/mcp-server-azure-architect
+// Issue #99: Identity / RBAC drift queries
+// Query ID: decc6b2b-9a5b-4261-a2f7-eac632b550fe
+// Description: Identify managed identities without active role assignments (orphaned)
+resources
+| where identity has 'SystemAssigned' or identity has 'UserAssigned'
+| extend principalId = tostring(identity.principalId)
+| extend identityType = tostring(identity.type)
+| where isnotempty(principalId)
+| join kind=leftouter (
+    authorizationresources
+    | where type =~ 'microsoft.authorization/roleassignments'
+    | extend principalId = tostring(properties.principalId)
+    | distinct principalId
+) on principalId
+| where isempty(principalId1)
+| project id,
+          name,
+          type,
+          resourceGroup,
+          subscriptionId,
+          checkItem='Orphaned Managed Identities',
+          currentValue=strcat(identityType, ' MI without role assignments'),
+          expectedValue='Managed identities should have role assignments or be removed',
+          compliant=false,
+          identityType,
+          principalId
