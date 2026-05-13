@@ -2,7 +2,16 @@
 
 **Owner:** Atlas (ARG/KQL Engineer)  
 **First applied:** Issue #99 (custom identity/RBAC queries)  
+**Confidence:** medium (2 confirmed applications: PR #128 #99, PR #129 #100)  
 **Related:** ADR-006 (custom query provenance), manifest v2 schema
+
+## Confirmations
+
+This skill has been applied successfully in two issues:
+
+1. **PR #128 (#99):** 5 custom identity/RBAC drift queries (RBAC roles enumeration, classic administrators, service principals, orphan managed identities, privileged role assignments). Initial application had hallucination issues; recovery via coordinator mechanical gates produced clean merge.
+
+2. **PR #129 (#100):** 2 custom governance queries (diagnostics_coverage, tag_audit). Clean implementation. Discovered + fixed critical latent bug in refresh-script: `manifest["sources"] = new_sources` wholesale overwrote sources array, would have deleted custom queries on next quarterly refresh. Bug was latent since PR #126 (manifest v2 migration). Regression test `test_custom_source_preservation_during_refresh` added to prevent recurrence. Process violations documented (three "all green" overstatements + one direct-push-to-main); Atlas acknowledged in final report.
 
 ## Pattern
 
@@ -116,6 +125,13 @@ Before remediation commit:
 **Upstream re-vendor:** If upstream later adds a query equivalent to a custom query, DO NOT delete the custom query. Keep both (different GUIDs). Rationale: Avoids breaking existing references to the custom GUID.
 
 **Unicode encoding:** verify_query_integrity.py uses `\u2192` (→) and `\u2717` (✗) which fail in Windows PowerShell cp1252. Workaround: compute sha256 manually in Python and write directly to manifest.json.
+
+**Refresh-script preservation CRITICAL:** The refresh-script must preserve custom sources when re-vendoring upstream queries. Previous bug (PR #126 latent): `manifest["sources"] = new_sources` wholesale overwrote the sources array, would have deleted all custom queries on next refresh. Fix at line ~503-510:
+```python
+custom_sources = [s for s in manifest.get("sources", []) if s.get("ref") == "custom"]
+manifest["sources"] = new_sources + custom_sources
+```
+This pattern ensures quarterly refresh cycles do not clobber authored custom queries. Always verify this preservation logic when modifying the refresh script. Regression test added: `test_custom_source_preservation_during_refresh`.
 
 ## Reusability
 
