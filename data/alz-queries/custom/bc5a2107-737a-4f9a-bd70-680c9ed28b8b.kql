@@ -1,0 +1,20 @@
+// Custom query authored in martinopedal/mcp-server-azure-architect
+// Issue #99: Identity / RBAC drift queries
+// Query ID: bc5a2107-737a-4f9a-bd70-680c9ed28b8b
+// Description: Service principals with role assignments (authentication risk surface)
+authorizationresources
+| where type =~ 'microsoft.authorization/roleassignments'
+| extend principalType = tostring(properties.principalType)
+| extend principalId = tostring(properties.principalId)
+| extend scope = tostring(properties.scope)
+| extend roleId = tostring(properties.roleDefinitionId)
+| where principalType =~ 'ServicePrincipal'
+| summarize roleCount = count(), scopes = make_set(scope), roleIds = make_set(roleId) by principalId
+| project principalId,
+          name=strcat('SP ', principalId),
+          checkItem='Service Principal RBAC',
+          currentValue=strcat(tostring(roleCount), ' role assignment(s)'),
+          expectedValue='Use managed identities instead of service principals',
+          compliant=false,
+          roleCount,
+          scopeCount=array_length(scopes)

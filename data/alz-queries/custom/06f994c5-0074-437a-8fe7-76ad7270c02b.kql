@@ -1,0 +1,25 @@
+// Custom query authored in martinopedal/mcp-server-azure-architect
+// Issue #99: Identity / RBAC drift queries
+// Query ID: 06f994c5-0074-437a-8fe7-76ad7270c02b
+// Description: Enumerate custom RBAC roles and their assignment counts
+authorizationresources
+| where type =~ 'microsoft.authorization/roledefinitions'
+| where properties.type =~ 'CustomRole'
+| extend roleName = tostring(properties.roleName)
+| extend roleId = tostring(id)
+| extend assignableScopes = properties.assignableScopes
+| extend permissions = properties.permissions
+| join kind=leftouter (
+    authorizationresources
+    | where type =~ 'microsoft.authorization/roleassignments'
+    | extend roleDefId = tostring(properties.roleDefinitionId)
+    | summarize assignmentCount = count() by roleDefId
+) on $left.roleId == $right.roleDefId
+| project id, 
+          name=roleName, 
+          checkItem='Custom RBAC Roles', 
+          currentValue=strcat(roleName, ' (', tostring(coalesce(assignmentCount, 0)), ' assignments)'),
+          expectedValue='Review custom roles for least privilege',
+          compliant=true,
+          assignmentCount=coalesce(assignmentCount, 0),
+          assignableScopes

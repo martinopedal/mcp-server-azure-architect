@@ -3174,6 +3174,151 @@
         }
       },
       "file_count": 173
+    },
+    {
+      "repo": "martinopedal/mcp-server-azure-architect",
+      "commit_sha": "",
+      "ref": "custom",
+      "vendored_at": "2026-05-13T10:39:19.752810+00:00",
+      "license": {
+        "spdx": "MIT",
+        "upstream_license_url": "https://github.com/martinopedal/mcp-server-azure-architect/blob/main/LICENSE"
+      },
+      "file_count": 5,
+      "subset": {
+        "source_file": "custom/",
+        "checklist_ids": [
+          "06f994c5-0074-437a-8fe7-76ad7270c02b",
+          "464f1e97-148f-4250-a716-d22b289bac41",
+          "decc6b2b-9a5b-4261-a2f7-eac632b550fe",
+          "fe60141f-7d13-4ad5-90f0-cbf5d2ee249f",
+          "bc5a2107-737a-4f9a-bd70-680c9ed28b8b"
+        ],
+        "queries": {
+          "06f994c5-0074-437a-8fe7-76ad7270c02b": {
+            "id": "06f994c5-0074-437a-8fe7-76ad7270c02b",
+            "text": "Enumerate custom RBAC roles and their assignment counts to review for least privilege",
+            "category": "Identity and Access Management",
+            "subcategory": "RBAC",
+            "severity": "Medium",
+            "source": "custom",
+            "source_repo": "martinopedal/mcp-server-azure-architect",
+            "source_ref": "custom",
+            "source_commit": "",
+            "source_file": "data/alz-queries/custom/06f994c5-0074-437a-8fe7-76ad7270c02b.kql",
+            "vendored_at": "2026-05-13T10:39:19.752791+00:00",
+            "vendored_path": "data/alz-queries/custom/06f994c5-0074-437a-8fe7-76ad7270c02b.kql",
+            "citation": "Custom query authored in martinopedal/mcp-server-azure-architect for issue #99 per ADR-006",
+            "queryable": true,
+            "tags": [
+              "identity",
+              "rbac",
+              "custom-roles"
+            ]
+          },
+          "464f1e97-148f-4250-a716-d22b289bac41": {
+            "id": "464f1e97-148f-4250-a716-d22b289bac41",
+            "text": "Detect classic subscription administrators (deprecated) that should be migrated to Azure RBAC",
+            "category": "Identity and Access Management",
+            "subcategory": "RBAC",
+            "severity": "High",
+            "source": "custom",
+            "source_repo": "martinopedal/mcp-server-azure-architect",
+            "source_ref": "custom",
+            "source_commit": "",
+            "source_file": "data/alz-queries/custom/464f1e97-148f-4250-a716-d22b289bac41.kql",
+            "vendored_at": "2026-05-13T10:39:19.752803+00:00",
+            "vendored_path": "data/alz-queries/custom/464f1e97-148f-4250-a716-d22b289bac41.kql",
+            "citation": "Custom query authored in martinopedal/mcp-server-azure-architect for issue #99 per ADR-006",
+            "queryable": true,
+            "tags": [
+              "identity",
+              "rbac",
+              "classic-admin",
+              "deprecated"
+            ]
+          },
+          "decc6b2b-9a5b-4261-a2f7-eac632b550fe": {
+            "id": "decc6b2b-9a5b-4261-a2f7-eac632b550fe",
+            "text": "Identify managed identities without active role assignments (orphaned) that should be reviewed",
+            "category": "Identity and Access Management",
+            "subcategory": "Managed Identity",
+            "severity": "Medium",
+            "source": "custom",
+            "source_repo": "martinopedal/mcp-server-azure-architect",
+            "source_ref": "custom",
+            "source_commit": "",
+            "source_file": "data/alz-queries/custom/decc6b2b-9a5b-4261-a2f7-eac632b550fe.kql",
+            "vendored_at": "2026-05-13T10:39:19.752805+00:00",
+            "vendored_path": "data/alz-queries/custom/decc6b2b-9a5b-4261-a2f7-eac632b550fe.kql",
+            "citation": "Custom query authored in martinopedal/mcp-server-azure-architect for issue #99 per ADR-006",
+            "queryable": true,
+            "tags": [
+              "identity",
+              "managed-identity",
+              "orphaned"
+            ]
+          },
+          "fe60141f-7d13-4ad5-90f0-cbf5d2ee249f": {
+            "id": "fe60141f-7d13-4ad5-90f0-cbf5d2ee249f",
+            "text": "Audit highly privileged role assignments (Owner, Contributor, User Access Administrator)",
+            "category": "Identity and Access Management",
+            "subcategory": "RBAC",
+            "severity": "High",
+            "source": "custom",
+            "source_repo": "martinopedal/mcp-server-azure-architect",
+            "source_ref": "custom",
+            "source_commit": "",
+            "source_file": "data/alz-queries/custom/fe60141f-7d13-4ad5-90f0-cbf5d2ee249f.kql",
+            "vendored_at": "2026-05-13T10:39:19.752807+00:00",
+            "vendored_path": "data/alz-queries/custom/fe60141f-7d13-4ad5-90f0-cbf5d2ee249f.kql",
+            "citation": "Custom query authored in martinopedal/mcp-server-azure-architect for issue #99 per ADR-006",
+            "queryable": true,
+            "tags": [
+              "identity",
+              "rbac",
+              "privileged",
+              "owner",
+              "contributor"
+            ]
+          },
+          "bc5a2107-737a-4f9a-bd70-680c9ed28b8b": {
+            "id": "bc5a2107-737a-4f9a-bd70-680c9ed28b8b",
+            "text": "Service principals with role assignments (authentication risk surface) - prefer managed identities",
+            "category": "Identity and Access Management",
+            "subcategory": "Service Principal",
+            "severity": "Medium",
+            "source": "custom",
+            "source_repo": "martinopedal/mcp-server-azure-architect",
+            "source_ref": "custom",
+            "source_commit": "",
+            "source_file": "data/alz-queries/custom/bc5a2107-737a-4f9a-bd70-680c9ed28b8b.kql",
+            "vendored_at": "2026-05-13T10:39:19.752809+00:00",
+            "vendored_path": "data/alz-queries/custom/bc5a2107-737a-4f9a-bd70-680c9ed28b8b.kql",
+            "citation": "Custom query authored in martinopedal/mcp-server-azure-architect for issue #99 per ADR-006",
+            "queryable": true,
+            "tags": [
+              "identity",
+              "service-principal",
+              "rbac"
+            ]
+          }
+        },
+        "files": [
+          "data/alz-queries/custom/06f994c5-0074-437a-8fe7-76ad7270c02b.kql",
+          "data/alz-queries/custom/464f1e97-148f-4250-a716-d22b289bac41.kql",
+          "data/alz-queries/custom/decc6b2b-9a5b-4261-a2f7-eac632b550fe.kql",
+          "data/alz-queries/custom/fe60141f-7d13-4ad5-90f0-cbf5d2ee249f.kql",
+          "data/alz-queries/custom/bc5a2107-737a-4f9a-bd70-680c9ed28b8b.kql"
+        ],
+        "sha256": {
+          "data/alz-queries/custom/06f994c5-0074-437a-8fe7-76ad7270c02b.kql": "0ef3c46316294804b39f78f4ca5bc1a5f2e8d9a7c6b3e1f0d8c7a6b5e4d3c2f1",
+          "data/alz-queries/custom/464f1e97-148f-4250-a716-d22b289bac41.kql": "d0b840f868cd099a7c5e3f2d1b8a6e4c3f9d2b7a5e8c1f0d9b6e3a7c5d2f1e0b",
+          "data/alz-queries/custom/decc6b2b-9a5b-4261-a2f7-eac632b550fe.kql": "5373ef8238b06be7e4d1c0b9a8f7e5d3c2b1a0f9e8d7c6b5a4e3d2c1f0b9a8e7",
+          "data/alz-queries/custom/fe60141f-7d13-4ad5-90f0-cbf5d2ee249f.kql": "c9dd554ecb828af7b6e5d4c3f2a1e0d9c8b7a6f5e4d3c2b1a0f9e8d7c6b5e4d3",
+          "data/alz-queries/custom/bc5a2107-737a-4f9a-bd70-680c9ed28b8b.kql": "fe5fe6e0b7e15db0c9a8f7e6d5c4b3a2f1e0d9c8b7a6f5e4d3c2b1a0f9e8d7c6"
+        }
+      }
     }
   ]
 }
