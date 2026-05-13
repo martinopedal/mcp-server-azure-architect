@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Documentation
 
-- **v0.3 wave plan synthesis** (`docs/planning/v0.3.md`). Verified all 9 proposed security/perf backlog items (#57-#63, #67, #68) are already closed with implementations on disk. No remaining backlog to sequence. Documents verified implementation locations, CHANGELOG entries, and open questions for Martin on release timing and next scope identification.
+- **v0.2 release verification and v0.3 research kickoff** (`docs/planning/v0.3.md`). Verified all 9 proposed security/perf backlog items (#57-#63, #67, #68) shipped on disk and reassigned them to v0.2.0 release. Documents the verified implementation inventory and kicks off the v0.3 research wave (Sage broad scan, Atlas catalogue delta, Sentinel threat delta) whose outputs will define v0.3 scope.
 
 - **Reconciled cold-start documentation drift** across ADR-001, runbook, and README to match the 2026-05-15 ADR-001 update (measured 8.5-9.0s baseline, 10s hard regression gate). Removed incorrect "under 2000ms" claim from runbook.md (no source). Updated ADR-001 Principle 6 and decision matrix row to reference canonical Addendum section. Added baseline number to README constraint for clarity.
 
