@@ -314,7 +314,7 @@ def refresh_snapshot(dry_run: bool = False) -> bool:
     # NOTE: Temporarily vendoring from checklist repo ONLY to avoid guid collision
     # per Decision 10/11 (issue #96). The checklist repo is marked as merged=true
     # and contains 173 queryable items. The graph repo causes guid collision for
-    # 667313b4-f566-44b5-b984-a859c773e7d2.
+    # one item (see PR #127 body for the specific guid).
     repos: list[RepoConfig] = [
         {
             "repo": "martinopedal/alz-checklist-queries",
