@@ -1305,6 +1305,100 @@ Five orchestration-log entries created (one per agent):
 
 Each entry documents agent routing, authorization, mode, files authorized, outcomes, and key findings.
 
+## Wave 15 — v0.3 Wave-Open (PR #134, 8 Candidate Issues, 2026-05-18)
+
+**Author:** Lead (planning decision) + Coordinator (execution)  
+**Date:** 2026-05-18  
+**Status:** Wave opened (PR #134 in review, 8 issues filed, dependencies resolved)  
+**Scope:** v0.3 planning synthesis + GitHub issue creation + follow-up coordination
+
+### Lead Decision: v0.3 Plan Extension (9-Candidate Scope)
+
+**Decision:** APPROVED (all 9 candidates included per Coordinator directive)
+
+**What:** All 9 candidates from the 3-agent research wave (Sentinel, Atlas, Sage) are included in v0.3 scope. The plan is organized into 3 parallel tracks with per-candidate ownership, severity, effort, and dependencies.
+
+**Candidates (9 total):**
+
+- **Security track (T4, T2, I4):** CodeQL Python language matrix, manifest integrity hash, token_scrub consolidation.
+- **Catalogue track (A1, A2, A3):** backup_coverage query (Reliability pillar gap, replaced diagnostics_coverage which shipped), managed_identity_audit query, upstream 82-query gap analysis.
+- **Stewardship track (G1, G2, G3):** PyPI publication (external blocker for v0.2.0), github-mcp-server semver pin, Copilot CLI skill deferral documentation.
+
+**Rationale:**
+
+1. **Security track** addresses highest-severity findings from Sentinel. T4 (CodeQL Python) is one line of config but closes a false-coverage gap that undermines the entire CI security posture. T2 (manifest integrity) closes the root-of-trust hole identified in the T1 mitigation. I4 (token_scrub consolidation) eliminates duplicated code and closes 6+ pattern gaps.
+
+2. **Catalogue track** fills the thinnest WAF pillars. A1 targets Reliability (0 queries, the widest gap). A2 extends identity coverage for zero-trust assessments. A3 is research-only to understand the 82-query vendor gap before expanding the catalogue further.
+
+3. **Stewardship track** addresses distribution, supply-chain hygiene, and documentation clarity. G1 (PyPI) is the sole external blocker for v0.2.0 release. G2 closes an ADR-004 violation. G3 sets correct expectations for users who see "skills" in the charter.
+
+**Trade-offs Named:**
+
+- **A1 swap:** `diagnostics_coverage` (Atlas's top catalogue pick) was already shipped in #100. Replaced with `backup_coverage` (Reliability). Trade-off: less mature query domain, but 0% coverage in a WAF pillar is a bigger gap than adding another query to a covered pillar.
+- **No Sentinel P1 items in v0.3.** Sentinel identified 13 threats total. Only 3 (T4, T2, I4) are P0. The remaining 10 are P1 hardening. Including all 13 would bloat v0.3 scope. They become v0.3.x patch candidates or v0.4.
+- **PR #133 metadata revert.** The reframed metadata described content the merged commit does not contain. Reverting is cleaner than leaving misleading metadata, even though this PR supersedes it.
+
+**Source artifacts:** Sentinel research (`sentinel-v03-research-threat-delta.md`), Atlas research (`atlas-v03-research-catalogue-delta.md`), Sage research (`sage-v03-research-broad-scan.md`), Coordinator directive ("ALL 9 candidates from the 3-agent research wave land in v0.3").
+
+### Coordinator Execution: Wave-Open Delivery
+
+**Date:** 2026-05-18  
+**PR:** #134 (docs/v03-plan-synthesis)  
+**Commits:** Lead synthesis (commit TBD on PR), Coordinator follow-up `57bdda5` (cross-links + issue reference update)
+
+**Artifacts Delivered:**
+
+1. **PR #134:** Opened on `docs/v03-plan-synthesis` branch with two work products:
+   - `docs/planning/v0.3.md` — Full v0.2 release inventory + v0.3 9-candidate consolidated scope (T4/T2/I4 security, A1/A2/A3 catalogue, G1/G2/G3 stewardship). A1 candidate corrected from `diagnostics_coverage` (shipped in #100) to `backup_coverage` (Reliability pillar gap).
+   - `CHANGELOG.md` — Consolidated 7 duplicate H3 categories under `[Unreleased]` into single canonical blocks in canonical order: Added → Changed → Fixed → Security → Documentation → Repository Infrastructure → Automation.
+
+2. **PR #133 Metadata Revert:** Coordinator used `gh pr edit` to revert PR #133 metadata to match the merged commit's original framing. The PR metadata had been edited to describe a reframe, but the merge captured the original framing — divergence was repaired to eliminate confusion.
+
+3. **Eight GitHub Issues Created (all labeled `release:v0.3`):**
+   - #135: T4 (squad:sentinel) — security: Add Python to CodeQL language matrix
+   - #136: T2 (squad:sentinel) — security: manifest.json integrity hash
+   - #137: I4 (squad:sentinel) — security: token_scrub consolidation
+   - #138: A1 (squad:atlas) — feat(alz): backup_coverage query for Reliability pillar
+   - #139: A2 (squad:atlas) — feat(alz): managed_identity_audit query
+   - #140: A3 (squad:atlas) — chore(alz): analyze upstream 82-query gap
+   - #141: G2 (squad:burke) — chore(companions): pin github-mcp-server to semver tag
+   - #142: G3 (squad:sage) — docs: document Copilot CLI skill deferral in README
+
+4. **G1 External Blocker:** Issue #93 (existing, PyPI publication) carries the G1 scope. All v0.3 issues + #93 are cross-linked in `docs/planning/v0.3.md`.
+
+5. **Follow-Up Coordination Commit `57bdda5`:** Added `[#NN]` cross-links to each candidate ID in `docs/planning/v0.3.md` and updated the closing summary line to reference the 8 new issues + #93. PR #134 is currently re-running gates after this commit.
+
+**Known Issues & Follow-Up:**
+
+- **Auto-label workflow over-application:** The sync workflow added extra `squad:forge` and `squad:lead` ownership tags to several issues beyond the intended single `squad:{member}` label. Minor UX issue, not blocking. Follow-up: review the auto-label keyword matching regex to tighten specificity.
+- **Spawn authorization boundary lesson:** During earlier session, coordinator's spawn authorization for Lead did not restrict per-issue closures. Lesson: never authorize agents to close issues without explicit per-issue authorization. Reinforced in this session's Lead charter review.
+
+**Validation Gates (PR #134 at open):**
+
+- CodeQL (Python + Actions) — pending re-run after commit `57bdda5`
+- Dependency-review — pending re-run
+- gitleaks — pending re-run
+- Mypy, ruff, pytest — expected green
+- Read-only AST gate — expected green
+- MCP Inspector smoke — expected green
+- Branch protection — awaiting 1 approving review
+
+### Institutional Memory
+
+**Duplicate-Session Collision (resolved):** A sibling coordinator merged PR #133 mid-reframe. This session recovered Lead's reframe commit `398b42f` to local branch `lead-reframe-recovery` before git GC could collect it (origin still has it as `origin/docs/v03-plan-synthesis`). Reconciliation logged in `.squad/log/2026-05-13T15-30-00Z-duplicate-session-collision-and-v03-research-wave.md`. Lesson: explicit branch naming and origin tracking prevents gc-induced state loss across concurrent sessions.
+
+**Process Quality:** Lead's planning decision was sound, well-researched, and delivered with clear trade-off documentation. Coordinator's execution was mechanical (issue filing, cross-linking, metadata repair) with clean separation of concerns. No process violations or hallucinations this wave.
+
+### Related
+
+- Lead inbox decision: `lead-v03-plan-extension.md` (merged into this entry)
+- Sentinel research: archived locally in `.squad/agents/sentinel/`
+- Atlas research: archived locally in `.squad/agents/atlas/`
+- Sage research: archived locally in `.squad/agents/sage/`
+- PR #134: docs/v03-plan-synthesis branch, awaiting review
+- Issues: #135-142 (v0.3 candidates), #93 (G1 external blocker)
+- Previous waves: Wave 13 (cold-start reconciliation), Waves 8-12 (KQL catalogue expansion)
+
 ---
 
 ## Governance
