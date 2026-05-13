@@ -6,7 +6,6 @@ import pytest
 
 from mcp_server_azure_architect import alz_queries
 
-
 CUSTOM_GUIDS = [
     "06f994c5-0074-437a-8fe7-76ad7270c02b",
     "464f1e97-148f-4250-a716-d22b289bac41",
