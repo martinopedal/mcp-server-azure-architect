@@ -1,4 +1,5 @@
 {
+  "schema_version": 2,
   "sources": [
     {
       "repo": "martinopedal/alz-checklist-queries",
@@ -22,6 +23,40 @@
         "sha256": {
           "data/alz-queries/checklist/54f0d8b1-22a3-4c0d-8ce2-58b9e086c93a.kql": "35c9f61e21f4aa19a7497ba293abc83fc713025e9147609320c259e68e5cc61f",
           "data/alz-queries/checklist/348ef254-c27d-442e-abba-c7571559ab91.kql": "93476d96090080a5fc32c450afaffc8540990a9f6a4a8d00bceac93cc273703b"
+        },
+        "queries": {
+          "54f0d8b1-22a3-4c0d-8ce2-58b9e086c93a": {
+            "id": "54f0d8b1-22a3-4c0d-8ce2-58b9e086c93a",
+            "text": "Assign a budget for each department and account, and establish an alert associated with the budget.",
+            "category": "Azure Billing and Microsoft Entra ID Tenants",
+            "subcategory": "Enterprise Agreement",
+            "severity": "Low",
+            "source": "vendored-checklist",
+            "source_repo": "martinopedal/alz-checklist-queries",
+            "source_ref": "commit:e7641beeda0126cc78825f8b77764c379552f3e1",
+            "source_file": "queries/alz_all_queries.json",
+            "vendored_at": "2026-04-22T12:35:39Z",
+            "vendored_path": "data/alz-queries/checklist/54f0d8b1-22a3-4c0d-8ce2-58b9e086c93a.kql",
+            "citation": "martinopedal/alz-checklist-queries@e7641beeda0126cc78825f8b77764c379552f3e1 (queries/alz_all_queries.json) checklist_id=54f0d8b1-22a3-4c0d-8ce2-58b9e086c93a",
+            "queryable": true,
+            "upstream_reason": "Not automatable via ARG"
+          },
+          "348ef254-c27d-442e-abba-c7571559ab91": {
+            "id": "348ef254-c27d-442e-abba-c7571559ab91",
+            "text": "Enforce a RBAC model that aligns to your cloud operating model. Scope and Assign across Management Groups and Subscriptions.",
+            "category": "Identity and Access Management",
+            "subcategory": "Identity",
+            "severity": "High",
+            "source": "vendored-checklist",
+            "source_repo": "martinopedal/alz-checklist-queries",
+            "source_ref": "commit:e7641beeda0126cc78825f8b77764c379552f3e1",
+            "source_file": "queries/alz_all_queries.json",
+            "vendored_at": "2026-04-22T12:35:39Z",
+            "vendored_path": "data/alz-queries/checklist/348ef254-c27d-442e-abba-c7571559ab91.kql",
+            "citation": "martinopedal/alz-checklist-queries@e7641beeda0126cc78825f8b77764c379552f3e1 (queries/alz_all_queries.json) checklist_id=348ef254-c27d-442e-abba-c7571559ab91",
+            "queryable": true,
+            "upstream_reason": "Not automatable via ARG"
+          }
         }
       },
       "file_count": 2
@@ -38,19 +73,33 @@
       "subset": {
         "source_file": "queries/alz_additional_queries.json",
         "checklist_ids": [
-          "e8aa1e41-870d-4968-94c6-77be14f510ac",
           "667313b4-f566-44b5-b984-a859c773e7d2"
         ],
         "files": [
-          "data/alz-queries/graph/e8aa1e41-870d-4968-94c6-77be14f510ac.kql",
           "data/alz-queries/graph/667313b4-f566-44b5-b984-a859c773e7d2.kql"
         ],
         "sha256": {
-          "data/alz-queries/graph/e8aa1e41-870d-4968-94c6-77be14f510ac.kql": "8d75212f8e502761eababeee4914f5fc6eeb4321b4dfc3fd95c90a13b4994a02",
           "data/alz-queries/graph/667313b4-f566-44b5-b984-a859c773e7d2.kql": "85fb49e2a26f0d8b64673a41b57de4955d4d6c16b5cb066c1570f78bae750497"
+        },
+        "queries": {
+          "667313b4-f566-44b5-b984-a859c773e7d2": {
+            "id": "667313b4-f566-44b5-b984-a859c773e7d2",
+            "text": "Enforce a sandbox management group to allow users to immediately experiment with Azure.",
+            "category": "Resource Organization",
+            "subcategory": "Subscriptions",
+            "severity": "Medium",
+            "source": "vendored-graph",
+            "source_repo": "martinopedal/alz-graph-queries",
+            "source_ref": "commit:448998d01000e7f863d3c1f8876787fd2234a77b",
+            "source_file": "queries/alz_additional_queries.json",
+            "vendored_at": "2026-05-12T21:52:10Z",
+            "vendored_path": "data/alz-queries/graph/667313b4-f566-44b5-b984-a859c773e7d2.kql",
+            "citation": "martinopedal/alz-graph-queries@448998d01000e7f863d3c1f8876787fd2234a77b (queries/alz_additional_queries.json) checklist_id=667313b4-f566-44b5-b984-a859c773e7d2",
+            "queryable": true
+          }
         }
       },
-      "file_count": 2
+      "file_count": 1
     }
   ]
 }

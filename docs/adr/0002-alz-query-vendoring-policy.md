@@ -236,3 +236,7 @@ The initial snapshot in PR #27 pins:
 
 **Assigned to:** Atlas  
 **Status:** Pending (scheduled for next maintenance window)
+
+---
+
+**Note:** This ADR is superseded for per-query metadata schema and custom-query provenance by ADR-006 (2026-05-16). ADR-002 remains authoritative for vendoring storage policy, manifest top-level structure, refresh cadence, and citation requirements.

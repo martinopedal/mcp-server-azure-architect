@@ -241,16 +241,17 @@ async def test_scorecard_by_source_breakdown() -> None:
         result = await run_scorecard(
             subscription_id="sub-123",
             checklist_ids=[
-                "54f0d8b1-22a3-4c0d-8ce2-58b9e086c93a",  # checklist source
-                "e8aa1e41-870d-4968-94c6-77be14f510ac",  # graph source
+                "54f0d8b1-22a3-4c0d-8ce2-58b9e086c93a",  # vendored-checklist source
+                "667313b4-f566-44b5-b984-a859c773e7d2",  # vendored-graph source
             ],
         )
 
         by_source = result["aggregate"]["by_source"]
-        assert "checklist" in by_source
-        assert "graph" in by_source
-        assert by_source["checklist"]["pass"] == 1
-        assert by_source["graph"]["pass"] == 1
+        # Manifest v2: source values are now "vendored-*"
+        assert "vendored-checklist" in by_source
+        assert "vendored-graph" in by_source
+        assert by_source["vendored-checklist"]["pass"] == 1
+        assert by_source["vendored-graph"]["pass"] == 1
 
 
 @pytest.mark.asyncio

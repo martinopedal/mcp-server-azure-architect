@@ -6,6 +6,35 @@ Vendored at: 2026-05-12T21:52:10Z
 
 This snapshot is pinned to commit SHAs. No `main` or `latest` references are used for source content.
 
+## Manifest Schema
+
+**Schema version:** 2 (as of issue #125, ADR-006)
+
+Manifest v2 adds rich per-query metadata under `sources[].subset.queries[<guid>]`:
+
+**Mandatory fields per query:**
+- `id`: checklist guid
+- `text`: checklist item text (may be empty if unavailable upstream)
+- `category`: WAF category
+- `subcategory`: WAF subcategory
+- `severity`: High, Medium, or Low
+- `source`: one of `vendored-checklist`, `vendored-graph`, `custom`
+- `source_repo`: GitHub repository slug
+- `source_ref`: ref (tag or commit) vendored from
+- `source_file`: upstream file path within the repo
+- `vendored_at`: ISO 8601 timestamp
+- `vendored_path`: relative path within this repo's vendored snapshot
+- `citation`: human-readable provenance
+- `queryable`: bool, whether the query is executable via ARG
+
+**Optional fields (where upstream provides data):**
+- `scope_hint`: `subscription`, `management-group`, or `tenant` (ARG scope)
+- `tags`: array of strings, free-form categorization
+- `waf`: Well-Architected Framework pillar
+- `upstream_reason`: the upstream `reason` field (preserved as-is, often noisy)
+
+See ADR-006 for design rationale and custom-query provenance pattern.
+
 ## Refresh cadence
 
 Vendored snapshots are refreshed automatically on a **weekly cadence** (Monday 06:00 UTC) via `.github/workflows/refresh-alz-snapshot.yml`. The workflow:
@@ -36,8 +65,8 @@ Vendored snapshots are refreshed automatically on a **weekly cadence** (Monday 0
 - ref: `commit:448998d01000e7f863d3c1f8876787fd2234a77b`
 - vendored_at: `2026-05-12T21:52:10Z`
 - source_file: `queries/alz_additional_queries.json`
-- checklist_ids: `e8aa1e41-870d-4968-94c6-77be14f510ac, 667313b4-f566-44b5-b984-a859c773e7d2`
-- file_count: `2`
+- checklist_ids: `667313b4-f566-44b5-b984-a859c773e7d2`
+- file_count: `1`
 
 ## Breaking-change detection
 

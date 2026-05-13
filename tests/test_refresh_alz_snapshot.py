@@ -149,27 +149,41 @@ def test_manifest_regeneration_valid_structure(temp_data_dir: Path) -> None:
 
 
 def test_extract_queries_from_checklist_repo(tmp_path: Path) -> None:
-    """Test extracting queries from checklist repo mock."""
+    """Test extracting queries from checklist repo with current upstream shape."""
     clone_dir = tmp_path / "clone"
     clone_dir.mkdir()
     queries_dir = clone_dir / "queries"
     queries_dir.mkdir()
 
-    # Mock alz_all_queries.json
+    # Mock alz_all_queries.json with current upstream shape
     source_json = queries_dir / "alz_all_queries.json"
     source_json.write_text(
         json.dumps(
             {
-                "items": [
+                "metadata": {
+                    "name": "Azure Landing Zone Review",
+                    "merged": False,
+                },
+                "queries": [
                     {
-                        "id": "test-checklist-1",
+                        "guid": "test-checklist-1",
                         "graph": "resources | where type =~ 'microsoft.test'",
+                        "text": "Test checklist item 1",
+                        "category": "Test Category",
+                        "subcategory": "Test Subcategory",
+                        "severity": "High",
+                        "queryable": True,
                     },
                     {
-                        "id": "test-checklist-2",
+                        "guid": "test-checklist-2",
                         "graph": "resources | where name =~ 'testname'",
+                        "text": "Test checklist item 2",
+                        "category": "Test Category",
+                        "subcategory": "Test Subcategory 2",
+                        "severity": "Medium",
+                        "queryable": True,
                     },
-                ]
+                ],
             }
         )
     )
@@ -177,11 +191,17 @@ def test_extract_queries_from_checklist_repo(tmp_path: Path) -> None:
     dest_dir = tmp_path / "output"
     dest_dir.mkdir()
 
-    checklist_ids = ras.extract_queries_from_checklist_repo(clone_dir, dest_dir)
+    checklist_ids, metadata_dict = ras.extract_queries_from_checklist_repo(clone_dir, dest_dir)
 
     assert len(checklist_ids) == 2
     assert "test-checklist-1" in checklist_ids
     assert "test-checklist-2" in checklist_ids
+
+    # Verify metadata dict
+    assert "test-checklist-1" in metadata_dict
+    assert metadata_dict["test-checklist-1"]["text"] == "Test checklist item 1"
+    assert metadata_dict["test-checklist-1"]["category"] == "Test Category"
+    assert metadata_dict["test-checklist-1"]["severity"] == "High"
 
     kql_file = dest_dir / "test-checklist-1.kql"
     assert kql_file.exists()
@@ -191,7 +211,7 @@ def test_extract_queries_from_checklist_repo(tmp_path: Path) -> None:
 
 
 def test_extract_queries_from_graph_repo(tmp_path: Path) -> None:
-    """Test extracting queries from graph repo mock."""
+    """Test extracting queries from graph repo with current upstream shape."""
     clone_dir = tmp_path / "clone"
     clone_dir.mkdir()
     queries_dir = clone_dir / "queries"
@@ -207,11 +227,19 @@ def test_extract_queries_from_graph_repo(tmp_path: Path) -> None:
                     {
                         "guid": "test-graph-1",
                         "graph": "graph | where type =~ 'test'",
+                        "text": "Test graph query",
+                        "category": "Test Cat",
+                        "subcategory": "Test Sub",
+                        "severity": "Low",
                         "queryable": True,
                     },
                     {
                         "guid": "test-graph-2",
                         "graph": "graph | where name =~ 'nonqueryable'",
+                        "text": "Non-queryable item",
+                        "category": "Test Cat",
+                        "subcategory": "Test Sub",
+                        "severity": "Medium",
                         "queryable": False,
                     },
                 ],
@@ -222,12 +250,17 @@ def test_extract_queries_from_graph_repo(tmp_path: Path) -> None:
     dest_dir = tmp_path / "output"
     dest_dir.mkdir()
 
-    query_ids = ras.extract_queries_from_graph_repo(clone_dir, dest_dir)
+    query_ids, metadata_dict = ras.extract_queries_from_graph_repo(clone_dir, dest_dir)
 
     # Should only extract queryable items
     assert len(query_ids) == 1
     assert "test-graph-1" in query_ids
     assert "test-graph-2" not in query_ids
+
+    # Verify metadata dict
+    assert "test-graph-1" in metadata_dict
+    assert metadata_dict["test-graph-1"]["text"] == "Test graph query"
+    assert metadata_dict["test-graph-1"]["severity"] == "Low"
 
     kql_file = dest_dir / "test-graph-1.kql"
     assert kql_file.exists()
@@ -312,12 +345,12 @@ def test_extract_queries_schema_mismatch_checklist(tmp_path: Path) -> None:
     queries_dir = clone_dir / "queries"
     queries_dir.mkdir()
 
-    # Mock upstream with wrong top-level key
+    # Mock upstream with no valid top-level key
     source_json = queries_dir / "alz_all_queries.json"
     source_json.write_text(
         json.dumps(
             {
-                "queries": [  # Wrong key - should be "items"
+                "invalid_key": [  # Neither "items" nor "queries"
                     {
                         "id": "test-id",
                         "graph": "resources | where type =~ 'test'",
@@ -332,7 +365,7 @@ def test_extract_queries_schema_mismatch_checklist(tmp_path: Path) -> None:
     dest_dir.mkdir()
 
     # Should raise ValueError on schema mismatch
-    with pytest.raises(ValueError, match="expected top-level key 'items'"):
+    with pytest.raises(ValueError, match="expected top-level key 'queries' or 'items'"):
         ras.extract_queries_from_checklist_repo(clone_dir, dest_dir)
 
 
@@ -415,3 +448,75 @@ def test_refresh_snapshot_dry_run_with_drift(
     # In dry-run, manifest should not be updated
     loaded = ras.load_manifest(manifest_path)
     assert loaded["sources"][1]["commit_sha"] == "8a3fddabcbf272a19a627770a0d33de5f4ace8ee"
+
+
+def test_extract_queries_merged_catalogue_detection(tmp_path: Path) -> None:
+    """Test merged-catalogue detection skips secondary fetch."""
+    clone_dir = tmp_path / "clone"
+    clone_dir.mkdir()
+    queries_dir = clone_dir / "queries"
+    queries_dir.mkdir()
+
+    # Mock with merged flag set
+    source_json = queries_dir / "alz_additional_queries.json"
+    source_json.write_text(
+        json.dumps(
+            {
+                "metadata": {
+                    "name": "ALZ Graph Queries",
+                    "merged": True,
+                    "total_items": 255,
+                },
+                "queries": [],
+            }
+        )
+    )
+
+    dest_dir = tmp_path / "output"
+    dest_dir.mkdir()
+
+    query_ids, metadata_dict = ras.extract_queries_from_graph_repo(clone_dir, dest_dir)
+
+    # Should return empty when merged flag is true
+    assert len(query_ids) == 0
+    assert len(metadata_dict) == 0
+
+
+def test_compute_content_hash_deduplication() -> None:
+    """Test compute_content_hash for deduplication logic."""
+    import tempfile
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        kql_path = Path(tmpdir) / "test.kql"
+        kql_path.write_text("resources | where type =~ 'test'\n")
+
+        metadata1 = {
+            "text": "Test query",
+            "category": "Test",
+            "subcategory": "Sub",
+            "severity": "High",
+        }
+
+        metadata2 = {
+            "text": "Test query",
+            "category": "Test",
+            "subcategory": "Sub",
+            "severity": "High",
+        }
+
+        metadata3 = {
+            "text": "Different text",
+            "category": "Test",
+            "subcategory": "Sub",
+            "severity": "High",
+        }
+
+        hash1 = ras.compute_content_hash(kql_path, metadata1)
+        hash2 = ras.compute_content_hash(kql_path, metadata2)
+        hash3 = ras.compute_content_hash(kql_path, metadata3)
+
+        # Identical metadata should produce same hash
+        assert hash1 == hash2
+
+        # Different metadata should produce different hash
+        assert hash1 != hash3

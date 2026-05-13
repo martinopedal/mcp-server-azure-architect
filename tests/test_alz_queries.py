@@ -40,7 +40,8 @@ def test_get_query_known_id() -> None:
     assert record["source_commit"], "source_commit must be populated"
     assert record["citation"].startswith(record["source_repo"])
     assert checklist_id in record["citation"]
-    assert record["source"] in {"checklist", "graph"}
+    # Manifest v2: source values are now "vendored-*"
+    assert record["source"] in {"vendored-checklist", "vendored-graph", "custom"}
 
 
 def test_get_query_unknown_id_raises_lookup_error() -> None:
@@ -307,3 +308,140 @@ def test_alz_query_list_function_direct() -> None:
     assert isinstance(result, dict)
     assert "count" in result
     assert result["count"] >= 0
+
+
+def test_manifest_v2_schema_validator() -> None:
+    """Validate real manifest.json has schema_version=2 and all mandatory fields."""
+    raw = json.loads(MANIFEST_PATH.read_text(encoding="utf-8"))
+
+    # Check schema version
+    assert raw.get("schema_version") == 2, "Manifest must have schema_version: 2"
+
+    # Check all sources have queries metadata
+    for source in raw.get("sources", []):
+        subset = source.get("subset", {})
+        queries = subset.get("queries", {})
+
+        for guid, meta in queries.items():
+            # Mandatory fields
+            assert "id" in meta, f"Query {guid} missing 'id'"
+            assert "text" in meta, f"Query {guid} missing 'text'"
+            assert "category" in meta, f"Query {guid} missing 'category'"
+            assert "subcategory" in meta, f"Query {guid} missing 'subcategory'"
+            assert "severity" in meta, f"Query {guid} missing 'severity'"
+            assert "source" in meta, f"Query {guid} missing 'source'"
+            assert "source_repo" in meta, f"Query {guid} missing 'source_repo'"
+            assert "source_file" in meta, f"Query {guid} missing 'source_file'"
+            assert "vendored_at" in meta, f"Query {guid} missing 'vendored_at'"
+            assert "vendored_path" in meta, f"Query {guid} missing 'vendored_path'"
+            assert "citation" in meta, f"Query {guid} missing 'citation'"
+            assert "queryable" in meta, f"Query {guid} missing 'queryable'"
+
+            # Source enum validation
+            assert meta["source"] in ["vendored-checklist", "vendored-graph", "custom"], (
+                f"Query {guid} has invalid source: {meta['source']}"
+            )
+
+
+def test_loader_build_index_does_not_read_kql_bodies(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Verify _build_index() does NOT read .kql files (manifest-only index)."""
+
+    # Reset cache to force rebuild
+    alz_queries.reset_cache()
+
+    # Mock open to track file reads
+    original_open = open
+    kql_files_read = []
+
+    def tracking_open(file, *args, **kwargs):
+        if str(file).endswith(".kql"):
+            kql_files_read.append(str(file))
+        return original_open(file, *args, **kwargs)
+
+    monkeypatch.setattr("builtins.open", tracking_open)
+
+    # Trigger index build
+    _ = alz_queries.list_query_ids()
+
+    # Assert no .kql files were read during index build
+    assert len(kql_files_read) == 0, f".kql files were read during _build_index(): {kql_files_read}"
+
+
+def test_loader_get_query_lazy_loads_kql_body() -> None:
+    """Verify get_query() lazy-loads .kql body on first call and caches."""
+
+    # Reset cache
+    alz_queries.reset_cache()
+
+    # Get a known query ID
+    checklist_id = _known_checklist_id()
+
+    # First call should load KQL body
+    record1 = alz_queries.get_query(checklist_id)
+    assert record1["kql"].strip(), "KQL body should be loaded"
+
+    # Cache the KQL body for comparison
+    kql_body = record1["kql"]
+
+    # Second call should return same KQL from cache
+    record2 = alz_queries.get_query(checklist_id)
+    assert record2["kql"] == kql_body, "Second call should return cached KQL"
+
+
+def test_list_queries_filter_by_category() -> None:
+    """Test list_queries() category filter."""
+    # Get all queries to find a category
+    all_queries = alz_queries.list_queries()
+    if all_queries["count"] == 0:
+        pytest.skip("No queries in snapshot")
+
+    category = all_queries["items"][0].get("category")
+    if not category:
+        pytest.skip("No category in test data")
+
+    result = alz_queries.list_queries(category=category)
+
+    assert result["count"] > 0
+    assert all(item.get("category") == category for item in result["items"])
+    assert result["filters_applied"]["category"] == category
+
+
+def test_list_queries_filter_by_severity() -> None:
+    """Test list_queries() severity filter."""
+    all_queries = alz_queries.list_queries()
+    if all_queries["count"] == 0:
+        pytest.skip("No queries in snapshot")
+
+    severity = all_queries["items"][0].get("severity")
+    if not severity:
+        pytest.skip("No severity in test data")
+
+    result = alz_queries.list_queries(severity=severity)
+
+    assert result["count"] > 0
+    assert all(item.get("severity") == severity for item in result["items"])
+    assert result["filters_applied"]["severity"] == severity
+
+
+def test_list_queries_filter_queryable_only() -> None:
+    """Test list_queries() queryable_only filter."""
+    result = alz_queries.list_queries(queryable_only=True)
+
+    # All items should be queryable
+    assert all(item.get("queryable", True) for item in result["items"])
+    assert result["filters_applied"]["queryable_only"] is True
+
+
+def test_list_queries_title_populated_from_text() -> None:
+    """Test that list_queries() populates title from text field."""
+    result = alz_queries.list_queries()
+
+    if result["count"] == 0:
+        pytest.skip("No queries in snapshot")
+
+    for item in result["items"]:
+        # Title should be populated (either from text or subcategory)
+        assert "title" in item
+        # If text exists, title should match it
+        if item.get("text"):
+            assert item["title"] == item["text"]
