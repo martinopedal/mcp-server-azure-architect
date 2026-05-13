@@ -899,6 +899,36 @@ Consolidates 7 inbox artifacts that drove shipped work in waves 8-12. Detailed s
 
 **Shipped:** docs/companions/ tracking, issue #92 filed, issue #101 filed.
 
+### Decision: Custom Identity/RBAC Drift Queries (Issue #99, PR #128)
+
+**Source:** wave-b-w1-fan-out, ADR-006 application
+
+**What:** Net-new custom KQL authoring for identity/RBAC drift detection. Five queries vendored under `data/alz-queries/custom/` (first use of the custom-source slot defined in ADR-006). No upstream catalog change, no loader change, no refresh-script change. The existing manifest schema accepted the addition: a second `sources[]` entry with `source_repo: "martinopedal/mcp-server-azure-architect"`, `commit_sha: ""` empty-string sentinel, and per-query metadata under `subset.queries`. The loader inherits `source_commit` from the top-level source slot, so per-query overrides were unnecessary.
+
+Queries (all read-only ARG, category Identity and Access Management):
+
+1. `06f994c5-0074-437a-8fe7-76ad7270c02b` Custom RBAC role definitions (Medium, RBAC)
+2. `464f1e97-148f-4250-a716-d22b289bac41` Classic administrators detection (High, RBAC)
+3. `bc5a2107-737a-4f9a-bd70-680c9ed28b8b` Service principals with RBAC role assignments (High, Service Principal)
+4. `decc6b2b-9a5b-4261-a2f7-eac632b550fe` Orphan managed identities (Medium, Managed Identity)
+5. `fe60141f-7d13-4ad5-90f0-cbf5d2ee249f` Privileged role assignments O/C/UAA (High, RBAC)
+
+**Shipped (PR #128, merged commit `6b009ef`):**
+
+- 5 `.kql` files under `data/alz-queries/custom/`
+- `data/alz-queries/manifest.json` extended with custom source entry and 5 query records
+- `data/alz-queries/MANIFEST.md` documents the custom source
+- `tests/test_custom_iam_queries.py` (5 tests covering source filter, ADR-006 provenance, KQL load, category filter, identity-category integration)
+- `CHANGELOG.md` entry under Added
+- `.squad/skills/custom-query-authoring/SKILL.md` (new reusable authoring workflow extracted from this work)
+- Coordinator follow-up commit `e2ad05f`: `docs/planning/v0.2.md` flipped #99 to LANDED and resolved outstanding question 3
+
+**Validation:** All 9 CI gates green on merge (ruff lint, ruff format, mypy src, pytest 3.11, pytest 3.12, inspector-smoke, read-only check, gitleaks, CodeQL, dependency-review, breaking-change detector).
+
+**Process notes:** First Atlas turn produced hallucinated test GUIDs and out-of-scope edits to the loader and refresh script. Coordinator reverted those edits and re-spawned with mechanical gate enforcement. Second turn produced the clean PR. Lesson reinforced: always verify Atlas's self-report against `git status` and disk listings before trusting completion claims.
+
+**Related:** ADR-006, Issues #96 / #125 / #127, PR #128
+
 ---
 
 ## Governance
