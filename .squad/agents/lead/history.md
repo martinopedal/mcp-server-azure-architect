@@ -2,6 +2,54 @@
 
 ## Session Log
 
+### 2026-05-13: v0.2 Planning Document
+
+**Task:** Produce `docs/planning/v0.2.md` as the published v0.2 planning document, synthesizing Wave 9 research outputs and accounting for v0.1.1 closures and v0.1.2 in-flight work.
+
+**Inputs read:**
+- `.squad/decisions/inbox/lead-synthesis-v0.2-roadmap.md` (20KB synthesis, 20-item N1-N20 roadmap)
+- `.squad/decisions/inbox/atlas-research-kql.md` (KQL coverage audit, 1.3% coverage finding)
+- `.squad/decisions/inbox/sage-research-roadmap.md` (MCP ecosystem scan, microsoft/mcp consolidation)
+- `.squad/decisions/inbox/copilot-directive-mcp-scope-filter.md` (Martin's MCP-only directive)
+- `.squad/decisions/inbox/sage-issue-filing-manifest.md` (Lead-ref to issue mapping)
+- `.squad/identity/now.md` (Wave 9 state)
+- `CHANGELOG.md` (unreleased items)
+- `docs/adr/0004-companion-server-bar.md` (Wave 9 addendum)
+
+**Issue status verification:**
+- v0.1.1 closed: #85, #86, #88, #89, #90, #91, #92, #97, #98, #101 (10 issues)
+- v0.1.2 in flight: #94, #95
+- Security backlog all CLOSED: #57, #58, #59, #60, #61, #62, #63
+- Perf items all CLOSED: #67, #68
+- v0.2 open issues: #93, #96, #99, #100, #102
+
+**Architectural approach:**
+
+1. **Scope clarity.** v0.2 is catalogue expansion (4 queries → 118+ queries) plus CI tooling (#102 breaking-change detector). Not skill work (deferred per Martin's MCP scope filter), not hardening (all shipped), not perf (all shipped).
+
+2. **Out-of-scope discipline.** Explicitly named what's NOT v0.2: skill issues N9/N15/N16 (Copilot CLI orchestration, not MCP server), quota planner + Advisor surfacing (retired per #91, microsoft/mcp covers), all closed security/perf items. This prevents scope creep and sets clear expectations.
+
+3. **Dependency sequencing.** #102 (CI detector) lands first to guard #96/#99/#100. All catalogue work can parallelize once #102 is in place. #93 (MCP Registry) is external-gated (PyPI publish, Martin's control).
+
+4. **MCP-shape rationale per item.** Every in-scope issue has a "MCP-shape rationale" paragraph explaining why it belongs in the MCP server release (vs skill bundle or out-of-scope). This satisfies Martin's filter requirement explicitly.
+
+5. **Open questions vs assumptions.** Three real questions for Martin (timing, versioning, provenance format). Did not pad the list with pseudo-questions. Actual unknowns that need decision.
+
+**What changed from Wave 9 synthesis:**
+
+- Original synthesis had 20 items (N1-N20). 10 closed in Wave 9 (v0.1.1 tier), 2 in-flight (v0.1.2), leaving 5 for v0.2 (N8=#96, N10=#97 CLOSED, N12=#98 CLOSED, N13=#99, N14=#100, N20=#102). #93 (N5) remains blocked on PyPI.
+- Skill items N9/N15/N16 explicitly deferred per MCP scope filter. Not canceled, deferred pending separate skill-bundle evaluation.
+- All security/perf items that were listed in original synthesis as v0.2 candidates are now CLOSED and removed from v0.2 scope.
+
+**Deliverable:** PR #115 (`docs/planning/v0.2.md`, 113 lines). Clean single-file deliverable. No new ADRs created (all work falls under ADR-002 vendoring policy). Mermaid sequencing diagram included for dependency hygiene visualization.
+
+**Lessons:**
+
+- Planning documents need explicit out-of-scope sections. The "what we're NOT doing" clarity is as valuable as the "what we're doing" list.
+- MCP-shape rationale per item prevents scope confusion. Martin's filter is a binding constraint; every item justifies itself against it.
+- Issue-status verification before planning prevents listing closed work as future. All 7 security items (#57-#63) closed, both perf items (#67-#68) closed. Planning doc reflects reality.
+- Sequencing matters for data-heavy releases. #102 (CI gate) first prevents regression risk when #96 (bulk vendor) lands.
+
 ### 2026-04-22: ADR-001 Runtime Choice Review
 
 Reviewed ADR-001 (MCP Server Runtime Choice). Performed full reviewer gate per AGENTS.md project conventions.

@@ -396,3 +396,61 @@ Four pre-existing pytest failures in test_scorecard.py (missing ResourceGraphCli
 
 ### Squad Coordination
 Issue #90 is part of Atlas's mission (AGENTS.md: "Source-of-truth for ALZ queries"). Lead (@martinopedal) to review PR #111 after CI gates pass. No other team dependencies.
+
+---
+
+## Wave 9: Vendoring License + Cadence + Third-Party Notices (Issue #95)
+
+### Tasks
+- Added `license` field to each source in `data/alz-queries/manifest.json` with SPDX identifier and upstream LICENSE URL pinned to commit_sha
+- Updated `data/alz-queries/MANIFEST.md` to document **weekly Monday 06:00 UTC** refresh cadence (verified from `.github/workflows/refresh-alz-snapshot.yml`)
+- Created `THIRD-PARTY-NOTICES.md` (new file at repo root) reproducing full LICENSE text for each vendored upstream source
+- Added reference to THIRD-PARTY-NOTICES.md in README.md under new "Third-party content" section
+- Updated `pyproject.toml` to include THIRD-PARTY-NOTICES.md in wheel distribution (`[tool.hatch.build.targets.wheel.force-include]`)
+
+### Key Decisions
+
+#### License Field Structure: URL Pinned to Commit SHA
+**Chosen:** `license.upstream_license_url` constructed from the same `commit_sha` already in the manifest entry.
+
+```json
+"license": {
+  "spdx": "MIT",
+  "upstream_license_url": "https://github.com/martinopedal/alz-checklist-queries/blob/<commit_sha>/LICENSE"
+}
+```
+
+This ensures that downstream consumers can traverse the exact commit where the license was verified, not the current upstream state (which could change). Aligns with the manifest's explicit commit pinning strategy.
+
+**Rejected:** Dynamic URL pointing to upstream `main` (license could change, losing reproducibility). Separate `licenses.json` file (duplication with manifest).
+
+#### Refresh Cadence: Document the Actual Cron, Not Aspirational
+**Chosen:** Document the *actual* weekly Monday 06:00 UTC cadence from the workflow file, not the aspirational "monthly" mentioned in the issue.
+
+The `.github/workflows/refresh-alz-snapshot.yml` explicitly uses `cron: "0 6 * * 1"` (Monday 06:00 UTC, weekly). MANIFEST.md now documents this fact with a reference to the workflow file. Future cadence changes will be obvious in the workflow — no need to update MANIFEST.md unless the cron schedule changes.
+
+**Rejected:** Hardcoding "monthly" (incorrect, doesn't match workflow reality). Making cadence configurable in the manifest (adds coupling between manifest and workflow, error-prone).
+
+#### THIRD-PARTY-NOTICES: File Path in Wheel
+**Chosen:** Map `THIRD-PARTY-NOTICES.md` (repo root) to `mcp_server_azure_architect/_THIRD-PARTY-NOTICES.md` in the wheel.
+
+This keeps the notices file visible at the wheel's top level (for tools that inspect the dist directory) while maintaining the Python package structure (all non-code assets under the package namespace).
+
+**Rejected:** Including at repo root in the wheel (clutters top-level). Embedding license text in pyproject.toml (TOML escaping complexity, not source-readable).
+
+### Validation Gates Passed
+- ✅ `python -c "import json; json.load(open('data/alz-queries/manifest.json'))"` — manifest is valid JSON
+- ✅ Both sources have `license.spdx = "MIT"` and properly formatted upstream_license_url
+- ✅ THIRD-PARTY-NOTICES.md created with full MIT LICENSE text reproduced from both upstreams at pinned commits
+- ✅ Markdown links verified: README.md → THIRD-PARTY-NOTICES.md (relative link works)
+- ✅ pyproject.toml includes the file in wheel force-include section
+- ✅ Commit message follows scope prefix convention (`chore(vendoring):`) and includes Copilot trailer
+
+### Outcomes
+- ✅ Branch: `atlas/95-vendoring-license-cadence`
+- ✅ Commit: `1ba7b7f` with 5 files changed, 98 insertions
+- ✅ PR #114 created: https://github.com/martinopedal/mcp-server-azure-architect/pull/114
+- ✅ CI status: awaiting automated checks (ruff, mypy, pytest, CodeQL, gitleaks, dependency-review)
+
+### Squad Coordination
+Issue #95 is part of Atlas's supply-chain transparency mission (AGENTS.md: "Citations required. Every ALZ checklist query references its checklist ID and the source query commit"). Lead (@martinopedal) to review PR #114 after CI gates pass. No cross-team dependencies.
