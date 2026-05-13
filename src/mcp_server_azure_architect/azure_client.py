@@ -117,8 +117,6 @@ def validate_caller_scope(subscription_id: str, credential: DefaultAzureCredenti
 
     if not is_valid:
         scrubbed_id = scrub_subscription_id(subscription_id)
-        logger.warning(
-            f"Subscription ID validation failed: {scrubbed_id} is not in caller's scope"
-        )
+        logger.warning(f"Subscription ID validation failed: {scrubbed_id} is not in caller's scope")
 
     return is_valid

@@ -34,6 +34,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **Readonly-check workflow now runs on all PRs.** Removed `paths:` filter from `.github/workflows/readonly-check.yml` to fix doc-only PR blocking issue. The workflow always runs on every PR + push; it is a fast check (~30s) and correctly reports "no violations" for doc-only changes. This unblocks doc-only PRs while preserving the read-only enforcement gate as a required status check.
 
+### Automation
+
+- **CI now enforces ruff format consistency.** New required check `ruff format --check .` runs on every PR after the lint step. Prevents format drift. Ruff version pinned to `0.15.12` in `pyproject.toml` to ensure reproducible formatting across local and CI environments. (Closes #117)
+
 ### Documentation
 
 - `docs/install/deployment-guide.md` - Audit logging configuration guide with log rotation settings, sensitive data redaction policies, immutable log storage upgrade paths (syslog, Azure Monitor), and cross-platform permission enforcement details

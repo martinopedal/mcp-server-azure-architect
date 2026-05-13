@@ -82,7 +82,9 @@ def get_config_path(client: str) -> Path | None:
         if system == "Windows":
             return home / "AppData" / "Roaming" / "Claude" / "claude_desktop_config.json"
         elif system == "Darwin":
-            return home / "Library" / "Application Support" / "Claude" / "claude_desktop_config.json"
+            return (
+                home / "Library" / "Application Support" / "Claude" / "claude_desktop_config.json"
+            )
         else:
             return home / ".config" / "Claude" / "claude_desktop_config.json"
 
@@ -130,13 +132,12 @@ def load_existing_config(path: Path) -> dict[str, Any]:
             shutil.copy2(path, backup_path)
             print(f"Backup saved to {backup_path}")
 
-    return {
-        "$schema": "https://aka.ms/mcp-config-schema",
-        "mcpServers": {}
-    }
+    return {"$schema": "https://aka.ms/mcp-config-schema", "mcpServers": {}}
 
 
-def merge_configs(existing: dict[str, Any], curated: dict[str, Any], interactive: bool = True) -> dict[str, Any]:
+def merge_configs(
+    existing: dict[str, Any], curated: dict[str, Any], interactive: bool = True
+) -> dict[str, Any]:
     """
     Merge curated config into existing, preserving existing servers.
 
@@ -255,7 +256,9 @@ def prompt_clients(detected: list[str]) -> list[str]:
         marker = "✓" if client in detected else " "
         print(f"  {idx}. [{marker}] {client}")
 
-    print("\nEnter client numbers to configure (comma-separated, e.g., '1,2,4'), or 'all': ", end="")
+    print(
+        "\nEnter client numbers to configure (comma-separated, e.g., '1,2,4'), or 'all': ", end=""
+    )
     response = input().strip().lower()
 
     if response == "all":
@@ -308,11 +311,15 @@ def main() -> int:
         return 1
 
     if not prereqs["node"][0]:
-        print("\nWarning: Node.js not found. npx-based companions (azure-mcp, mermaid, drawio, kubernetes) will not work.")
+        print(
+            "\nWarning: Node.js not found. npx-based companions (azure-mcp, mermaid, drawio, kubernetes) will not work."
+        )
         print("Install from https://nodejs.org")
 
     if not prereqs["docker"][0]:
-        print("\nWarning: Docker not found. Docker-based companions (github, terraform) will not work.")
+        print(
+            "\nWarning: Docker not found. Docker-based companions (github, terraform) will not work."
+        )
         print("Install Docker Desktop from https://docker.com")
 
     # Step 2: Install this server
@@ -381,7 +388,9 @@ def main() -> int:
     print(f"  {status_gh} GitHub: {gh_msg}")
 
     if not az_ok:
-        print("\nWarning: Azure CLI not authenticated. Run 'az login' before using azure-mcp or this server.")
+        print(
+            "\nWarning: Azure CLI not authenticated. Run 'az login' before using azure-mcp or this server."
+        )
 
     if not gh_ok:
         print("\nWarning: GitHub CLI not authenticated. The 'github' companion will not work.")

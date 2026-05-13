@@ -52,9 +52,7 @@ def test_validate_caller_scope_accepts_valid_subscription() -> None:
     mock_sub2 = Mock()
     mock_sub2.subscription_id = "valid-sub-2"
 
-    with patch(
-        "azure.mgmt.subscription.SubscriptionClient"
-    ) as mock_client_class:
+    with patch("azure.mgmt.subscription.SubscriptionClient") as mock_client_class:
         mock_client = Mock()
         mock_client.subscriptions.list.return_value = [mock_sub1, mock_sub2]
         mock_client_class.return_value = mock_client
@@ -78,9 +76,7 @@ def test_validate_caller_scope_rejects_invalid_subscription() -> None:
     mock_sub1 = Mock()
     mock_sub1.subscription_id = "valid-sub-1"
 
-    with patch(
-        "azure.mgmt.subscription.SubscriptionClient"
-    ) as mock_client_class:
+    with patch("azure.mgmt.subscription.SubscriptionClient") as mock_client_class:
         mock_client = Mock()
         mock_client.subscriptions.list.return_value = [mock_sub1]
         mock_client_class.return_value = mock_client
@@ -100,9 +96,7 @@ def test_validate_caller_scope_caches_subscription_list() -> None:
     mock_sub1 = Mock()
     mock_sub1.subscription_id = "valid-sub-1"
 
-    with patch(
-        "azure.mgmt.subscription.SubscriptionClient"
-    ) as mock_client_class:
+    with patch("azure.mgmt.subscription.SubscriptionClient") as mock_client_class:
         mock_client = Mock()
         mock_client.subscriptions.list.return_value = [mock_sub1]
         mock_client_class.return_value = mock_client
@@ -126,9 +120,7 @@ def test_validate_caller_scope_propagates_arm_errors() -> None:
     """ARM API errors are propagated to the caller."""
     mock_credential = Mock()
 
-    with patch(
-        "azure.mgmt.subscription.SubscriptionClient"
-    ) as mock_client_class:
+    with patch("azure.mgmt.subscription.SubscriptionClient") as mock_client_class:
         mock_client = Mock()
         mock_client.subscriptions.list.side_effect = Exception("ARM API unavailable")
         mock_client_class.return_value = mock_client
@@ -152,9 +144,7 @@ def test_validate_caller_scope_handles_none_subscription_ids() -> None:
     mock_sub2 = Mock()
     mock_sub2.subscription_id = None  # ARM can return subscriptions with no ID
 
-    with patch(
-        "azure.mgmt.subscription.SubscriptionClient"
-    ) as mock_client_class:
+    with patch("azure.mgmt.subscription.SubscriptionClient") as mock_client_class:
         mock_client = Mock()
         mock_client.subscriptions.list.return_value = [mock_sub1, mock_sub2]
         mock_client_class.return_value = mock_client

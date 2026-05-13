@@ -71,9 +71,6 @@ def get_cloud_config() -> CloudConfig:
 
     if cloud_name not in _CLOUD_MAP:
         valid_clouds = ", ".join(_CLOUD_MAP.keys())
-        raise ValueError(
-            f"Unknown AZURE_CLOUD_NAME '{cloud_name}'. "
-            f"Valid values: {valid_clouds}"
-        )
+        raise ValueError(f"Unknown AZURE_CLOUD_NAME '{cloud_name}'. Valid values: {valid_clouds}")
 
     return _CLOUD_MAP[cloud_name]

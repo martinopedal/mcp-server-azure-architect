@@ -99,6 +99,5 @@ def test_httpx_fastmcp_owned_note() -> None:
     )
     assert result.returncode == 0, f"Import failed: {result.stderr}"
     assert "PASS" in result.stdout, (
-        "httpx is expected to be imported by FastMCP at server startup. "
-        "See issue #68 for context."
+        "httpx is expected to be imported by FastMCP at server startup. See issue #68 for context."
     )

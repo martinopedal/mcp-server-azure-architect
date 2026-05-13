@@ -159,7 +159,9 @@ def extract_queries_from_graph_repo(clone_dir: Path, dest_dir: Path) -> list[str
     for item in data["queries"]:
         # Validate each item has required fields
         if "guid" not in item or "graph" not in item:
-            print(f"Warning: skipping item missing 'guid' or 'graph': {item.get('guid', 'unknown')}")
+            print(
+                f"Warning: skipping item missing 'guid' or 'graph': {item.get('guid', 'unknown')}"
+            )
             continue
 
         query_id = item["guid"]
@@ -279,7 +281,9 @@ def refresh_snapshot(dry_run: bool = False) -> bool:
                 new_sources.append(existing)
             continue
 
-        print(f"  Drift detected: {pinned_sha[:12] if pinned_sha else 'none'} -> {upstream_sha[:12]}")
+        print(
+            f"  Drift detected: {pinned_sha[:12] if pinned_sha else 'none'} -> {upstream_sha[:12]}"
+        )
         changes_detected = True
 
         if dry_run:

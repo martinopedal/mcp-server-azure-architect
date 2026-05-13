@@ -36,7 +36,9 @@ def mock_manifest() -> dict:
                 "subset": {
                     "source_file": "queries/alz_all_queries.json",
                     "checklist_ids": ["54f0d8b1-22a3-4c0d-8ce2-58b9e086c93a"],
-                    "files": ["data/alz-queries/checklist/54f0d8b1-22a3-4c0d-8ce2-58b9e086c93a.kql"],
+                    "files": [
+                        "data/alz-queries/checklist/54f0d8b1-22a3-4c0d-8ce2-58b9e086c93a.kql"
+                    ],
                 },
                 "file_count": 1,
             },
@@ -155,18 +157,22 @@ def test_extract_queries_from_checklist_repo(tmp_path: Path) -> None:
 
     # Mock alz_all_queries.json
     source_json = queries_dir / "alz_all_queries.json"
-    source_json.write_text(json.dumps({
-        "items": [
+    source_json.write_text(
+        json.dumps(
             {
-                "id": "test-checklist-1",
-                "graph": "resources | where type =~ 'microsoft.test'",
-            },
-            {
-                "id": "test-checklist-2",
-                "graph": "resources | where name =~ 'testname'",
-            },
-        ]
-    }))
+                "items": [
+                    {
+                        "id": "test-checklist-1",
+                        "graph": "resources | where type =~ 'microsoft.test'",
+                    },
+                    {
+                        "id": "test-checklist-2",
+                        "graph": "resources | where name =~ 'testname'",
+                    },
+                ]
+            }
+        )
+    )
 
     dest_dir = tmp_path / "output"
     dest_dir.mkdir()
@@ -193,24 +199,25 @@ def test_extract_queries_from_graph_repo(tmp_path: Path) -> None:
 
     # Mock alz_additional_queries.json with realistic upstream schema
     source_json = queries_dir / "alz_additional_queries.json"
-    source_json.write_text(json.dumps({
-        "metadata": {
-            "name": "ALZ Additional Graph Queries",
-            "version": "1.0.0"
-        },
-        "queries": [
+    source_json.write_text(
+        json.dumps(
             {
-                "guid": "test-graph-1",
-                "graph": "graph | where type =~ 'test'",
-                "queryable": True,
-            },
-            {
-                "guid": "test-graph-2",
-                "graph": "graph | where name =~ 'nonqueryable'",
-                "queryable": False,
+                "metadata": {"name": "ALZ Additional Graph Queries", "version": "1.0.0"},
+                "queries": [
+                    {
+                        "guid": "test-graph-1",
+                        "graph": "graph | where type =~ 'test'",
+                        "queryable": True,
+                    },
+                    {
+                        "guid": "test-graph-2",
+                        "graph": "graph | where name =~ 'nonqueryable'",
+                        "queryable": False,
+                    },
+                ],
             }
-        ]
-    }))
+        )
+    )
 
     dest_dir = tmp_path / "output"
     dest_dir.mkdir()
@@ -276,15 +283,19 @@ def test_extract_queries_schema_mismatch_graph(tmp_path: Path) -> None:
 
     # Mock upstream with wrong top-level key
     source_json = queries_dir / "alz_additional_queries.json"
-    source_json.write_text(json.dumps({
-        "items": [  # Wrong key - should be "queries"
+    source_json.write_text(
+        json.dumps(
             {
-                "guid": "test-id",
-                "graph": "resources | where type =~ 'test'",
-                "queryable": True,
+                "items": [  # Wrong key - should be "queries"
+                    {
+                        "guid": "test-id",
+                        "graph": "resources | where type =~ 'test'",
+                        "queryable": True,
+                    }
+                ]
             }
-        ]
-    }))
+        )
+    )
 
     dest_dir = tmp_path / "output"
     dest_dir.mkdir()
@@ -303,15 +314,19 @@ def test_extract_queries_schema_mismatch_checklist(tmp_path: Path) -> None:
 
     # Mock upstream with wrong top-level key
     source_json = queries_dir / "alz_all_queries.json"
-    source_json.write_text(json.dumps({
-        "queries": [  # Wrong key - should be "items"
+    source_json.write_text(
+        json.dumps(
             {
-                "id": "test-id",
-                "graph": "resources | where type =~ 'test'",
-                "queryable": True,
+                "queries": [  # Wrong key - should be "items"
+                    {
+                        "id": "test-id",
+                        "graph": "resources | where type =~ 'test'",
+                        "queryable": True,
+                    }
+                ]
             }
-        ]
-    }))
+        )
+    )
 
     dest_dir = tmp_path / "output"
     dest_dir.mkdir()

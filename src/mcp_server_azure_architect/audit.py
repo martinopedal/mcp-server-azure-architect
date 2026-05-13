@@ -183,11 +183,13 @@ def setup_audit_logging() -> None:
     _AUDIT_LOGGER.addHandler(handler)
 
     _AUDIT_LOGGER.info(
-        json.dumps({
-            "event": "audit_logging_initialized",
-            "log_dir": str(log_dir),
-            "log_file": str(log_file),
-        })
+        json.dumps(
+            {
+                "event": "audit_logging_initialized",
+                "log_dir": str(log_dir),
+                "log_file": str(log_file),
+            }
+        )
     )
 
 
@@ -214,6 +216,7 @@ def audit_log_tool(func: Callable[P, R]) -> Callable[P, R]:
     Returns:
         Wrapped function with audit logging.
     """
+
     @functools.wraps(func)
     def sync_wrapper(*args: P.args, **kwargs: P.kwargs) -> R:
         logger = get_audit_logger()
@@ -229,12 +232,14 @@ def audit_log_tool(func: Callable[P, R]) -> Callable[P, R]:
 
         # Log invocation (caller identity not available from MCP context)
         logger.info(
-            json.dumps({
-                "event": "tool_invocation",
-                "tool": tool_name,
-                "params": redacted_params,
-                "caller": "unknown",  # MCP protocol does not surface caller identity
-            })
+            json.dumps(
+                {
+                    "event": "tool_invocation",
+                    "tool": tool_name,
+                    "params": redacted_params,
+                    "caller": "unknown",  # MCP protocol does not surface caller identity
+                }
+            )
         )
 
         try:
@@ -243,24 +248,28 @@ def audit_log_tool(func: Callable[P, R]) -> Callable[P, R]:
             # Log result summary (not full result to avoid leaking sensitive data)
             result_summary = _summarize_result(result)
             logger.info(
-                json.dumps({
-                    "event": "tool_result",
-                    "tool": tool_name,
-                    "status": "success",
-                    "summary": result_summary,
-                })
+                json.dumps(
+                    {
+                        "event": "tool_result",
+                        "tool": tool_name,
+                        "status": "success",
+                        "summary": result_summary,
+                    }
+                )
             )
 
             return result
         except Exception as e:
             # Log error
             logger.error(
-                json.dumps({
-                    "event": "tool_error",
-                    "tool": tool_name,
-                    "error_type": type(e).__name__,
-                    "error_message": str(e),
-                })
+                json.dumps(
+                    {
+                        "event": "tool_error",
+                        "tool": tool_name,
+                        "error_type": type(e).__name__,
+                        "error_message": str(e),
+                    }
+                )
             )
             raise
 
@@ -279,12 +288,14 @@ def audit_log_tool(func: Callable[P, R]) -> Callable[P, R]:
 
         # Log invocation
         logger.info(
-            json.dumps({
-                "event": "tool_invocation",
-                "tool": tool_name,
-                "params": redacted_params,
-                "caller": "unknown",
-            })
+            json.dumps(
+                {
+                    "event": "tool_invocation",
+                    "tool": tool_name,
+                    "params": redacted_params,
+                    "caller": "unknown",
+                }
+            )
         )
 
         try:
@@ -293,24 +304,28 @@ def audit_log_tool(func: Callable[P, R]) -> Callable[P, R]:
             # Log result summary
             result_summary = _summarize_result(result)
             logger.info(
-                json.dumps({
-                    "event": "tool_result",
-                    "tool": tool_name,
-                    "status": "success",
-                    "summary": result_summary,
-                })
+                json.dumps(
+                    {
+                        "event": "tool_result",
+                        "tool": tool_name,
+                        "status": "success",
+                        "summary": result_summary,
+                    }
+                )
             )
 
             return result  # type: ignore[no-any-return]
         except Exception as e:
             # Log error
             logger.error(
-                json.dumps({
-                    "event": "tool_error",
-                    "tool": tool_name,
-                    "error_type": type(e).__name__,
-                    "error_message": str(e),
-                })
+                json.dumps(
+                    {
+                        "event": "tool_error",
+                        "tool": tool_name,
+                        "error_type": type(e).__name__,
+                        "error_message": str(e),
+                    }
+                )
             )
             raise
 

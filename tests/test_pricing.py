@@ -116,9 +116,7 @@ def test_lookup_sku_reservation_term_in_filter() -> None:
         )
 
     with _install_mock_transport(handler):
-        result = pricing.pricing_lookup_sku(
-            sku="Standard_D2s_v5", region="westeurope", term="1yr"
-        )
+        result = pricing.pricing_lookup_sku(sku="Standard_D2s_v5", region="westeurope", term="1yr")
 
     assert "priceType eq 'Reservation'" in captured["filter"]
     assert "reservationTerm eq '1 Year'" in captured["filter"]
@@ -146,9 +144,7 @@ def test_lookup_sku_pagination() -> None:
         )
 
     with _install_mock_transport(handler):
-        result = pricing.pricing_lookup_sku(
-            sku="Standard_D2s_v5", region="westeurope"
-        )
+        result = pricing.pricing_lookup_sku(sku="Standard_D2s_v5", region="westeurope")
 
     assert len(calls) == 2
     assert "page=2" in calls[1]
@@ -175,9 +171,7 @@ def test_lookup_sku_pagination_capped() -> None:
         )
 
     with _install_mock_transport(handler):
-        result = pricing.pricing_lookup_sku(
-            sku="Standard_D2s_v5", region="westeurope"
-        )
+        result = pricing.pricing_lookup_sku(sku="Standard_D2s_v5", region="westeurope")
 
     assert call_count == pricing._MAX_PAGES
     assert result["item_count"] == pricing._MAX_PAGES
@@ -190,9 +184,7 @@ def test_lookup_sku_caching() -> None:
     def handler(request: httpx.Request) -> httpx.Response:
         nonlocal call_count
         call_count += 1
-        return httpx.Response(
-            200, json={"Items": [_make_item()], "NextPageLink": None}
-        )
+        return httpx.Response(200, json={"Items": [_make_item()], "NextPageLink": None})
 
     with _install_mock_transport(handler):
         pricing.pricing_lookup_sku(sku="Standard_D2s_v5", region="westeurope")
@@ -208,17 +200,11 @@ def test_lookup_sku_cache_currency_isolation() -> None:
     def handler(request: httpx.Request) -> httpx.Response:
         nonlocal call_count
         call_count += 1
-        return httpx.Response(
-            200, json={"Items": [_make_item()], "NextPageLink": None}
-        )
+        return httpx.Response(200, json={"Items": [_make_item()], "NextPageLink": None})
 
     with _install_mock_transport(handler):
-        pricing.pricing_lookup_sku(
-            sku="Standard_D2s_v5", region="westeurope", currency="USD"
-        )
-        pricing.pricing_lookup_sku(
-            sku="Standard_D2s_v5", region="westeurope", currency="EUR"
-        )
+        pricing.pricing_lookup_sku(sku="Standard_D2s_v5", region="westeurope", currency="USD")
+        pricing.pricing_lookup_sku(sku="Standard_D2s_v5", region="westeurope", currency="EUR")
 
     assert call_count == 2
 
@@ -230,9 +216,7 @@ def test_lookup_sku_empty_results() -> None:
         return httpx.Response(200, json={"Items": [], "NextPageLink": None})
 
     with _install_mock_transport(handler):
-        result = pricing.pricing_lookup_sku(
-            sku="Standard_NotARealSku", region="westeurope"
-        )
+        result = pricing.pricing_lookup_sku(sku="Standard_NotARealSku", region="westeurope")
 
     assert result["items"] == []
     assert result["item_count"] == 0
@@ -241,7 +225,9 @@ def test_lookup_sku_empty_results() -> None:
 def test_lookup_sku_invalid_term_raises() -> None:
     with pytest.raises(ValueError, match="Unknown term"):
         pricing.pricing_lookup_sku(
-            sku="Standard_D2s_v5", region="westeurope", term="lifetime"  # type: ignore[arg-type]
+            sku="Standard_D2s_v5",
+            region="westeurope",
+            term="lifetime",  # type: ignore[arg-type]
         )
 
 
@@ -266,14 +252,12 @@ def test_compare_skus_combines_results() -> None:
         if "D2s_v5" in sku_clause:
             return httpx.Response(
                 200,
-                json={"Items": [_make_item("Standard_D2s_v5", price=0.096)],
-                      "NextPageLink": None},
+                json={"Items": [_make_item("Standard_D2s_v5", price=0.096)], "NextPageLink": None},
             )
         if "D4s_v5" in sku_clause:
             return httpx.Response(
                 200,
-                json={"Items": [_make_item("Standard_D4s_v5", price=0.192)],
-                      "NextPageLink": None},
+                json={"Items": [_make_item("Standard_D4s_v5", price=0.192)], "NextPageLink": None},
             )
         return httpx.Response(200, json={"Items": [], "NextPageLink": None})
 
@@ -296,9 +280,7 @@ def test_compare_skus_marks_missing_sku() -> None:
         return httpx.Response(200, json={"Items": [], "NextPageLink": None})
 
     with _install_mock_transport(handler):
-        result = pricing.pricing_compare_skus(
-            skus=["Standard_NotReal"], region="westeurope"
-        )
+        result = pricing.pricing_compare_skus(skus=["Standard_NotReal"], region="westeurope")
 
     row = result["comparison"][0]
     assert row["found"] is False
@@ -366,9 +348,7 @@ def test_pricing_lookup_sku_via_server_tool() -> None:
     from mcp_server_azure_architect.server import pricing_lookup_sku as server_tool
 
     def handler(request: httpx.Request) -> httpx.Response:
-        return httpx.Response(
-            200, json={"Items": [_make_item()], "NextPageLink": None}
-        )
+        return httpx.Response(200, json={"Items": [_make_item()], "NextPageLink": None})
 
     with _install_mock_transport(handler):
         result = server_tool(sku="Standard_D2s_v5", region="westeurope")

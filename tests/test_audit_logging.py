@@ -169,6 +169,7 @@ def test_setup_audit_logging_creates_directory(tmp_path: Path) -> None:
     with patch.dict(os.environ, {"MCP_AZURE_ARCHITECT_LOG_DIR": str(log_dir)}):
         # Reset global logger
         import mcp_server_azure_architect.audit
+
         mcp_server_azure_architect.audit._AUDIT_LOGGER = None
 
         setup_audit_logging()
@@ -183,6 +184,7 @@ def test_setup_audit_logging_respects_env_var(tmp_path: Path) -> None:
 
     with patch.dict(os.environ, {"MCP_AZURE_ARCHITECT_LOG_DIR": str(custom_log_dir)}):
         import mcp_server_azure_architect.audit
+
         mcp_server_azure_architect.audit._AUDIT_LOGGER = None
 
         setup_audit_logging()

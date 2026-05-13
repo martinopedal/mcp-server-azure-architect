@@ -22,8 +22,6 @@ sys.path.insert(0, str(Path(__file__).parent.parent / "scripts"))
 import install_kit  # noqa: E402, I001
 
 
-
-
 def test_check_python_version() -> None:
     """Test Python version check returns correct status."""
     ok, msg = install_kit.check_python_version()
@@ -78,7 +76,14 @@ def test_get_config_path_claude_desktop(tmp_path: Path, monkeypatch: pytest.Monk
 
     with patch("platform.system", return_value="Darwin"):
         path = install_kit.get_config_path("claude-desktop")
-        assert path == tmp_path / "Library" / "Application Support" / "Claude" / "claude_desktop_config.json"
+        assert (
+            path
+            == tmp_path
+            / "Library"
+            / "Application Support"
+            / "Claude"
+            / "claude_desktop_config.json"
+        )
 
     with patch("platform.system", return_value="Linux"):
         path = install_kit.get_config_path("claude-desktop")
@@ -103,10 +108,7 @@ def test_load_existing_config_missing(tmp_path: Path) -> None:
     """Test loading config when file doesn't exist returns empty template."""
     config_path = tmp_path / "missing.json"
     config = install_kit.load_existing_config(config_path)
-    assert config == {
-        "$schema": "https://aka.ms/mcp-config-schema",
-        "mcpServers": {}
-    }
+    assert config == {"$schema": "https://aka.ms/mcp-config-schema", "mcpServers": {}}
 
 
 def test_load_existing_config_valid(tmp_path: Path) -> None:
@@ -114,9 +116,7 @@ def test_load_existing_config_valid(tmp_path: Path) -> None:
     config_path = tmp_path / "config.json"
     existing = {
         "$schema": "https://aka.ms/mcp-config-schema",
-        "mcpServers": {
-            "my-server": {"command": "npx", "args": ["-y", "my-server"]}
-        }
+        "mcpServers": {"my-server": {"command": "npx", "args": ["-y", "my-server"]}},
     }
     config_path.write_text(json.dumps(existing), encoding="utf-8")
 
@@ -142,15 +142,11 @@ def test_merge_configs_no_collision() -> None:
     """Test merging configs when no server name collision."""
     existing = {
         "$schema": "https://aka.ms/mcp-config-schema",
-        "mcpServers": {
-            "existing-server": {"command": "existing"}
-        }
+        "mcpServers": {"existing-server": {"command": "existing"}},
     }
     curated = {
         "$schema": "https://aka.ms/mcp-config-schema",
-        "mcpServers": {
-            "new-server": {"command": "new"}
-        }
+        "mcpServers": {"new-server": {"command": "new"}},
     }
 
     merged = install_kit.merge_configs(existing, curated, interactive=False)
@@ -164,15 +160,11 @@ def test_merge_configs_collision_skip() -> None:
     """Test merging configs with collision in non-interactive mode skips."""
     existing = {
         "$schema": "https://aka.ms/mcp-config-schema",
-        "mcpServers": {
-            "shared-server": {"command": "existing"}
-        }
+        "mcpServers": {"shared-server": {"command": "existing"}},
     }
     curated = {
         "$schema": "https://aka.ms/mcp-config-schema",
-        "mcpServers": {
-            "shared-server": {"command": "curated"}
-        }
+        "mcpServers": {"shared-server": {"command": "curated"}},
     }
 
     merged = install_kit.merge_configs(existing, curated, interactive=False)
@@ -184,15 +176,11 @@ def test_merge_configs_collision_overwrite_yes() -> None:
     """Test merging configs with collision and user chooses overwrite."""
     existing = {
         "$schema": "https://aka.ms/mcp-config-schema",
-        "mcpServers": {
-            "shared-server": {"command": "existing"}
-        }
+        "mcpServers": {"shared-server": {"command": "existing"}},
     }
     curated = {
         "$schema": "https://aka.ms/mcp-config-schema",
-        "mcpServers": {
-            "shared-server": {"command": "curated"}
-        }
+        "mcpServers": {"shared-server": {"command": "curated"}},
     }
 
     with patch("builtins.input", return_value="y"):
@@ -205,15 +193,11 @@ def test_merge_configs_collision_overwrite_no() -> None:
     """Test merging configs with collision and user chooses keep existing."""
     existing = {
         "$schema": "https://aka.ms/mcp-config-schema",
-        "mcpServers": {
-            "shared-server": {"command": "existing"}
-        }
+        "mcpServers": {"shared-server": {"command": "existing"}},
     }
     curated = {
         "$schema": "https://aka.ms/mcp-config-schema",
-        "mcpServers": {
-            "shared-server": {"command": "curated"}
-        }
+        "mcpServers": {"shared-server": {"command": "curated"}},
     }
 
     with patch("builtins.input", return_value="n"):
@@ -239,7 +223,7 @@ def test_write_config_actually_writes(tmp_path: Path) -> None:
     config_path = tmp_path / "test.json"
     config = {
         "$schema": "https://aka.ms/mcp-config-schema",
-        "mcpServers": {"test": {"command": "test"}}
+        "mcpServers": {"test": {"command": "test"}},
     }
 
     install_kit.write_config(config_path, config, dry_run=False)
@@ -297,6 +281,8 @@ def test_detect_clients_none(monkeypatch: pytest.MonkeyPatch) -> None:
 
 def test_detect_clients_copilot_cli() -> None:
     """Test client detection finds Copilot CLI."""
-    with patch("shutil.which", side_effect=lambda cmd: "/usr/bin/copilot" if cmd == "copilot" else None):
+    with patch(
+        "shutil.which", side_effect=lambda cmd: "/usr/bin/copilot" if cmd == "copilot" else None
+    ):
         detected = install_kit.detect_clients()
         assert "copilot-cli" in detected

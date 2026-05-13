@@ -521,7 +521,7 @@ def pricing_estimate_workload(spec: WorkloadSpec) -> dict[str, Any]:
         items = result["items"]
         if not items:
             warnings.append(
-                f"Storage SKU '{storage_item.sku}' not found in region " f"'{storage_region}'."
+                f"Storage SKU '{storage_item.sku}' not found in region '{storage_region}'."
             )
             continue
 
@@ -535,7 +535,7 @@ def pricing_estimate_workload(spec: WorkloadSpec) -> dict[str, Any]:
 
         if storage_cheapest is None:
             warnings.append(
-                f"Storage SKU '{storage_item.sku}' has no valid unit_price in API " f"response."
+                f"Storage SKU '{storage_item.sku}' has no valid unit_price in API response."
             )
             continue
 
