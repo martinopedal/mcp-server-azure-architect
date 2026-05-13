@@ -46,6 +46,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `docs/perf/importtime-baseline-3.14.log` - Raw Python importtime trace (first 200 lines)
 - `docs/install/deployment-guide.md` - Deployment configuration and hardening guidance covering audit logging setup (append-only on Linux, Windows Event Log forwarding, cloud log ingestion to Azure Monitor Logs or syslog), log retention policy (90+ days minimum for compliance), and security best practices (non-privileged user, restricted permissions, network isolation, credential management). Addresses Threat R2 (log tampering). (#59)
 - `docs/install/usage-guide.md` - End-user guide for safe invocation of query tools covering sensitive data handling (connection strings, resource tags, private IPs, role assignments), scope guidance (prefer resource group over subscription, one subscription per call), result handling best practices (local processing, redaction before sharing, archive with access controls), and organizational policy template. Addresses Threat I2 (sensitive data exposure). (#60)
+- README.md: Removed inaccurate cold-start claim. Replaced with link to `docs/perf/coldstart-investigation.md` for measured baseline (8.5-9.0s on Python 3.12-3.14, dominated by FastMCP framework overhead). Fixes discrepancy between README claim and ADR-001 planning estimate.
+- `.copilot/skills/docs-style/SKILL.md`: Fixed tool count drift. Updated from "six native tools" to "seven native tools" and added `pricing_estimate_workload` to the list (added in PR #87).
 
 ### Security
 
