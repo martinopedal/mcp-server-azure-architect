@@ -1304,8 +1304,7 @@ Five orchestration-log entries created (one per agent):
 - `.squad/orchestration-log/2026-05-13T17-30-00Z-consensus-bundle-and-wave.md` (Rubber-duck consensus)
 
 Each entry documents agent routing, authorization, mode, files authorized, outcomes, and key findings.
-## Wave 13+ — v0.3 Wave-Open (PR #134, 8 Candidate Issues, 2026-05-18)
-## Wave 15 — v0.3 Wave-Open (PR #143, 8 Candidate Issues, 2026-05-18)
+
 ## Wave 15 — v0.3 Wave-Open (PR #134, 8 Candidate Issues, 2026-05-18)
 
 **Author:** Lead (planning decision) + Coordinator (execution)  
