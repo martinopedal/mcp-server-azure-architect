@@ -38,3 +38,18 @@ Vendored snapshots are refreshed automatically on a **weekly cadence** (Monday 0
 - source_file: `queries/alz_additional_queries.json`
 - checklist_ids: `e8aa1e41-870d-4968-94c6-77be14f510ac, 667313b4-f566-44b5-b984-a859c773e7d2`
 - file_count: `2`
+
+## Breaking-change detection
+
+Refresh PRs are automatically checked for breaking changes via `.github/workflows/breaking-change-detector.yml`. The workflow detects when the first table reference token in a `.kql` file changes, which signals a schema surface change (e.g., `resources` to `securityresources`).
+
+**Breaking changes** (fail the check):
+- First table reference token changed (schema surface altered)
+- Query file removed
+
+**Non-breaking changes** (pass):
+- Header-only changes (updated commit SHA, timestamp)
+- Body changes with same first token (query logic refined)
+- New query files added
+
+**Override:** If a breaking change is intentional (e.g., upstream schema update), apply the `breaking-change-approved` label to the PR to bypass the check.
