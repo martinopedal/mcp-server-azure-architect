@@ -1374,7 +1374,7 @@ Each entry documents agent routing, authorization, mode, files authorized, outco
 - **Auto-label workflow over-application:** The sync workflow added extra `squad:forge` and `squad:lead` ownership tags to several issues beyond the intended single `squad:{member}` label. Minor UX issue, not blocking. Follow-up: review the auto-label keyword matching regex to tighten specificity.
 - **Spawn authorization boundary lesson:** During earlier session, coordinator's spawn authorization for Lead did not restrict per-issue closures. Lesson: never authorize agents to close issues without explicit per-issue authorization. Reinforced in this session's Lead charter review.
 
-**Validation Gates (PR #143 at open):**
+**Validation Gates (PR #134 at open):**
 
 - CodeQL (Python + Actions) — pending re-run after commit `57bdda5`
 - Dependency-review — pending re-run
@@ -1396,7 +1396,7 @@ Each entry documents agent routing, authorization, mode, files authorized, outco
 - Sentinel research: archived locally in `.squad/agents/sentinel/`
 - Atlas research: archived locally in `.squad/agents/atlas/`
 - Sage research: archived locally in `.squad/agents/sage/`
-- PR #143: docs/v03-plan-synthesis branch, awaiting review
+- PR #134: docs/v03-plan-synthesis branch, awaiting review
 - Issues: #135-142 (v0.3 candidates), #93 (G1 external blocker)
 - Previous waves: Wave 13 (cold-start reconciliation), Waves 8-12 (KQL catalogue expansion)
 

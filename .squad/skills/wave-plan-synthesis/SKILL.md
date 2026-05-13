@@ -1,6 +1,6 @@
 # SKILL: Wave Plan Synthesis from Deferred Backlog
 
-**Confidence:** Low (2 observations: v0.2 synthesis from Wave 9, v0.3 synthesis from Wave 15)
+**Confidence:** Low (2 observations: v0.2 synthesis from Wave 9, v0.3 synthesis from Wave 14-15)
 **Author:** Lead
 **Last updated:** 2026-05-17
 
@@ -31,7 +31,7 @@ When a batch of deferred issues needs to be organized into a versioned release p
 - Output: 5 items scoped, 3 skill items deferred, all security/perf marked as closed.
 - Key learning: out-of-scope section is as valuable as in-scope.
 
-### v0.3 synthesis (Wave 15, 2026-05-17)
+### v0.3 synthesis (Wave 14-15, 2026-05-17 to 2026-05-18)
 - Input: 9 issues labeled `go:needs-research`. All 9 already closed.
 - Output: verification document, no new scope.
 - Key learning: always verify issue state before planning. Stale data in derived tables caused the entire synthesis request to be based on a false premise.
