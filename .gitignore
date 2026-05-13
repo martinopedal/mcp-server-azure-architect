@@ -17,5 +17,10 @@ build/
 .squad/log/
 .squad/decisions/inbox/
 .squad/sessions/
+# Squad: ignore append-only session artifacts (PR noise)
+# Templates under .squad/templates/ are NOT matched by these patterns.
+.squad/agents/*/history.md
+.squad/identity/now.md
+.squad/casting/history.json
 # Squad: SubSquad activation file (local to this machine)
 .squad-workstream
