@@ -71,7 +71,7 @@ Describe the return value type and shape. If returning a dict, enumerate the key
 Example (from `alz_query_by_id`):
 ```
 Returns:
-    A dictionary with `checklist_id`, `kql`, `pillar`, `source_repo`,
+    A dictionary with `checklist_id`, `kql`, `source`, `source_repo`,
     `source_commit`, `source_ref`, `source_file`, `vendored_at`,
     `vendored_path`, and `citation`.
 ```
@@ -165,7 +165,7 @@ def alz_query_by_id(checklist_id: str) -> dict[str, str]:
             `.kql` filename stem).
 
     Returns:
-        A dictionary with `checklist_id`, `kql`, `pillar`, `source_repo`,
+        A dictionary with `checklist_id`, `kql`, `source`, `source_repo`,
         `source_commit`, `source_ref`, `source_file`, `vendored_at`,
         `vendored_path`, and `citation`.
 

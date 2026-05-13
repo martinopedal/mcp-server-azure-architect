@@ -48,7 +48,7 @@ When the current log file reaches 10 MB, it is rotated to `audit.log.1`, and old
 Logs are written in JSON format for machine parsing:
 
 ```json
-{"timestamp": "2026-04-22T14:30:00+0000", "level": "INFO", "message": {"event": "tool_invocation", "tool": "alz_scorecard", "params": {"subscription_id": "12345678-****-****-****-************", "pillar": "checklist"}, "caller": "unknown"}}
+{"timestamp": "2026-04-22T14:30:00+0000", "level": "INFO", "message": {"event": "tool_invocation", "tool": "alz_scorecard", "params": {"subscription_id": "12345678-****-****-****-************", "source": "checklist"}, "caller": "unknown"}}
 ```
 
 Key fields:

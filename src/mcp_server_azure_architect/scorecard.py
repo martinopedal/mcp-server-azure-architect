@@ -14,7 +14,7 @@ Design notes (Forge, PR #10):
 * **Bounded concurrency.** Max 5 in-flight queries via asyncio.Semaphore to be polite
   to Azure Resource Graph rate limits.
 * **25-query cap.** If the caller requests more than 25 checklist IDs (via explicit
-  list or full-sweep of a pillar), slice to the first 25 alphabetical and set
+  list or full-sweep of a source dataset), slice to the first 25 alphabetical and set
   `truncated: true` in the result.
 * **Citation.** Every scorecard row includes the `citation` from the manifest so
   the caller can trace upstream ALZ source.
@@ -41,7 +41,7 @@ class ChecklistResult(TypedDict):
     """Per-checklist result in the scorecard."""
 
     checklist_id: str
-    pillar: str
+    source: str
     status: Literal["pass", "fail", "unknown"]
     count: int
     citation: str
@@ -57,7 +57,7 @@ class AggregateSummary(TypedDict):
     pass_count: int
     fail: int
     unknown: int
-    by_pillar: dict[str, dict[str, int]]
+    by_source: dict[str, dict[str, int]]
 
 
 class ScorecardResult(TypedDict):
@@ -119,7 +119,7 @@ async def _run_single_query(
             record = get_query(checklist_id)
             kql = record["kql"]
             citation = record["citation"]
-            pillar = record["pillar"]
+            source = record["source"]
 
             # Wrap sync SDK call in asyncio.to_thread for concurrency
             def _blocking_call() -> Any:
@@ -138,9 +138,7 @@ async def _run_single_query(
 
             # Apply 60-second timeout to prevent DoS via large query results
             try:
-                response = await asyncio.wait_for(
-                    asyncio.to_thread(_blocking_call), timeout=60.0
-                )
+                response = await asyncio.wait_for(asyncio.to_thread(_blocking_call), timeout=60.0)
             except TimeoutError:
                 raise Exception(
                     "Query timed out after 60s. Narrow the scope or increase pagination."
@@ -153,7 +151,7 @@ async def _run_single_query(
                 # No violations found
                 return ChecklistResult(
                     checklist_id=checklist_id,
-                    pillar=pillar,
+                    source=source,
                     status="pass",
                     count=0,
                     citation=citation,
@@ -178,7 +176,7 @@ async def _run_single_query(
 
             return ChecklistResult(
                 checklist_id=checklist_id,
-                pillar=pillar,
+                source=source,
                 status=status,
                 count=count,
                 citation=citation,
@@ -191,7 +189,7 @@ async def _run_single_query(
             # checklist_id not in vendored snapshot
             return ChecklistResult(
                 checklist_id=checklist_id,
-                pillar="unknown",
+                source="unknown",
                 status="unknown",
                 count=0,
                 citation="",
@@ -203,7 +201,7 @@ async def _run_single_query(
             # ARG query failed or other error
             return ChecklistResult(
                 checklist_id=checklist_id,
-                pillar="unknown",
+                source="unknown",
                 status="unknown",
                 count=0,
                 citation="",
@@ -215,7 +213,7 @@ async def _run_single_query(
 
 async def run_scorecard(
     subscription_id: str,
-    pillar: str | None = None,
+    source: str | None = None,
     checklist_ids: list[str] | None = None,
     page_size: int | None = None,
     page_token: str | None = None,
@@ -224,10 +222,10 @@ async def run_scorecard(
 
     Args:
         subscription_id: Azure subscription ID to evaluate.
-        pillar: Optional pillar filter (e.g., "checklist", "graph"). If provided,
-            only queries from that pillar are run.
+        source: Optional source dataset filter (e.g., "checklist", "graph"). If provided,
+            only queries from that source are run.
         checklist_ids: Optional explicit list of checklist IDs to run. If provided,
-            overrides pillar filter and runs only these queries.
+            overrides source filter and runs only these queries.
         page_size: Maximum number of items per page in Azure Resource Graph queries
             (default 1000, max 5000). Each checklist query respects this limit.
         page_token: Continuation token from previous page for pagination. Pass the
@@ -252,9 +250,7 @@ async def run_scorecard(
     if page_size is None:
         page_size = 1000
     elif not (1 <= page_size <= 5000):
-        raise ValueError(
-            f"page_size must be between 1 and 5000 (got {page_size})."
-        )
+        raise ValueError(f"page_size must be between 1 and 5000 (got {page_size}).")
 
     # Determine which checklist IDs to run
     if checklist_ids is not None:
@@ -266,15 +262,15 @@ async def run_scorecard(
         ids_to_run = checklist_ids
         truncated = False
     else:
-        # Full sweep or pillar-filtered sweep
+        # Full sweep or source-filtered sweep
         all_ids = list_query_ids()
-        if pillar:
-            # Filter by pillar
+        if source:
+            # Filter by source
             filtered = []
             for cid in all_ids:
                 try:
                     record = get_query(cid)
-                    if record["pillar"] == pillar:
+                    if record["source"] == source:
                         filtered.append(cid)
                 except LookupError:
                     pass
@@ -305,20 +301,20 @@ async def run_scorecard(
     fail = sum(1 for r in results if r["status"] == "fail")
     unknown = sum(1 for r in results if r["status"] == "unknown")
 
-    # By-pillar breakdown
-    by_pillar: dict[str, dict[str, int]] = {}
+    # By-source breakdown
+    by_source: dict[str, dict[str, int]] = {}
     for result in results:
-        p = result["pillar"]
-        if p not in by_pillar:
-            by_pillar[p] = {"pass": 0, "fail": 0, "unknown": 0}
-        by_pillar[p][result["status"]] += 1
+        s = result["source"]
+        if s not in by_source:
+            by_source[s] = {"pass": 0, "fail": 0, "unknown": 0}
+        by_source[s][result["status"]] += 1
 
     aggregate = AggregateSummary(
         total=total,
         pass_count=pass_count,
         fail=fail,
         unknown=unknown,
-        by_pillar=by_pillar,
+        by_source=by_source,
     )
 
     return ScorecardResult(

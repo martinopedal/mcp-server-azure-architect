@@ -73,7 +73,7 @@ def alz_query_by_id(checklist_id: str) -> dict[str, str]:
             `.kql` filename stem).
 
     Returns:
-        A dictionary with `checklist_id`, `kql`, `pillar`, `source_repo`,
+        A dictionary with `checklist_id`, `kql`, `source`, `source_repo`,
         `source_commit`, `source_ref`, `source_file`, `vendored_at`,
         `vendored_path`, and `citation`.
 
@@ -173,14 +173,14 @@ def pricing_estimate_workload(spec: dict[str, Any]) -> dict[str, Any]:
 )
 @audit_log_tool
 def alz_query_list(
-    pillar: str | None = None,
+    source: str | None = None,
     source_repo: str | None = None,
     limit: int = 200,
 ) -> dict[str, Any]:
     """List vendored Azure Landing Zone (ALZ) checklist queries.
 
-    Enumerate the vendored ALZ snapshot with optional filters by pillar or
-    source repository. Returns metadata for each query (checklist ID, pillar,
+    Enumerate the vendored ALZ snapshot with optional filters by source dataset or
+    source repository. Returns metadata for each query (checklist ID, source,
     source repo, citation) but not the full KQL text. Use alz_query_by_id to
     retrieve the full query.
 
@@ -189,8 +189,8 @@ def alz_query_list(
     accept a subscription ID.
 
     Args:
-        pillar: Optional pillar filter (e.g., "checklist", "graph"). If provided,
-            only queries from that pillar are returned.
+        source: Optional source dataset filter (e.g., "checklist", "graph"). If provided,
+            only queries from that source are returned.
         source_repo: Optional source repo filter (e.g.,
             "martinopedal/alz-checklist-queries"). If provided, only queries
             from that repo are returned.
@@ -200,16 +200,16 @@ def alz_query_list(
 
     Returns:
         A dictionary with `count` (int, total matching queries), `items` (list
-        of dicts with checklist_id, pillar, source_repo, title, citation),
+        of dicts with checklist_id, source, source_repo, title, citation),
         `manifest_commit` (str, composite of source commits), `truncated` (bool),
-        and `filters_applied` (dict with pillar and source_repo).
+        and `filters_applied` (dict with source and source_repo).
 
     Note: Results may contain sensitive data (resource tags with secrets, connection
         strings in configurations, private IPs). Treat results as sensitive. Do not log,
         share, or persist results without review per your organization's data handling
         policy.
     """
-    result = list_queries(pillar=pillar, source_repo=source_repo, limit=limit)
+    result = list_queries(source=source, source_repo=source_repo, limit=limit)
     return result
 
 
@@ -225,7 +225,7 @@ def alz_query_list(
 @audit_log_tool
 async def alz_scorecard(
     subscription_id: str,
-    pillar: str | None = None,
+    source: str | None = None,
     checklist_ids: list[str] | None = None,
     page_size: int | None = None,
     page_token: str | None = None,
@@ -234,7 +234,7 @@ async def alz_scorecard(
 
     Executes vendored ALZ checklist queries against Azure Resource Graph and
     returns a structured scorecard with per-checklist pass/fail/unknown status
-    plus aggregate summary by pillar.
+    plus aggregate summary by source dataset.
 
     Read-only: calls ResourceGraphClient.resources() only. No mutations, no
     Begin*/Create*/Update*/Delete* operations per ADR-003.
@@ -247,10 +247,10 @@ async def alz_scorecard(
 
     Args:
         subscription_id: Azure subscription ID to evaluate.
-        pillar: Optional pillar filter (e.g., "checklist", "graph"). If provided,
-            only queries from that pillar are run.
+        source: Optional source dataset filter (e.g., "checklist", "graph"). If provided,
+            only queries from that source are run.
         checklist_ids: Optional explicit list of checklist IDs to run. If provided,
-            overrides pillar filter. Capped at 25 queries per call.
+            overrides source filter. Capped at 25 queries per call.
         page_size: Maximum number of items per page in Azure Resource Graph queries
             (default 1000, max 5000). Each checklist query respects this limit.
         page_token: Continuation token from previous page for pagination. Pass the
@@ -259,7 +259,7 @@ async def alz_scorecard(
     Returns:
         ScorecardResult with `subscription_id`, `results` (list of per-checklist
         ChecklistResult with `next_page_token` if more results available), `aggregate`
-        (total/pass/fail/unknown counts plus by_pillar breakdown), and `truncated`
+        (total/pass/fail/unknown counts plus by_source breakdown), and `truncated`
         (bool, true if cap was applied).
 
     Raises:
@@ -273,7 +273,7 @@ async def alz_scorecard(
     """
     result = await run_scorecard(
         subscription_id=subscription_id,
-        pillar=pillar,
+        source=source,
         checklist_ids=checklist_ids,
         page_size=page_size,
         page_token=page_token,
