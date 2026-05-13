@@ -38,6 +38,16 @@ Every PR runs:
 - CodeQL
 - MCP Inspector smoke test (server starts, tools enumerate, schemas validate)
 
+Before pushing, run locally:
+
+```bash
+ruff check .
+ruff format --check .
+mypy src
+pytest -v
+python scripts/verify_query_integrity.py
+```
+
 ## Identifier provenance
 
 Any hard-coded Azure identifier (policy ID, initiative ID, role definition ID, recommendation ID, ALZ checklist item ID) must be tagged with one of:
