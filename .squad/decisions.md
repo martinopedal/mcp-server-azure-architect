@@ -847,6 +847,60 @@ All validation gates pass: ruff, mypy strict, pytest, cold-start within budget.
 
 ---
 
+## Wave 8-12 Inbox Consolidation (2026-05-15)
+
+Consolidates 7 inbox artifacts that drove shipped work in waves 8-12. Detailed source artifacts archived locally (gitignored).
+
+### Decision: KQL/ARG Catalogue Expansion Is the v0.2 Focus
+
+**Source:** atlas-research-kql.md, sage-research-roadmap.md, lead-synthesis-v0.2-roadmap.md
+
+**What:** v0.2 focuses on expanding vendored ALZ queries from 4 to ~130 (Atlas domain). Rationale: azure-mcp now covers 40+ namespaces with `--read-only`, `--mode`, `--namespace`, `--tool` flags. ADR-004 complement-not-wrap posture stands. Mission lines for quota planner and Advisor surfacing retired (microsoft/mcp native covers both).
+
+**Shipped:** docs/planning/v0.2.md (roadmap), issues #96/#99/#100 (Atlas catalogue work), issue #89 (refresh-script fix).
+
+### Decision: MCP Scope Filter Applied to All v0.2 Work
+
+**Source:** copilot-directive-mcp-scope-filter.md (user directive 2026-05-12)
+
+**What:** Every v0.2 candidate evaluated through MCP-server lens. STAY: tool annotations, MCP Registry listing, companion-kit refresh (microsoft/mcp migration), vendored ALZ catalogue expansion. RE-EVALUATE: pure Copilot CLI skills (deferred unless reframed as MCP capabilities).
+
+**Shipped:** docs/planning/v0.2.md scope; 3 skill issues (N9/N15/N16) excluded from filing per filter.
+
+### Decision: Refresh Script N1 Bug Fixed
+
+**Source:** atlas-n1-refresh-fix.md
+
+**What:** refresh_alz_snapshot.py had silent bug: wrong JSON keys (`items` → `queries`, `id` → `guid`) + missing queryable filter. Auto-refresh was broken even when drift detected.
+
+**Shipped:** PR #103 merged, issue #89 filed.
+
+### Decision: MCP Inspector Smoke Test in CI
+
+**Source:** forge-mcp-inspector-ci.md
+
+**What:** All PRs run MCP Inspector smoke test that starts server, enumerates tools with valid JSON Schema. Required CI check. Validates protocol layer and schema correctness.
+
+**Shipped:** `.github/workflows/inspector-smoke.yml` (Forge issue #19 closed).
+
+### Decision: 14 v0.2 Issues Filed Per Manifest
+
+**Source:** sage-issue-filing-manifest.md
+
+**What:** Lead synthesis converted to 14 GitHub issues (Atlas/Forge/Burke/Sage tracks). 3 skill issues excluded per MCP scope filter. Duplicates verified against #63/#67/#68. All filed with original Lead specifications.
+
+**Shipped:** Issue manifest reflected in v0.2 milestone.
+
+### Decision: azure-mcp Distribution Move (Azure → microsoft/mcp)
+
+**Source:** sage-research-roadmap.md, lead-synthesis-v0.2-roadmap.md
+
+**What:** `Azure/azure-mcp` archived 2026-02-06. Azure MCP Server now at `microsoft/mcp`. First-class `--read-only`, `--mode`, `--namespace`, `--tool` flags added. ADR-004 stands (complement-not-wrap). Burke owns mcp-config.json migration, docs update (issue #92), and AKS-MCP mutation hazard documentation (issue #101).
+
+**Shipped:** docs/companions/ tracking, issue #92 filed, issue #101 filed.
+
+---
+
 ## Governance
 
 - All meaningful changes require team consensus
