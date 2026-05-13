@@ -447,7 +447,7 @@ def refresh_snapshot(dry_run: bool = False) -> bool:
                 target.write_bytes(kql_file.read_bytes())
 
             # Build manifest v2 source entry with queries metadata
-            files = [str(p.relative_to(repo_root)) for p in sorted(dest_dir.glob("*.kql"))]
+            files = [p.relative_to(repo_root).as_posix() for p in sorted(dest_dir.glob("*.kql"))]
             queries_metadata = {}
             for guid in checklist_ids:
                 meta = metadata_dict[guid]
