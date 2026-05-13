@@ -1305,6 +1305,7 @@ Five orchestration-log entries created (one per agent):
 
 Each entry documents agent routing, authorization, mode, files authorized, outcomes, and key findings.
 ## Wave 13+ — v0.3 Wave-Open (PR #134, 8 Candidate Issues, 2026-05-18)
+## Wave 15 — v0.3 Wave-Open (PR #143, 8 Candidate Issues, 2026-05-18)
 
 **Author:** Lead (planning decision) + Coordinator (execution)  
 **Date:** 2026-05-18  
@@ -1342,12 +1343,12 @@ Each entry documents agent routing, authorization, mode, files authorized, outco
 ### Coordinator Execution: Wave-Open Delivery
 
 **Date:** 2026-05-18  
-**PR:** #134 (docs/v03-plan-synthesis)  
+**PR:** #143 (docs/v03-plan-synthesis)  
 **Commits:** Lead synthesis (commit TBD on PR), Coordinator follow-up `57bdda5` (cross-links + issue reference update)
 
 **Artifacts Delivered:**
 
-1. **PR #134:** Opened on `docs/v03-plan-synthesis` branch with two work products:
+1. **PR #143:** Opened on `docs/v03-plan-synthesis` branch with two work products:
    - `docs/planning/v0.3.md` — Full v0.2 release inventory + v0.3 9-candidate consolidated scope (T4/T2/I4 security, A1/A2/A3 catalogue, G1/G2/G3 stewardship). A1 candidate corrected from `diagnostics_coverage` (shipped in #100) to `backup_coverage` (Reliability pillar gap).
    - `CHANGELOG.md` — Consolidated 7 duplicate H3 categories under `[Unreleased]` into single canonical blocks in canonical order: Added → Changed → Fixed → Security → Documentation → Repository Infrastructure → Automation.
 
@@ -1372,7 +1373,7 @@ Each entry documents agent routing, authorization, mode, files authorized, outco
 - **Auto-label workflow over-application:** The sync workflow added extra `squad:forge` and `squad:lead` ownership tags to several issues beyond the intended single `squad:{member}` label. Minor UX issue, not blocking. Follow-up: review the auto-label keyword matching regex to tighten specificity.
 - **Spawn authorization boundary lesson:** During earlier session, coordinator's spawn authorization for Lead did not restrict per-issue closures. Lesson: never authorize agents to close issues without explicit per-issue authorization. Reinforced in this session's Lead charter review.
 
-**Validation Gates (PR #134 at open):**
+**Validation Gates (PR #143 at open):**
 
 - CodeQL (Python + Actions) — pending re-run after commit `57bdda5`
 - Dependency-review — pending re-run
@@ -1394,7 +1395,7 @@ Each entry documents agent routing, authorization, mode, files authorized, outco
 - Sentinel research: archived locally in `.squad/agents/sentinel/`
 - Atlas research: archived locally in `.squad/agents/atlas/`
 - Sage research: archived locally in `.squad/agents/sage/`
-- PR #134: docs/v03-plan-synthesis branch, awaiting review
+- PR #143: docs/v03-plan-synthesis branch, awaiting review
 - Issues: #135-142 (v0.3 candidates), #93 (G1 external blocker)
 - Previous waves: Wave 13 (cold-start reconciliation), Waves 8-12 (KQL catalogue expansion)
 
