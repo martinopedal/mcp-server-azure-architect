@@ -598,7 +598,7 @@
           },
           "1770a2ac-c194-4e5c-ade4-82939d38a510": {
             "id": "1770a2ac-c194-4e5c-ade4-82939d38a510",
-            "text": "Identify and restrict platform administrators in line with sovereignty requirements (for example, EUâ€‘only, UKâ€‘only, or countryâ€‘specific privileged roles).",
+            "text": "Identify and restrict platform administrators in line with sovereignty requirements (for example, EU\u00c3\u00a2\u00e2\u201a\u00ac\u00e2\u20ac\u02dconly, UK\u00c3\u00a2\u00e2\u201a\u00ac\u00e2\u20ac\u02dconly, or country\u00c3\u00a2\u00e2\u201a\u00ac\u00e2\u20ac\u02dcspecific privileged roles).",
             "category": "Identity and Access Management",
             "subcategory": "Sovereign Cloud",
             "severity": "Medium",
@@ -1706,7 +1706,7 @@
           },
           "7371dc21-251a-47a3-af14-6e01b9da4757": {
             "id": "7371dc21-251a-47a3-af14-6e01b9da4757",
-            "text": "Prevent SNAT Port exhaustion by monitoring SNAT port usage, evaluating NAT Gateway settings, and ensuring seamless failover. If the port count approaches the limit, itâ€™s a sign that SNAT exhaustion might be imminent.",
+            "text": "Prevent SNAT Port exhaustion by monitoring SNAT port usage, evaluating NAT Gateway settings, and ensuring seamless failover. If the port count approaches the limit, it\u00c3\u00a2\u00e2\u201a\u00ac\u00e2\u201e\u00a2s a sign that SNAT exhaustion might be imminent.",
             "category": "Network Topology and Connectivity",
             "subcategory": "Firewall",
             "severity": "Medium",
@@ -3362,7 +3362,9 @@
           "data/alz-queries/custom/464f1e97-148f-4250-a716-d22b289bac41.kql": "d0b840f868cd099af7585464ea918ca4f7657c6cf4574ee04d092c0dfc321a3a",
           "data/alz-queries/custom/decc6b2b-9a5b-4261-a2f7-eac632b550fe.kql": "5373ef8238b06be72ee2ac0f4d98944b5d9d98d3688ed16172e8d7909bdf17de",
           "data/alz-queries/custom/fe60141f-7d13-4ad5-90f0-cbf5d2ee249f.kql": "c9dd554ecb828af7e44b79184c11eefa3716f2542f5b54b5e852aa39cff7cd8d",
-          "data/alz-queries/custom/bc5a2107-737a-4f9a-bd70-680c9ed28b8b.kql": "fe5fe6e0b7e15db08cba08565528667b19d0487b213be126cbf752a94b10abd0"
+          "data/alz-queries/custom/bc5a2107-737a-4f9a-bd70-680c9ed28b8b.kql": "fe5fe6e0b7e15db08cba08565528667b19d0487b213be126cbf752a94b10abd0",
+          "data/alz-queries/custom/8003d59b-f2fc-46c9-b387-d9a889ec491a.kql": "44b7abf6917ed10124fbd413bc0431c6b1d78de79cc31ff159ce8e629406f9ac",
+          "data/alz-queries/custom/b8bb32c6-18b1-4563-9435-6cf9b8b24b54.kql": "35ae08b4ba7345349ead61f814cf7b23e55bf815bbc27b9f366445644dd476f4"
         }
       }
     }
