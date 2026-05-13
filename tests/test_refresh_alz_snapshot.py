@@ -421,7 +421,7 @@ def test_refresh_snapshot_dry_run_with_drift(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Test refresh_snapshot in dry-run mode with drift detected.
-    
+
     NOTE: As of PR #96, graph repo is temporarily disabled due to guid collision
     (Decision 10/11). Test updated to check checklist-only vendoring.
     """
@@ -430,7 +430,7 @@ def test_refresh_snapshot_dry_run_with_drift(
     data_dir.mkdir(parents=True)
     (data_dir / "checklist").mkdir()
     manifest_path = data_dir / "manifest.json"
-    
+
     # Use a manifest with only checklist source (graph commented out in script)
     checklist_only_manifest = {
         "schema_version": 2,

@@ -46,7 +46,7 @@ def _mock_arg_response(rows: list[dict[str, Any]], skip_token: str | None = None
 @pytest.mark.asyncio
 async def test_scorecard_all_pass_no_violations() -> None:
     """All queries return zero violations; scorecard shows all pass.
-    
+
     NOTE: As of PR #96, we have 173 queryable items. Scorecard is capped at 25,
     so we filter to a known subset to test the pass-all logic without truncation.
     """
