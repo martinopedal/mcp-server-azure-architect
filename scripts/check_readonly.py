@@ -44,9 +44,7 @@ READONLY_ALLOW_MARKER = "readonly-allow:"
 class ReadOnlyViolation:
     """A detected mutation method call."""
 
-    def __init__(
-        self, file_path: Path, line_number: int, method_name: str, context: str
-    ):
+    def __init__(self, file_path: Path, line_number: int, method_name: str, context: str):
         self.file_path = file_path
         self.line_number = line_number
         self.method_name = method_name
@@ -168,9 +166,7 @@ def format_suggestions(violation: ReadOnlyViolation) -> str:
     elif method.startswith("delete_") or method.startswith("remove_"):
         suggestions.append("- Use list_* to enumerate resources without deletion")
     elif method.startswith("begin_"):
-        suggestions.append(
-            "- Avoid long-running operations (LROs); use read-only queries instead"
-        )
+        suggestions.append("- Avoid long-running operations (LROs); use read-only queries instead")
     elif method.startswith("start_") or method.startswith("stop_"):
         suggestions.append("- Use get_* to read resource state without control actions")
     else:

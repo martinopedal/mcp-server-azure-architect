@@ -54,11 +54,9 @@ def test_verify_integrity_happy_path(tmp_path: Path) -> None:
                     "source_file": "queries/test.json",
                     "checklist_ids": ["test-id"],
                     "files": ["data/alz-queries/checklist/test-query.kql"],
-                    "sha256": {
-                        "data/alz-queries/checklist/test-query.kql": expected_hash
-                    }
+                    "sha256": {"data/alz-queries/checklist/test-query.kql": expected_hash},
                 },
-                "file_count": 1
+                "file_count": 1,
             }
         ]
     }
@@ -97,9 +95,9 @@ def test_verify_integrity_tampered_file(tmp_path: Path) -> None:
                     "files": ["data/alz-queries/checklist/test-query.kql"],
                     "sha256": {
                         "data/alz-queries/checklist/test-query.kql": "0" * 64  # Wrong hash
-                    }
+                    },
                 },
-                "file_count": 1
+                "file_count": 1,
             }
         ]
     }
@@ -131,11 +129,9 @@ def test_verify_integrity_missing_file(tmp_path: Path) -> None:
                     "source_file": "queries/test.json",
                     "checklist_ids": ["test-id"],
                     "files": ["data/alz-queries/checklist/test-query.kql"],
-                    "sha256": {
-                        "data/alz-queries/checklist/test-query.kql": "a" * 64
-                    }
+                    "sha256": {"data/alz-queries/checklist/test-query.kql": "a" * 64},
                 },
-                "file_count": 1
+                "file_count": 1,
             }
         ]
     }
@@ -174,7 +170,7 @@ def test_verify_integrity_missing_hash(tmp_path: Path) -> None:
                     "files": ["data/alz-queries/checklist/test-query.kql"],
                     # No sha256 field
                 },
-                "file_count": 1
+                "file_count": 1,
             }
         ]
     }
@@ -212,7 +208,7 @@ def test_update_hashes(tmp_path: Path) -> None:
                     "checklist_ids": ["test-id"],
                     "files": ["data/alz-queries/checklist/test-query.kql"],
                 },
-                "file_count": 1
+                "file_count": 1,
             }
         ]
     }
@@ -258,7 +254,7 @@ def test_update_hashes_missing_file(tmp_path: Path) -> None:
                     "checklist_ids": ["test-id"],
                     "files": ["data/alz-queries/checklist/missing.kql"],
                 },
-                "file_count": 1
+                "file_count": 1,
             }
         ]
     }
@@ -285,9 +281,9 @@ def test_generate_markdown_manifest(tmp_path: Path) -> None:
                     "source_file": "queries/test.json",
                     "checklist_ids": ["id1", "id2"],
                     "files": ["data/alz-queries/checklist/id1.kql"],
-                    "sha256": {"data/alz-queries/checklist/id1.kql": "a" * 64}
+                    "sha256": {"data/alz-queries/checklist/id1.kql": "a" * 64},
                 },
-                "file_count": 2
+                "file_count": 2,
             }
         ]
     }

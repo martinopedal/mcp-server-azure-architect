@@ -67,9 +67,7 @@ class TestGetCloudConfig:
         assert config.arm_endpoint == "https://management.microsoftazure.de"
         assert config.arm_scope == "https://management.microsoftazure.de/.default"
 
-    def test_unknown_cloud_raises_value_error(
-        self, monkeypatch: pytest.MonkeyPatch
-    ) -> None:
+    def test_unknown_cloud_raises_value_error(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """Unknown AZURE_CLOUD_NAME should raise ValueError with valid options."""
         monkeypatch.setenv("AZURE_CLOUD_NAME", "InvalidCloud")
         with pytest.raises(ValueError, match="Unknown AZURE_CLOUD_NAME 'InvalidCloud'"):

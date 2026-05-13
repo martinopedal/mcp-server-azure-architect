@@ -102,9 +102,7 @@ results = client.query("Resources | where type =~ 'Microsoft.Compute/virtualMach
         violations = scan_file(test_file)
         assert len(violations) == 0
 
-    def test_readonly_allow_comment_suppresses_violation(
-        self, tmp_path: Path
-    ) -> None:
+    def test_readonly_allow_comment_suppresses_violation(self, tmp_path: Path) -> None:
         """Verify that readonly-allow: comment suppresses violations."""
         code = """
 # readonly-allow: test fixture for demonstrating allow syntax

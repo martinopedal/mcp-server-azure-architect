@@ -46,7 +46,9 @@ def test_set_file_permissions_0600_windows(tmp_path: Path) -> None:
 
 
 @pytest.mark.skipif(platform.system() == "Windows", reason="POSIX-only test")
-def test_check_directory_permissions_warns_on_permissive(tmp_path: Path, caplog: pytest.LogCaptureFixture) -> None:
+def test_check_directory_permissions_warns_on_permissive(
+    tmp_path: Path, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test that warning is logged for permissive directory permissions."""
     test_dir = tmp_path / "test_dir"
     test_dir.mkdir()
@@ -61,7 +63,9 @@ def test_check_directory_permissions_warns_on_permissive(tmp_path: Path, caplog:
 
 
 @pytest.mark.skipif(platform.system() == "Windows", reason="POSIX-only test")
-def test_check_directory_permissions_no_warn_on_0700(tmp_path: Path, caplog: pytest.LogCaptureFixture) -> None:
+def test_check_directory_permissions_no_warn_on_0700(
+    tmp_path: Path, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test that no warning is logged for secure directory permissions."""
     test_dir = tmp_path / "test_dir"
     test_dir.mkdir()
@@ -83,6 +87,7 @@ def test_setup_audit_logging_creates_secure_directory(tmp_path: Path) -> None:
     with patch.dict(os.environ, {"MCP_AZURE_ARCHITECT_LOG_DIR": str(log_dir)}):
         # Reset global logger
         import mcp_server_azure_architect.audit
+
         mcp_server_azure_architect.audit._AUDIT_LOGGER = None
 
         setup_audit_logging()
@@ -102,6 +107,7 @@ def test_setup_audit_logging_creates_secure_file(tmp_path: Path) -> None:
     with patch.dict(os.environ, {"MCP_AZURE_ARCHITECT_LOG_DIR": str(log_dir)}):
         # Reset global logger
         import mcp_server_azure_architect.audit
+
         mcp_server_azure_architect.audit._AUDIT_LOGGER = None
 
         setup_audit_logging()
@@ -121,6 +127,7 @@ def test_setup_audit_logging_windows_smoke(tmp_path: Path) -> None:
     with patch.dict(os.environ, {"MCP_AZURE_ARCHITECT_LOG_DIR": str(log_dir)}):
         # Reset global logger
         import mcp_server_azure_architect.audit
+
         mcp_server_azure_architect.audit._AUDIT_LOGGER = None
 
         setup_audit_logging()

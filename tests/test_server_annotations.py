@@ -60,18 +60,14 @@ def test_tool_annotation_completeness() -> None:
 
         # Check all expected fields are not None
         assert tool.annotations.title is not None, f"Tool {tool.name} missing title"
-        assert (
-            tool.annotations.readOnlyHint is not None
-        ), f"Tool {tool.name} missing readOnlyHint"
-        assert (
-            tool.annotations.destructiveHint is not None
-        ), f"Tool {tool.name} missing destructiveHint"
-        assert (
-            tool.annotations.idempotentHint is not None
-        ), f"Tool {tool.name} missing idempotentHint"
-        assert (
-            tool.annotations.openWorldHint is not None
-        ), f"Tool {tool.name} missing openWorldHint"
+        assert tool.annotations.readOnlyHint is not None, f"Tool {tool.name} missing readOnlyHint"
+        assert tool.annotations.destructiveHint is not None, (
+            f"Tool {tool.name} missing destructiveHint"
+        )
+        assert tool.annotations.idempotentHint is not None, (
+            f"Tool {tool.name} missing idempotentHint"
+        )
+        assert tool.annotations.openWorldHint is not None, f"Tool {tool.name} missing openWorldHint"
 
 
 def test_expected_tool_titles() -> None:
@@ -118,12 +114,12 @@ def test_alz_and_pricing_tools_are_idempotent_and_open_world() -> None:
     for tool in tools:
         if tool.name in alz_and_pricing_tools:
             assert tool.annotations is not None
-            assert (
-                tool.annotations.idempotentHint is True
-            ), f"Tool {tool.name} should have idempotentHint=True"
-            assert (
-                tool.annotations.openWorldHint is True
-            ), f"Tool {tool.name} should have openWorldHint=True"
+            assert tool.annotations.idempotentHint is True, (
+                f"Tool {tool.name} should have idempotentHint=True"
+            )
+            assert tool.annotations.openWorldHint is True, (
+                f"Tool {tool.name} should have openWorldHint=True"
+            )
 
 
 def test_health_check_is_closed_world() -> None:
@@ -133,9 +129,9 @@ def test_health_check_is_closed_world() -> None:
 
     assert health_tool is not None, "health_check tool not found"
     assert health_tool.annotations is not None
-    assert (
-        health_tool.annotations.openWorldHint is False
-    ), "health_check should have openWorldHint=False (no external calls)"
-    assert (
-        health_tool.annotations.idempotentHint is True
-    ), "health_check should have idempotentHint=True (always returns same result)"
+    assert health_tool.annotations.openWorldHint is False, (
+        "health_check should have openWorldHint=False (no external calls)"
+    )
+    assert health_tool.annotations.idempotentHint is True, (
+        "health_check should have idempotentHint=True (always returns same result)"
+    )

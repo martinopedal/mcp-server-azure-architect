@@ -56,7 +56,9 @@ def generate_markdown_manifest(manifest: dict[str, Any], repo_root: Path) -> str
     if timestamps:
         lines.append(f"Vendored at: {max(timestamps)}")
     lines.append("")
-    lines.append("This snapshot is pinned to commit SHAs. No `main` or `latest` references are used for source content.")
+    lines.append(
+        "This snapshot is pinned to commit SHAs. No `main` or `latest` references are used for source content."
+    )
     lines.append("")
     lines.append("## Sources")
     lines.append("")
@@ -169,9 +171,7 @@ def update_hashes(repo_root: Path) -> int:
 
 def main() -> int:
     """Main entry point."""
-    parser = argparse.ArgumentParser(
-        description="Verify SHA-256 integrity of vendored ALZ queries"
-    )
+    parser = argparse.ArgumentParser(description="Verify SHA-256 integrity of vendored ALZ queries")
     parser.add_argument(
         "--update",
         action="store_true",
