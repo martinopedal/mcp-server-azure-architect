@@ -7,6 +7,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Manifest v2 schema with rich per-query metadata** (Closes #125, ADR-006). Each query now includes `text`, `category`, `subcategory`, `severity`, `queryable`, optional `scope_hint`, `tags`, `waf`, `upstream_reason`. Enables filterable catalogue navigation at scale (Wave B prerequisite for #96, #99, #100 bulk vendor). Manifest v2 loader is metadata-only at index-build time (lazy-loads KQL bodies on first `get_query()` call), reducing cold-start overhead for 132+ query catalogue.
+- **`list_queries()` filter parameters:** `category`, `severity`, `queryable_only`. Enables discovery workflows ("show me High-severity Security items"). Returns rich metadata per query.
+- **Reserved `data/alz-queries/custom/` slot** for non-upstream Atlas-authored queries (populated by #99 and #100). ADR-006 defines custom-query provenance pattern (empty-string `source_commit`, citation to issue and ADR).
+
+### Changed
+
+- **BREAKING (pre-1.0 minor bump per ADR-005):** `QueryRecord` shape extended with manifest v2 fields (`text`, `category`, `subcategory`, `severity`, `queryable`, optional `scope_hint`, `tags`, `waf`, `upstream_reason`). `alz_query_by_id` and `alz_query_list` response shapes grew additive metadata. Existing field names and types preserved. Consumers not expecting new fields ignore them.
+- **BREAKING (pre-1.0 minor bump per ADR-005):** `source` field values changed from `checklist` / `graph` to `vendored-checklist` / `vendored-graph` / `custom`. Backward compatibility: loader accepts legacy values and maps to new enum. Callers filtering by source must update filter strings.
+- **Manifest schema version:** `manifest.json` now includes `schema_version: 2` at top level. Loader validates schema version ≥2 and raises clear error with remediation hint if v1 manifest detected.
+- **`list_queries()` title field:** Populated from `text` (or `subcategory` if `text` empty). Was empty string in manifest v1.
+
+### Fixed
+
+- **Refresh script handles current upstream shape** (Closes #125). Accepts `{metadata, queries}` top-level keys and `guid` item key (vs. old `{items}` / `id` shape). Monday 06:00 UTC cron no longer fails on schema assertion.
+- **Atomic refresh replace** (Closes #125). Extraction to tempdir, validation, then atomic replace via `pathlib.Path.replace()`. No mid-refresh deletes of existing files. Broken working tree on parse failure now impossible.
+- **Duplicate guid detection** (Closes #125). Cross-source deduplication: same guid with identical content (KQL + metadata bytes) accepted silently. Same guid with different content raises `ValueError` with both paths and remediation hint. Silent overwrite corruption eliminated.
+- **Merged-catalogue detection** (Closes #125). If upstream `metadata.merged: true`, refresh script treats two repos as one merged catalogue and vendors from checklist source only (per ADR-002 primacy). Prevents double-vendor and guid collisions.
+- **Non-queryable query filtering** (Closes #125). Refresh script skips queries where `queryable: false`. Logs count of skipped items. Vendored snapshot contains only executable queries per ADR-002.
+- **Removed non-queryable query** `e8aa1e41-870d-4968-94c6-77be14f510ac` (should not have been vendored per ADR-002). Manifest v2 conversion corrected this oversight.
+
+### Repository Infrastructure
+
+- **ADR-006: ALZ Query Metadata Schema and Custom Provenance** (Accepted 2026-05-16, Atlas). Documents manifest v2 design decisions, custom-query provenance pattern, lazy-loading rationale, and supersedes ADR-002 for metadata schema (vendoring storage policy still authoritative).
+- **Reserved `data/alz-queries/custom/.gitkeep`** slot for #99 and #100 custom query authoring. Empty in this release.
+
 ### Security
 
 - **SHA-256 integrity verification for vendored ALZ queries** (Closes #63). Mitigates threat T1 (compromised vendored query / KQL injection). Each query file now has a SHA-256 hash recorded in `manifest.json`. CI validates hashes on every build before tests run. Any tampered query file triggers build failure. Hash regeneration is explicit via `python scripts/verify_query_integrity.py --update`. The weekly refresh workflow automatically regenerates hashes after pulling new queries from upstream. See `data/alz-queries/CONTRIBUTING.md` for workflow documentation.
