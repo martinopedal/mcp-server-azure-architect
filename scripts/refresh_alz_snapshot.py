@@ -501,9 +501,16 @@ def refresh_snapshot(dry_run: bool = False) -> bool:
             print(f"  Extracted {len(checklist_ids)} queries")
 
     if changes_detected and not dry_run:
+        # Preserve custom sources before overwriting
+        custom_sources = [
+            s
+            for s in manifest.get("sources", [])
+            if s.get("ref") == "custom" or s.get("source_ref") == "custom"
+        ]
+
         # Save updated manifest with schema_version: 2
         manifest["schema_version"] = 2
-        manifest["sources"] = new_sources
+        manifest["sources"] = new_sources + custom_sources  # Append preserved custom sources
 
         # Regenerate SHA-256 hashes for all query files
         print("Regenerating SHA-256 hashes...")

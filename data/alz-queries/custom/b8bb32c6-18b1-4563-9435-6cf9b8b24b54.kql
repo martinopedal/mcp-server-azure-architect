@@ -1,0 +1,26 @@
+// Custom query for tag audit (required tags compliance)
+// Author: Atlas (ARG/KQL Engineer)
+// Issue: #100
+// Citation: ADR-006 custom query provenance pattern
+
+// For each subscription and resource, report which required tags are missing.
+// Default required tags are Environment, Owner, CostCenter (ALZ-aligned).
+// Consumers can override the required tag list at scorecard-composition time.
+// Note: This query uses a fixed required-tag set. For parameterized queries,
+// the consumer must filter results by their organization's required tags.
+
+let requiredTags = dynamic(["Environment", "Owner", "CostCenter"]);
+resources
+| extend tagKeys = bag_keys(tags)
+| mv-expand requiredTag = requiredTags to typeof(string)
+| extend hasTag = array_index_of(tagKeys, requiredTag) >= 0
+| where not(hasTag)
+| project 
+    subscriptionId,
+    resourceGroup,
+    ResourceType = type,
+    ResourceName = name,
+    ResourceId = id,
+    MissingTag = requiredTag,
+    ExistingTags = tags
+| order by subscriptionId asc, resourceGroup asc, ResourceName asc, MissingTag asc
