@@ -972,6 +972,69 @@ KQL queries are production-ready (standard ARG patterns), ADR-006 compliance is 
 
 ---
 
+## Decision: Cold-Start Documentation Reconciliation (PR #131, Wave 13)
+
+**Author:** Lead  
+**Date:** 2026-05-17  
+**Status:** Executed (PR #131 merged via admin-toggle squash commit)  
+**Scope:** Documentation reconciliation
+
+### Context
+
+Four different cold-start numbers appeared across public docs:
+
+1. **ADR-001 line 18 (Principle 6):** "Cold start under 1 second."
+2. **ADR-001 line 112 (decision matrix):** "<1s" comparative scoring row.
+3. **ADR-001 lines 200-234 (2026-05-15 Update):** Measured 8.5-9.0s baseline, 10s hard gate, 6-7s soft target.
+4. **runbook.md line 115:** "under 2000ms hard gate" (invented, no source).
+
+The 2026-05-15 ADR-001 Addendum is canonical. The drift is in older sections that weren't updated when the architectural position was revised in the Addendum.
+
+### Decision
+
+**Amend ADR-001 in place** rather than write a new ADR-007.
+
+**Rationale:**
+- The 2026-05-15 Addendum already contains the canonical architectural position with measured baseline data.
+- The drift was in older sections of the same document plus runbook.md cross-references.
+- A new ADR-007 would fragment the runtime-choice decision across two documents unnecessarily.
+- The Update section already did the heavy architectural lifting (measurement, analysis, revised targets, consequences).
+
+### Changes Made
+
+1. **ADR-001 line 18 (Principle 6):** Updated from "under 1 second" to "bounded but not aggressively optimized" with reference to Addendum (2026-05-15 update).
+2. **ADR-001 line 112 (decision matrix):** Added footnote on "<1s" row linking to Addendum. Comparative scoring remains useful for runtime selection rubric; absolute target revised.
+3. **runbook.md line 115:** Removed incorrect "under 2000ms hard gate" claim (no source). Replaced with accurate ADR-001 reference: measured baseline 8.5-9.0s, hard regression gate 10s.
+4. **README.md line 56:** Added baseline number (8.5-9.0s) to cold-start performance constraint for clarity.
+5. **CHANGELOG.md:** Added Unreleased / Documentation entry.
+
+### Editorial Improvements
+
+Lead unprompted relabeled the 2026-05-15 ADR-001 update section as "Addendum" rather than "Update" everywhere. Better ADR convention (Addendum implies stable, canonical; Update implies temporary).
+
+### Pattern Extracted
+
+**Four-numbers-into-one resolution pattern:** When an ADR update section exists with canonical measurement data, prefer amend-in-place over new ADR. Update older sections of same document + cross-references in other docs to point to the canonical section. This keeps the architectural decision unified and avoids ADR proliferation for documentation lag corrections.
+
+### Outcomes
+
+- PR #131: `docs/cold-start-doc-reconciliation` branch → squash merge to main
+- Surgical diff: +8/-4 lines across exactly 4 expected files
+- All 8 CI gates green independently verified before merge: ruff lint (exit 0), ruff format (exit 0), mypy (exit 0), pytest 207 passed (exit 0), gitleaks (exit 0), CodeQL (exit 0), dependency-review (exit 0), branch protection (exit 0)
+- No tracking issue (housekeeping reconciliation identified during Wave 13 planning)
+
+### Process Quality
+
+Lead claimed "all green" once and it was independently verified as accurate before merge. Clean claim-vs-reality alignment. Contrast to Atlas's pattern of overstatement in Waves B W1 (#128, #129). No further calibration needed for Lead.
+
+### Related
+
+- ADR-001 Addendum (2026-05-15): Canonical cold-start position
+- docs/perf/coldstart-investigation.md: Detailed measurement and analysis
+- PR #128, #129: Atlas's process violations documented in decisions.md as institutional memory for why guardrails matter
+
+---
+
 ## Governance
 
 - All meaningful changes require team consensus
