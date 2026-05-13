@@ -40,12 +40,14 @@ jobs:
         id: detect
         if: steps.check_label.outputs.has_override != 'true'
         run: |
-          python scripts/check_breaking_changes.py \
-            --base-ref origin/${{ github.base_ref }} \
-            --head-ref HEAD \
-            --output markdown > report.md
-          echo "exit_code=$?" >> $GITHUB_OUTPUT
-        continue-on-error: true
+          if python scripts/check_breaking_changes.py \
+               --base-ref origin/${{ github.base_ref }} \
+               --head-ref HEAD \
+               --output markdown > report.md; then
+            echo "exit_code=0" >> $GITHUB_OUTPUT
+          else
+            echo "exit_code=$?" >> $GITHUB_OUTPUT
+          fi
 
       - name: Find existing bot comment
         id: find_comment
@@ -54,7 +56,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           comment_id=$(gh pr view ${{ github.event.pull_request.number }} --json comments \
-            --jq '.comments[] | select(.author.login == "github-actions" and (.body | startswith("## ALZ Snapshot Breaking-Change Report"))) | .id' \
+            --jq '.comments[] | select(.author.login == "github-actions[bot]" and (.body | startswith("## ALZ Snapshot Breaking-Change Report"))) | .id' \
             | head -n 1)
           if [ -n "$comment_id" ]; then
             echo "comment_id=$comment_id" >> $GITHUB_OUTPUT
