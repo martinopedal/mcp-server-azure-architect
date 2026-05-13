@@ -15,7 +15,7 @@ We are building an MCP server and Copilot CLI skills bundle for Azure architects
 3. **Vendored ALZ query snapshot.** Source of truth from `martinopedal/alz-checklist-queries` and `martinopedal/alz-graph-queries`. Track upstream commit SHA in snapshot manifest.
 4. **Companion servers stay companions.** We do not proxy or wrap `azure-mcp`. Do not duplicate its tools.
 5. **MCP Inspector compatibility is a CI gate.** All tools must list with valid JSON Schema.
-6. **Cold start under 1 second.** Single binary or single-process startup. No Docker required for local use.
+6. **Cold start is bounded but not aggressively optimized.** Single binary or single-process startup. No Docker required for local use. Hard regression gate: 10 seconds. See Addendum (2026-05-15 update) for measured baseline and rationale.
 
 ### Why This Decision Matters Now
 
@@ -109,7 +109,7 @@ Supported. C# SDK ships with inspector-compatible tool listings. CI gate passes.
 |-----------|--------|--------|------------|------|-------|
 | MCP SDK Maturity | 3 | 9 | 9 | 9 | All Tier 1 with Linux Foundation (Python, TS) or Microsoft (.NET) backing |
 | Azure SDK Quality | 4 | 8 | 7 | 10 | .NET is gold standard. Python is mature. TypeScript is solid. |
-| Cold Start (<1s) | 5 | 9 | 8 | 7 | Python 200-800ms, TS 300-700ms, .NET 300-1500ms (optimized: <500ms) |
+| Cold Start (<1s)* | 5 | 9 | 8 | 7 | Python 200-800ms, TS 300-700ms, .NET 300-1500ms (optimized: <500ms). *See Addendum (2026-05-15) for revised baseline measurement. |
 | Install/Distribution | 3 | 8 | 9 | 8 | uvx, npx, dotnet tool all work. npx is ephemeral-first. |
 | JSON Schema Tooling | 3 | 8 | 9 | 8 | All have validation and generation. TS has best type-to-schema flow. |
 | Ecosystem Fit | 2 | 9 | 7 | 6 | Python is dominant in ops/data. TS is web/cloud. .NET is enterprise. |

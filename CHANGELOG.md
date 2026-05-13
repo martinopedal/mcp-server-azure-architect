@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Documentation
+
+- **Reconciled cold-start documentation drift** across ADR-001, runbook, and README to match the 2026-05-15 ADR-001 update (measured 8.5-9.0s baseline, 10s hard regression gate). Removed incorrect "under 2000ms" claim from runbook.md (no source). Updated ADR-001 Principle 6 and decision matrix row to reference canonical Addendum section. Added baseline number to README constraint for clarity.
+
 ### Added
 
 - **Custom governance queries for diagnostics coverage and tag audit** (Closes #100). Two custom queries authored for Management and Resource Organization pillars: (1) `diagnostics_coverage` (8003d59b-f2fc-46c9-b387-d9a889ec491a) reports diagnostic settings coverage by resource type to identify monitoring gaps (category: Management, severity: Medium, tags: diagnostics/monitoring/coverage). (2) `tag_audit` (b8bb32c6-18b1-4563-9435-6cf9b8b24b54) audits required tags (Environment, Owner, CostCenter) to identify tagging compliance gaps (category: Resource Organization, severity: Medium, tags: governance/tagging/compliance). Both queries follow ADR-006 custom-query provenance pattern. Custom query count: 7 (5 IAM from #99 + 2 governance from #100).
