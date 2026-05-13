@@ -132,3 +132,5 @@ Vendored content licenses are reproduced in [THIRD-PARTY-NOTICES.md](THIRD-PARTY
 ## License
 
 MIT.
+
+<!-- mcp-name: io.github.martinopedal/mcp-server-azure-architect -->
