@@ -114,7 +114,11 @@ jobs:
           path: dist
 
       - name: Publish to PyPI
-        uses: pypa/gh-action-pypi-publish@6733eb7d741f0b11ec6a39b58540dab7590f9b7d  # v1.14.0
+        # Tag pin (not SHA pin) is intentional: pypa/gh-action-pypi-publish pulls its
+        # ghcr.io runtime image using the ref it was invoked with as the image tag,
+        # and version-tagged images are published while SHA-tagged images are not.
+        # See pypa/gh-action-pypi-publish#290 for the upstream behaviour.
+        uses: pypa/gh-action-pypi-publish@v1.14.0
 
   create-release:
     name: Create GitHub Release
