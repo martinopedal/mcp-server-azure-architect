@@ -53,7 +53,7 @@ Python 3.11+ with FastMCP, per [ADR-001](docs/adr/0001-runtime-choice.md). Build
 
 Constraints:
 
-- Local-first, single binary or single-process startup. Cold-start performance is documented in [docs/perf/coldstart-investigation.md](docs/perf/coldstart-investigation.md).
+- Local-first, single binary or single-process startup. Cold-start performance baseline (measured 8.5-9.0s) and rationale documented in [docs/perf/coldstart-investigation.md](docs/perf/coldstart-investigation.md).
 - Read-only Azure SDK calls only. DefaultAzureCredential exclusively.
 - Zero credentials at rest. Token-scrub on any logging.
 - ALZ checklist queries source from the public `martinopedal/alz-checklist-queries` and `martinopedal/alz-graph-queries` repos (vendored snapshot, pinned by upstream commit SHA).

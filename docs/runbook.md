@@ -112,7 +112,7 @@ az login --tenant <your-tenant-id>
 
 **Root cause:** Python startup time + import graph (measured baseline in ADR-001).
 
-**Fix:** None required. This is expected per ADR-001 cold-start budget (under 2000ms hard gate). Use MCP clients' caching (e.g., Claude Desktop caches results across conversations). If unacceptable, see [docs/perf/coldstart-investigation.md](perf/coldstart-investigation.md) for profiling instructions.
+**Fix:** None required. This is expected per ADR-001 (measured baseline 8.5-9.0s, hard regression gate 10s, see ADR-001 Addendum 2026-05-15). Use MCP clients' caching (e.g., Claude Desktop caches results across conversations). If unacceptable, see [docs/perf/coldstart-investigation.md](perf/coldstart-investigation.md) for profiling instructions.
 
 ### 6. MCP client says "tool not found"
 
