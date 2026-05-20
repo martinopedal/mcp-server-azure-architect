@@ -39,8 +39,8 @@ Ship an MCP server + Copilot CLI skills bundle that fills the architect-shaped g
 - Ruff lint and format clean.
 - Mypy type check passes.
 - Pytest unit tests pass (Python 3.11, 3.12).
-- MCP Inspector smoke test: server starts, all tools enumerate with valid JSON Schema (Forge issue #19 forthcoming).
-- Read-only AST gate enforced: no Azure SDK `Begin*`, `Create*`, `Update*`, or `Delete*` calls in the call graph (Sentinel issue #7 forthcoming).
+- MCP Inspector smoke test: server starts, all tools enumerate with valid JSON Schema (Forge issue #19).
+- Read-only AST gate enforced: no Azure SDK `Begin*`, `Create*`, `Update*`, or `Delete*` calls in the call graph (Sentinel issue #7).
 - gitleaks scan passes (no embedded secrets).
 - CodeQL scan passes (security analysis).
 - Dependency-review check passes (supply chain).
