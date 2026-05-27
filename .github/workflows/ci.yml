@@ -10,11 +10,15 @@ permissions:
   contents: read
 
 jobs:
+  decide-runner:
+    uses: martinopedal/github-runners-alz-corp-cookbook/.github/workflows/decide-runner.yml@v1
+    with:
+      self-hosted-labels: '["self-hosted", "personal", "pub", "linux"]'
   test:
-    runs-on: ${{ matrix.os }}
+    needs: decide-runner
+    runs-on: ${{ fromJSON(needs.decide-runner.outputs.runner-labels) }}
     strategy:
       matrix:
-        os: [ubuntu-latest]
         python-version: ["3.11", "3.12"]
     
     steps:
