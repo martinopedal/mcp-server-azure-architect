@@ -10,9 +10,13 @@ permissions:
   id-token: write
 
 jobs:
+  decide-runner:
+    uses: martinopedal/github-runners-alz-corp-cookbook/.github/workflows/decide-runner.yml@v1
+    with:
+      self-hosted-labels: '["self-hosted", "personal", "pub", "linux"]'
   verify-version:
     name: Verify tag matches pyproject.toml version
-    runs-on: ubuntu-latest
+    runs-on: ${{ fromJSON(needs.decide-runner.outputs.runner-labels) }}
     outputs:
       version: ${{ steps.get-version.outputs.version }}
       tag: ${{ steps.get-tag.outputs.tag }}
@@ -74,7 +78,7 @@ jobs:
   build:
     name: Build distribution packages
     needs: test
-    runs-on: ubuntu-latest
+    runs-on: ${{ fromJSON(needs.decide-runner.outputs.runner-labels) }}
     steps:
       - name: Checkout code
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6
@@ -100,7 +104,7 @@ jobs:
   publish-pypi:
     name: Publish to PyPI
     needs: build
-    runs-on: ubuntu-latest
+    runs-on: ${{ fromJSON(needs.decide-runner.outputs.runner-labels) }}
     environment:
       name: pypi
       url: https://pypi.org/p/mcp-server-azure-architect
@@ -123,7 +127,7 @@ jobs:
   create-release:
     name: Create GitHub Release
     needs: [verify-version, publish-pypi]
-    runs-on: ubuntu-latest
+    runs-on: ${{ fromJSON(needs.decide-runner.outputs.runner-labels) }}
     permissions:
       contents: write
     steps:
@@ -161,7 +165,7 @@ jobs:
   publish-mcp-registry:
     name: Publish to MCP Registry
     needs: [verify-version, publish-pypi]
-    runs-on: ubuntu-latest
+    runs-on: ${{ fromJSON(needs.decide-runner.outputs.runner-labels) }}
     permissions:
       id-token: write
       contents: read
