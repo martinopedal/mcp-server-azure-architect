@@ -12,7 +12,7 @@ permissions:
 jobs:
   verify-version:
     name: Verify tag matches pyproject.toml version
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, personal-linux]
     outputs:
       version: ${{ steps.get-version.outputs.version }}
       tag: ${{ steps.get-tag.outputs.tag }}
@@ -41,7 +41,7 @@ jobs:
   test:
     name: Run test suite
     needs: verify-version
-    runs-on: ${{ matrix.os }}
+    runs-on: [self-hosted, personal-linux]
     strategy:
       matrix:
         os: [ubuntu-latest]
@@ -74,7 +74,7 @@ jobs:
   build:
     name: Build distribution packages
     needs: test
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, personal-linux]
     steps:
       - name: Checkout code
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6
@@ -100,7 +100,7 @@ jobs:
   publish-pypi:
     name: Publish to PyPI
     needs: build
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, personal-linux]
     environment:
       name: pypi
       url: https://pypi.org/p/mcp-server-azure-architect
@@ -123,7 +123,7 @@ jobs:
   create-release:
     name: Create GitHub Release
     needs: [verify-version, publish-pypi]
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, personal-linux]
     permissions:
       contents: write
     steps:
@@ -161,7 +161,7 @@ jobs:
   publish-mcp-registry:
     name: Publish to MCP Registry
     needs: [verify-version, publish-pypi]
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, personal-linux]
     permissions:
       id-token: write
       contents: read
