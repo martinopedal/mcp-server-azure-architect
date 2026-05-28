@@ -25,7 +25,7 @@ jobs:
         run: python scripts/refresh_alz_snapshot.py
 
       - name: Open PR if drift detected
-        uses: peter-evans/create-pull-request@v7
+        uses: peter-evans/create-pull-request@v8
         with:
           commit-message: |
             chore(alz): refresh vendored snapshot to upstream
