@@ -12,7 +12,7 @@ permissions:
 jobs:
   verify-version:
     name: Verify tag matches pyproject.toml version
-    runs-on: [self-hosted, personal, linux, x64]
+    runs-on: [self-hosted, personal-linux]
     outputs:
       version: ${{ steps.get-version.outputs.version }}
       tag: ${{ steps.get-tag.outputs.tag }}
@@ -46,35 +46,35 @@ jobs:
       matrix:
         os: [ubuntu-latest]
         python-version: ["3.11", "3.12"]
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6
-      
+
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065  # v5
         with:
           python-version: ${{ matrix.python-version }}
-      
+
       - name: Install uv
         run: pip install uv
-      
+
       - name: Install dependencies
         run: uv pip install --system -e ".[dev]"
-      
+
       - name: Run ruff check
         run: ruff check .
-      
+
       - name: Run mypy
         run: mypy src
-      
+
       - name: Run pytest
         run: pytest -v
 
   build:
     name: Build distribution packages
     needs: test
-    runs-on: [self-hosted, personal, linux, x64]
+    runs-on: [self-hosted, personal-linux]
     steps:
       - name: Checkout code
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6
@@ -100,7 +100,7 @@ jobs:
   publish-pypi:
     name: Publish to PyPI
     needs: build
-    runs-on: [self-hosted, personal, linux, x64]
+    runs-on: [self-hosted, personal-linux]
     environment:
       name: pypi
       url: https://pypi.org/p/mcp-server-azure-architect
@@ -123,7 +123,7 @@ jobs:
   create-release:
     name: Create GitHub Release
     needs: [verify-version, publish-pypi]
-    runs-on: [self-hosted, personal, linux, x64]
+    runs-on: [self-hosted, personal-linux]
     permissions:
       contents: write
     steps:
@@ -161,7 +161,7 @@ jobs:
   publish-mcp-registry:
     name: Publish to MCP Registry
     needs: [verify-version, publish-pypi]
-    runs-on: [self-hosted, personal, linux, x64]
+    runs-on: [self-hosted, personal-linux]
     permissions:
       id-token: write
       contents: read

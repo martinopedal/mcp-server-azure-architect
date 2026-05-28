@@ -14,7 +14,7 @@ permissions:
 
 jobs:
   analyze:
-    runs-on: [self-hosted, personal, linux, x64]
+    runs-on: [self-hosted, personal-linux]
     strategy:
       fail-fast: false
       matrix:
