@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Documentation
+
+- Clarified that the architect-specific Copilot CLI skill bundle is post-v0.2 deferred work, and removed stale "forthcoming" wording from implemented validation gates.
+
 ### Fixed
 
 - **`release.yml` PyPI publish step now tag-pins `pypa/gh-action-pypi-publish` to `v1.14.0` instead of SHA-pinning.** The action pulls its runtime image from `ghcr.io/pypa/gh-action-pypi-publish:<ref>` using the exact ref the workflow invoked it with. SHA-tagged images are not published by upstream maintainers, only version-tagged images are, so SHA pins fail with `manifest unknown`. Confirmed against ghcr.io: `:v1.14.0` exists, `:<sha>` does not. See pypa/gh-action-pypi-publish#290 for the upstream behaviour. Discovered when the v0.2.0 tag push failed in the publish-pypi job.

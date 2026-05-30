@@ -23,6 +23,8 @@ This server is **not a router or aggregator**. MCP clients already aggregate. We
 - A curated `mcp-config.json` for Copilot CLI, Claude Desktop, Cursor, and VS Code Copilot.
 - Read-only by default, end to end.
 
+The architect-specific Copilot CLI skill bundle is planned post-v0.2 work. The current release delivers the MCP server and companion client configuration, while the skill bundle remains tracked as future scope.
+
 ## What's out of scope
 
 - Wrapping or proxying `azure-mcp`. Anything `azure-mcp` already exposes (raw KQL/ARG, quota, advisor, monitor, policy, RBAC, AKS, App Service) is **explicitly out**.
