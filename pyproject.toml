@@ -14,7 +14,7 @@ authors = [
     { name = "Martin Opedal", email = "martinopedal@users.noreply.github.com" }
 ]
 dependencies = [
-    "mcp>=1.27.0,<2.0.0",
+    "mcp>=1.28.1,<2.0.0",
     "azure-identity>=1.23.0,<2.0.0",
     "azure-mgmt-resourcegraph>=8.0.0",
     "azure-mgmt-subscription>=3.0.0",
